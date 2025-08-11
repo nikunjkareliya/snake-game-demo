@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Neon Snake</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+
+      <main id="stage-wrap">
+        <div id="grid-overlay"></div>
+        <canvas id="gameCanvas" width="1024" height="768"></canvas>
+
+        <div id="stage-hud">
+          <div class="corner left glass">Score: <span id="score">0</span></div>
+          <div class="stage-title neon">NEON SNAKE</div>
+          <div class="corner right glass">Best: <span id="highScore">0</span></div>
+        </div>
+
+        <div id="overlay" class="overlay visible">
+          <div class="overlay-inner">
+            <h1 class="title neon">NEON SNAKE</h1>
+            <p class="subtitle">Eat the glowing orbs. Don't hit the walls or yourself.</p>
+            <div class="controls">
+              <div><span class="key">W A S D</span> or <span class="key">Arrow Keys</span> to move</div>
+              <div><span class="key">Space</span> or <span class="key">P</span> to pause</div>
+              <div><span class="key">R</span> to restart</div>
+            </div>
+            <button id="startBtn" class="btn neon">Press Space to Start</button>
+          </div>
+        </div>
+      </main>
+
+      <footer id="help" class="glass">
+        <span>Controls: Arrow Keys / WASD • Space to Pause/Resume • R to Restart</span>
+      </footer>
+    </div>
+
+    <script defer src="game.js"></script>
+  </body>
+  </html>
+
+
