@@ -4,7 +4,7 @@ A neon-styled Snake game for the web. Built with HTML5 Canvas, CSS, and vanilla 
 
 ## 🎮 Play Online
 
-**Live Demo**: [Play Neon Snake](https://nikunjkareliya.github.io/snake-game-gpt5/)
+**Live Demo**: [Play Neon Snake](https://nikunjkareliya.github.io/snake-game-demo/)
 
 ## 🎯 How to Play
 
@@ -22,3 +22,25 @@ Open `index.html` in any modern browser, or visit the live demo above.
 - Speed increases slightly after eating
 - Best score is saved to `localStorage`
 - Neon visual effects and smooth animations
+
+## 🚀 Deployment
+
+This game is deployed using GitHub Pages. To deploy your own version:
+
+1. Fork this repository
+2. Go to Settings → Pages
+3. Select "Deploy from a branch"
+4. Choose "main" branch and "/ (root)" folder
+5. Your game will be live at: `https://yourusername.github.io/snake-game-demo/`
+
+## 🛠️ Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/nikunjkareliya/snake-game-demo.git
+
+# Open index.html in your browser
+# Or use a local server:
+python -m http.server 8000
+# Then visit http://localhost:8000
+```
