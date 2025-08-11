@@ -11,7 +11,7 @@
    */
   const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
   const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const randomFloat = (min, max) => Math.random() * (max - min) + min;
+  const hypot = (x, y) => Math.sqrt(x * x + y * y);
 
   /**
    * Canvas and layout
@@ -66,6 +66,9 @@
   let speedMs = 120; // lower is faster
   let lastTickAt = 0;
   let lastFrameAt = 0;
+  let elapsedSec = 0;
+  let mouthOpenTimer = 0; // seconds remaining for eat animation
+  let hitShakeTimer = 0;  // seconds remaining for hit shake
 
   // Particles
   /** @typedef {{x:number,y:number,vx:number,vy:number,life:number,maxLife:number,size:number,color:string,shape:'circle'|'square',glow:string,gravity?:number}} Particle */
@@ -74,13 +77,31 @@
   let foodSparkTimer = 0; // seconds accumulator
   let deathTimer = 0; // seconds remaining in death animation
 
+  // Visual constants
+  const COLOR_A = '#00eaff';
+  const COLOR_B = '#ff00ff';
+  const BODY_RADIUS = Math.round(CELL_SIZE * 0.36);
+  const HEAD_RADIUS = Math.round(BODY_RADIUS * 1.15);
+  const USE_SPLINE_SMOOTHING = true;
+  const MOUTH_ANIM_DURATION = 0.45; // seconds
+  // For smooth rendering between ticks
+  /** @type {Cell[]} */
+  let lastSnakePositions = [];
+
   /**
    * DOM elements
    */
   const overlay = document.getElementById('overlay');
+  // Make overlay focusable for keyboard events
+  overlay.setAttribute('tabindex', '0');
   const scoreEl = document.getElementById('score');
   const highScoreEl = document.getElementById('highScore');
   const startBtn = document.getElementById('startBtn');
+  // Ensure canvas can receive focus for keyboard events when overlay is hidden
+  canvas.setAttribute('tabindex', '0');
+  canvas.addEventListener('click', () => canvas.focus());
+  // Focus canvas immediately so spacebar works from the start
+  setTimeout(() => canvas.focus(), 100);
   highScoreEl.textContent = String(highScore);
 
   function resetGame() {
@@ -98,6 +119,11 @@
     direction = Direction.Right;
     nextDirection = Direction.Right;
     placeFood();
+    lastSnakePositions = snake.map(s => ({ ...s }));
+    lastTickAt = performance.now();
+    lastFrameAt = lastTickAt;
+    mouthOpenTimer = 0;
+    hitShakeTimer = 0;
   }
 
   function placeFood() {
@@ -120,34 +146,8 @@
   function startDeathSequence() {
     if (gameState === 'dying' || gameState === 'gameover') return;
     gameState = 'dying';
-    deathTimer = 1.1; // seconds
-
-    // Spawn explosion particles from each snake segment
-    for (let i = 0; i < snake.length; i++) {
-      const seg = snake[i];
-      const centerX = seg.x * CELL_SIZE + CELL_SIZE / 2;
-      const centerY = seg.y * CELL_SIZE + CELL_SIZE / 2;
-      const baseHue = 200 + (i / Math.max(1, snake.length - 1)) * 160; // cyan->magenta
-      for (let k = 0; k < 6; k++) {
-        const angle = randomFloat(0, Math.PI * 2);
-        const speed = randomFloat(80, 240);
-        particles.push({
-          x: centerX,
-          y: centerY,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 0,
-          maxLife: randomFloat(0.6, 1.1),
-          size: randomFloat(2, 5),
-          color: `hsl(${baseHue}, 100%, 60%)`,
-          shape: 'square',
-          glow: 'rgba(255,255,255,0.6)',
-          gravity: 140,
-        });
-      }
-    }
-    // Clear the snake immediately to emphasize break effect
-    snake = [];
+    deathTimer = 0.9; // show overlay after brief reaction
+    hitShakeTimer = 0.5; // brief shake on impact
   }
 
   function finalizeGameOver() {
@@ -184,10 +184,14 @@
         <button id="overlayBtn" class="btn neon">${buttonText}</button>
       </div>
     `;
+    // Focus overlay so it can receive keyboard events immediately
+    setTimeout(() => overlay.focus(), 50);
     const btn = document.getElementById('overlayBtn');
     if (btn) {
       btn.addEventListener('click', () => {
-        if (gameState === 'init' || gameState === 'paused') {
+        if (gameState === 'init') {
+          startGame();
+        } else if (gameState === 'paused') {
           gameState = 'playing';
           hideOverlay();
         } else if (gameState === 'gameover') {
@@ -199,6 +203,8 @@
 
   function hideOverlay() {
     overlay.classList.remove('visible');
+    // Focus canvas when overlay is hidden so game controls work
+    setTimeout(() => canvas.focus(), 50);
   }
 
   /**
@@ -207,12 +213,20 @@
   const keyToDirection = new Map([
     ['ArrowUp', Direction.Up],
     ['KeyW', Direction.Up],
+    ['w', Direction.Up],
+    ['W', Direction.Up],
     ['ArrowDown', Direction.Down],
     ['KeyS', Direction.Down],
+    ['s', Direction.Down],
+    ['S', Direction.Down],
     ['ArrowLeft', Direction.Left],
     ['KeyA', Direction.Left],
+    ['a', Direction.Left],
+    ['A', Direction.Left],
     ['ArrowRight', Direction.Right],
     ['KeyD', Direction.Right],
+    ['d', Direction.Right],
+    ['D', Direction.Right],
   ]);
 
   function isOpposite(a, b) {
@@ -224,8 +238,15 @@
     );
   }
 
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'KeyP') {
+  // Listen on both window and canvas to be safe
+  const keydown = (e) => {
+    const code = e.code;
+    const key = e.key;
+    const isSpace = code === 'Space' || key === ' ' || key === 'Spacebar';
+    const isP = code === 'KeyP' || key === 'p' || key === 'P';
+    const isR = code === 'KeyR' || key === 'r' || key === 'R';
+
+    if (isSpace || isP) {
       e.preventDefault();
       if (gameState === 'init') {
         startGame();
@@ -234,19 +255,24 @@
       }
       return;
     }
-    if (e.code === 'KeyR') {
+    if (isR) {
       e.preventDefault();
       startGame();
       return;
     }
-    const dir = keyToDirection.get(e.code);
+    const dir = keyToDirection.get(e.code) || keyToDirection.get(e.key);
     if (dir) {
       e.preventDefault();
       if (!isOpposite(dir, direction)) {
         nextDirection = dir;
       }
     }
-  });
+  };
+  window.addEventListener('keydown', keydown);
+  document.addEventListener('keydown', keydown);
+  canvas.addEventListener('keydown', keydown);
+  // Also listen on overlay since it blocks events when visible
+  overlay.addEventListener('keydown', keydown);
 
   if (startBtn) {
     startBtn.addEventListener('click', () => startGame());
@@ -261,10 +287,15 @@
     if (!lastFrameAt) lastFrameAt = now;
     const dt = Math.min(0.033, Math.max(0.001, (now - lastFrameAt) / 1000)); // seconds, capped
     lastFrameAt = now;
+    elapsedSec += dt;
 
-    // Always update particles and ambient effects
+  // Always update particles and ambient effects
     updateParticles(dt);
     spawnFoodAmbient(dt);
+  // update eat pulse lifetimes
+  // (eatPulses array declared later; using hoisting is fine for functions but we ensure order by patching declaration soon)
+    if (mouthOpenTimer > 0) mouthOpenTimer = Math.max(0, mouthOpenTimer - dt);
+    if (hitShakeTimer > 0) hitShakeTimer = Math.max(0, hitShakeTimer - dt);
 
     if (gameState === 'playing') {
       if (now - lastTickAt >= speedMs) {
@@ -309,6 +340,8 @@
       }
     }
 
+    // Remember previous snake for interpolation
+    lastSnakePositions = snake.map(s => ({ ...s }));
     // Move
     snake.unshift(next);
 
@@ -316,9 +349,13 @@
     if (willEat) {
       score += 10;
       scoreEl.textContent = String(score);
+      const eatPx = next.x * CELL_SIZE + CELL_SIZE / 2;
+      const eatPy = next.y * CELL_SIZE + CELL_SIZE / 2;
+      spawnEatBurstAt(eatPx, eatPy);
       placeFood();
       // speed up slightly with cap
       speedMs = clamp(speedMs - 3, 55, 120);
+      mouthOpenTimer = MOUTH_ANIM_DURATION; // trigger chomp animation
     } else {
       snake.pop();
     }
@@ -336,20 +373,20 @@
       foodSparkTimer -= emitInterval;
       const centerX = food.x * CELL_SIZE + CELL_SIZE / 2;
       const centerY = food.y * CELL_SIZE + CELL_SIZE / 2;
-      const angle = randomFloat(0, Math.PI * 2);
-      const radius = randomFloat(2, CELL_SIZE * 0.45);
+      const angle = randomInt(0, 360) * Math.PI / 180; // Use randomInt for angle
+      const radius = randomInt(2, CELL_SIZE * 0.45);
       const px = centerX + Math.cos(angle) * radius;
       const py = centerY + Math.sin(angle) * radius;
-      const speed = randomFloat(10, 60);
-      const outward = angle + randomFloat(-0.7, 0.7);
+      const speed = randomInt(10, 60);
+      const outward = angle + randomInt(-7, 7) * Math.PI / 180; // Use randomInt for outward angle
       particles.push({
         x: px,
         y: py,
         vx: Math.cos(outward) * speed,
         vy: Math.sin(outward) * speed,
         life: 0,
-        maxLife: randomFloat(0.6, 1.2),
-        size: randomFloat(1.8, 3.2),
+        maxLife: randomInt(600, 1200) / 1000, // Use randomInt for maxLife
+        size: randomInt(1.8, 3.2),
         color: 'rgba(255, 232, 0, 1)',
         shape: 'circle',
         glow: 'rgba(255, 122, 0, 0.9)'
@@ -376,7 +413,21 @@
    */
   function render() {
     ctx.clearRect(0, 0, CSS_WIDTH, CSS_HEIGHT);
+    // Screen shake on hit
+    if (hitShakeTimer > 0) {
+      const shakeAmt = 3 * (hitShakeTimer / 0.5);
+      const sx = (Math.random() - 0.5) * 2 * shakeAmt;
+      const sy = (Math.random() - 0.5) * 2 * shakeAmt;
+      ctx.save();
+      ctx.translate(sx, sy);
+      drawWorld();
+      ctx.restore();
+      return;
+    }
+    drawWorld();
+  }
 
+  function drawWorld() {
     // Glow backdrop vignette
     const grad = ctx.createRadialGradient(
       CSS_WIDTH * 0.55,
@@ -395,15 +446,8 @@
     // Draw food (circular neon + particles)
     drawFood();
 
-    // Draw snake segments with tail gradient
-    for (let i = snake.length - 1; i >= 0; i--) {
-      const seg = snake[i];
-      const t = i / Math.max(1, snake.length - 1);
-      const colorA = '#00eaff';
-      const colorB = '#ff00ff';
-      const mix = lerpColor(colorA, colorB, 1 - t * 0.8);
-      drawNeonCell(seg.x, seg.y, mix, '#00eaff');
-    }
+    // Draw continuous neon snake body
+    drawSnakeContinuous();
 
     // Particles on top
     drawParticles();
@@ -458,6 +502,28 @@
     ctx.restore();
   }
 
+  function updateEatPulses() { /* removed ring pulses */ }
+  function drawEatPulses() { /* removed ring pulses */ }
+
+  function spawnEatBurstAt(px, py) {
+    for (let i = 0; i < 24; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 160 + Math.random() * 240;
+      particles.push({
+        x: px,
+        y: py,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0,
+        maxLife: 0.35 + Math.random() * 0.4,
+        size: 2 + Math.random() * 3.5,
+        color: 'rgba(255, 232, 0, 1)',
+        shape: 'circle',
+        glow: 'rgba(255, 122, 0, 1)'
+      });
+    }
+  }
+
   function applyAlphaToColor(color, alpha) {
     if (color.startsWith('rgb(')) {
       // convert rgb(r,g,b) to rgba
@@ -483,21 +549,220 @@
     const innerX = px + inset;
     const innerY = py + inset;
     const innerSize = size - inset * 2;
-
-    // Outer glow
     ctx.save();
     ctx.shadowColor = glowColor;
     ctx.shadowBlur = 24;
     ctx.fillStyle = 'rgba(255,255,255,0.05)';
     ctx.fillRect(innerX, innerY, innerSize, innerSize);
-    ctx.restore();
-
-    // Inner neon body (square)
+    ctx.shadowBlur = 0;
     const grad = ctx.createLinearGradient(innerX, innerY, innerX + innerSize, innerY + innerSize);
     grad.addColorStop(0, color);
     grad.addColorStop(1, 'white');
     ctx.fillStyle = grad;
     ctx.fillRect(innerX, innerY, innerSize, innerSize);
+    ctx.restore();
+  }
+
+  function drawSnakeContinuous() {
+    if (snake.length === 0) return;
+    // Interpolate between previous and current positions for smooth movement
+    const t = gameState === 'playing' ? clamp((performance.now() - lastTickAt) / speedMs, 0, 1) : 0;
+    const interpSegments = getInterpolatedSnakeSegments(t); // head->tail
+    const points = interpSegments
+      .slice()
+      .reverse() // tail to head
+      .map(seg => ({ x: seg.x * CELL_SIZE + CELL_SIZE / 2, y: seg.y * CELL_SIZE + CELL_SIZE / 2 }));
+
+    const headCenter = points[points.length - 1];
+    const tailCenter = points[0];
+
+    // Outer glow stroke
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    const gradGlow = ctx.createLinearGradient(tailCenter.x, tailCenter.y, headCenter.x, headCenter.y);
+    gradGlow.addColorStop(0, COLOR_A);
+    gradGlow.addColorStop(1, COLOR_B);
+    ctx.strokeStyle = gradGlow;
+    ctx.shadowColor = COLOR_A;
+    ctx.shadowBlur = 28;
+    ctx.lineWidth = BODY_RADIUS * 2.1;
+    beginSmoothPath(points, USE_SPLINE_SMOOTHING ? 0.6 : 0.0);
+    ctx.stroke();
+    ctx.restore();
+
+    // Core body stroke
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    const gradBody = ctx.createLinearGradient(tailCenter.x, tailCenter.y, headCenter.x, headCenter.y);
+    gradBody.addColorStop(0, COLOR_A);
+    gradBody.addColorStop(1, COLOR_B);
+    ctx.strokeStyle = gradBody;
+    ctx.lineWidth = BODY_RADIUS * 2;
+    beginSmoothPath(points, USE_SPLINE_SMOOTHING ? 0.6 : 0.0);
+    ctx.stroke();
+
+    // Thin highlight stroke
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = BODY_RADIUS * 0.22;
+    beginSmoothPath(points, USE_SPLINE_SMOOTHING ? 0.6 : 0.0);
+    ctx.stroke();
+    ctx.restore();
+
+    // Head details on top
+    drawSnakeHeadDetails(points);
+  }
+
+  function getInterpolatedSnakeSegments(t) {
+    const prev = lastSnakePositions && lastSnakePositions.length ? lastSnakePositions : snake;
+    const curr = snake;
+    const maxLen = Math.max(prev.length, curr.length);
+    const out = [];
+    for (let i = 0; i < maxLen; i++) {
+      const a = prev[i] || prev[prev.length - 1];
+      const b = curr[i] || curr[curr.length - 1];
+      out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+    return out;
+  }
+
+  function beginSmoothPath(points, tension) {
+    if (!USE_SPLINE_SMOOTHING || points.length < 3 || tension <= 0) {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(points.length - 1, i + 2)];
+      const c1x = p1.x + (p2.x - p0.x) / 6 * tension;
+      const c1y = p1.y + (p2.y - p0.y) / 6 * tension;
+      const c2x = p2.x - (p3.x - p1.x) / 6 * tension;
+      const c2y = p2.y - (p3.y - p1.y) / 6 * tension;
+      ctx.bezierCurveTo(c1x, c1y, c2x, c2y, p2.x, p2.y);
+    }
+  }
+
+  function drawSnakeHeadDetails(points) {
+    const head = points[points.length - 1];
+    const neck = points[Math.max(0, points.length - 2)];
+    const dirX = head.x - neck.x;
+    const dirY = head.y - neck.y;
+    const len = Math.max(1, hypot(dirX, dirY));
+    const nx = dirX / len;
+    const ny = dirY / len;
+    const px = -ny; // perpendicular
+    const py = nx;
+
+    // Head circle
+    ctx.save();
+    ctx.shadowColor = COLOR_B;
+    ctx.shadowBlur = 24;
+    const headGrad = ctx.createLinearGradient(head.x - nx * HEAD_RADIUS, head.y - ny * HEAD_RADIUS, head.x + nx * HEAD_RADIUS, head.y + ny * HEAD_RADIUS);
+    headGrad.addColorStop(0, COLOR_B);
+    headGrad.addColorStop(1, '#ffffff');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, HEAD_RADIUS * 1.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Eyes (bigger per request)
+    const eyeOffsetAlong = HEAD_RADIUS * 0.04;
+    const eyeOffsetSide = HEAD_RADIUS * 0.64;
+    const baseEyeRadius = Math.max(2, Math.round(HEAD_RADIUS * 0.46));
+    const pupilRadius = Math.max(1, Math.round(baseEyeRadius * 0.42));
+
+    const leftEyeX = head.x - nx * eyeOffsetAlong + px * eyeOffsetSide;
+    const leftEyeY = head.y - ny * eyeOffsetAlong + py * eyeOffsetSide;
+    const rightEyeX = head.x - nx * eyeOffsetAlong - px * eyeOffsetSide;
+    const rightEyeY = head.y - ny * eyeOffsetAlong - py * eyeOffsetSide;
+
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    // Eye gag on hit: one small, one bigger, plus slight blink squeeze
+    const blinkPhase = gameState === 'dying' ? (1 - clamp(hitShakeTimer / 0.5, 0, 1)) : 0;
+    const squeeze = gameState === 'dying' ? clamp(1 - Math.sin(blinkPhase * Math.PI), 0.2, 1) : 1;
+    const leftScale = gameState === 'dying' ? 0.65 : 1;
+    const rightScale = gameState === 'dying' ? 1.25 : 1;
+    // Left eye
+    ctx.save();
+    ctx.translate(leftEyeX, leftEyeY);
+    ctx.scale(1, squeeze * leftScale);
+    ctx.beginPath(); ctx.arc(0, 0, baseEyeRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Right eye
+    ctx.save();
+    ctx.translate(rightEyeX, rightEyeY);
+    ctx.scale(1, squeeze * rightScale);
+    ctx.beginPath(); ctx.arc(0, 0, baseEyeRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    const pupilOffset = Math.min(baseEyeRadius * 0.6, 4.5);
+    const pupilXOff = nx * pupilOffset;
+    const pupilYOff = ny * pupilOffset;
+    ctx.fillStyle = '#111318';
+    ctx.beginPath(); ctx.arc(leftEyeX + pupilXOff, leftEyeY + pupilYOff, pupilRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rightEyeX + pupilXOff, rightEyeY + pupilYOff, pupilRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Mouth animation (more pronounced while eating)
+    if (mouthOpenTimer > 0) {
+      const openness = Math.sin((1 - mouthOpenTimer / MOUTH_ANIM_DURATION) * Math.PI); // 0..1..0
+      const spread = Math.max(0.2, 0.9 * openness); // radians factor
+      const baseX = head.x + nx * HEAD_RADIUS * 0.2;
+      const baseY = head.y + ny * HEAD_RADIUS * 0.2;
+      const tipX = head.x + nx * HEAD_RADIUS * 1.2;
+      const tipY = head.y + ny * HEAD_RADIUS * 1.2;
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#0a0d14';
+      ctx.beginPath();
+      ctx.moveTo(baseX + px * HEAD_RADIUS * 0.25, baseY + py * HEAD_RADIUS * 0.25);
+      ctx.lineTo(tipX + px * HEAD_RADIUS * spread * 0.7, tipY + py * HEAD_RADIUS * spread * 0.7);
+      ctx.lineTo(baseX - px * HEAD_RADIUS * 0.25, baseY - py * HEAD_RADIUS * 0.25);
+      ctx.lineTo(tipX - px * HEAD_RADIUS * spread * 0.7, tipY - py * HEAD_RADIUS * spread * 0.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Tongue
+    const flick = (Math.sin(elapsedSec * 10) + 1) / 2; // 0..1
+    const tongueLen = HEAD_RADIUS * (0.7 + 0.5 * flick);
+    const tongueWidth = Math.max(1.5, HEAD_RADIUS * 0.25);
+    const fork = tongueWidth * 0.6;
+    const baseX = head.x + nx * HEAD_RADIUS * 0.8;
+    const baseY = head.y + ny * HEAD_RADIUS * 0.8;
+    const tipX = baseX + nx * tongueLen;
+    const tipY = baseY + ny * tongueLen;
+    const forkLeftX = tipX + px * fork;
+    const forkLeftY = tipY + py * fork;
+    const forkRightX = tipX - px * fork;
+    const forkRightY = tipY - py * fork;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = '#ff3b6b';
+    ctx.shadowColor = '#ff99aa';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(baseX + px * (tongueWidth / 2), baseY + py * (tongueWidth / 2));
+    ctx.lineTo(forkLeftX, forkLeftY);
+    ctx.lineTo(baseX - px * (tongueWidth / 2), baseY - py * (tongueWidth / 2));
+    ctx.lineTo(forkRightX, forkRightY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   function roundRect(ctx, x, y, width, height, radius) {
