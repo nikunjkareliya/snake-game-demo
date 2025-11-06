@@ -99,7 +99,46 @@ function drawSnakeHead(head, nx, ny) {
   // Add subtle pulsing glow effect (breathing animation)
   const pulse = Math.sin(state.elapsedSec * 2) * 0.05 + 1; // oscillates 0.95 to 1.05
   const glowRadius = HEAD_RADIUS * HEAD_GLOW_MULTIPLIER * pulse;
-  
+
+  // Get head color based on skin type
+  const skin = state.currentSkin;
+  let headColor, tailColor, glowColor;
+
+  if (skin.type === 'gradient') {
+    headColor = skin.head || COLOR_B;
+    tailColor = skin.tail || COLOR_A;
+    glowColor = headColor;
+  } else if (skin.type === 'animated') {
+    if (skin.id === 'electric') {
+      headColor = skin.colors.primary;
+      tailColor = skin.colors.secondary;
+      glowColor = skin.colors.glow;
+    } else if (skin.id === 'inferno') {
+      headColor = skin.colors.accent;
+      tailColor = skin.colors.primary;
+      glowColor = skin.colors.secondary;
+    } else if (skin.id === 'holographic') {
+      const hue = (state.elapsedSec * skin.animation.speed * 60) % 360;
+      headColor = `hsl(${hue}, 100%, 60%)`;
+      tailColor = `hsl(${(hue + 180) % 360}, 100%, 60%)`;
+      glowColor = headColor;
+    }
+  } else if (skin.type === 'pattern') {
+    headColor = skin.colors.primary;
+    tailColor = skin.colors.secondary || skin.colors.primary;
+    glowColor = skin.colors.accent || headColor;
+  } else if (skin.type === 'special') {
+    if (skin.id === 'crystal') {
+      headColor = skin.colors.highlight;
+      tailColor = skin.colors.secondary;
+      glowColor = skin.colors.sparkle;
+    } else if (skin.id === 'phantom') {
+      headColor = skin.colors.inner;
+      tailColor = skin.colors.primary;
+      glowColor = skin.colors.glow;
+    }
+  }
+
   // Draw head glow
   const headGrad = ctx.createLinearGradient(
     head.x - nx * HEAD_RADIUS,
@@ -107,15 +146,15 @@ function drawSnakeHead(head, nx, ny) {
     head.x + nx * HEAD_RADIUS,
     head.y + ny * HEAD_RADIUS
   );
-  headGrad.addColorStop(0, state.currentSkin.head);
-  headGrad.addColorStop(1, state.currentSkin.tail);
+  headGrad.addColorStop(0, headColor);
+  headGrad.addColorStop(1, tailColor);
 
   ctx.fillStyle = headGrad;
   ctx.beginPath();
   // add layered fills with shadow to create a stronger bloom
   ctx.save();
   ctx.shadowBlur = Math.round(HEAD_RADIUS * 2.8);
-  ctx.shadowColor = state.currentSkin.head;
+  ctx.shadowColor = glowColor;
   ctx.beginPath();
   ctx.arc(head.x, head.y, glowRadius * 1.15, 0, Math.PI * 2);
   ctx.fill();
@@ -283,7 +322,7 @@ function drawSnake() {
   if (points.length === 0) return;
 
   // Calculate grow animation scale for tail segment
-  const growProgress = state.growTimer > 0 
+  const growProgress = state.growTimer > 0
     ? 1 - (state.growTimer / GROW_ANIMATION_DURATION) // 0 to 1
     : 1;
 
@@ -300,33 +339,59 @@ function drawSnake() {
     ny = dy / len;
   }
 
+  // Dispatch to appropriate skin renderer based on skin type
+  const skin = state.currentSkin;
+  if (!skin || skin.type === 'gradient') {
+    drawGradientSkin(points, growProgress, skin);
+  } else if (skin.type === 'animated') {
+    if (skin.id === 'electric') drawElectricSkin(points, growProgress, skin);
+    else if (skin.id === 'inferno') drawInfernoSkin(points, growProgress, skin);
+    else if (skin.id === 'holographic') drawHolographicSkin(points, growProgress, skin);
+    else drawGradientSkin(points, growProgress, skin); // fallback
+  } else if (skin.type === 'pattern') {
+    if (skin.id === 'python') drawPythonSkin(points, growProgress, skin);
+    else if (skin.id === 'cosmic') drawCosmicSkin(points, growProgress, skin);
+    else if (skin.id === 'circuit') drawCircuitSkin(points, growProgress, skin);
+    else drawGradientSkin(points, growProgress, skin); // fallback
+  } else if (skin.type === 'special') {
+    if (skin.id === 'crystal') drawCrystalSkin(points, growProgress, skin);
+    else if (skin.id === 'phantom') drawPhantomSkin(points, growProgress, skin);
+    else drawGradientSkin(points, growProgress, skin); // fallback
+  } else {
+    drawGradientSkin(points, growProgress, skin); // default fallback
+  }
+
+  drawSnakeHead(head, nx, ny);
+}
+
+// Original gradient skin renderer (for 'neon' and fallback)
+function drawGradientSkin(points, growProgress, skin) {
+  const headColor = skin.head || skin.colors?.primary || COLOR_B;
+  const tailColor = skin.tail || skin.colors?.secondary || COLOR_A;
+
   // Use lighter blend mode for neon glow effect
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  // rounded caps/joins make the neon stroke look smooth
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  // add a soft shadow to simulate bloom/glow
   ctx.shadowBlur = Math.round(BODY_RADIUS * 1.8);
-  ctx.shadowColor = state.currentSkin.tail;
+  ctx.shadowColor = tailColor;
 
-  // Draw body glow (thicker, blurred stroke) using rounded corners
-  ctx.strokeStyle = state.currentSkin.tail;
+  // Draw body glow (thicker, blurred stroke)
+  ctx.strokeStyle = tailColor;
   ctx.lineWidth = BODY_RADIUS * 2.6;
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
-
   ctx.restore();
 
   // Draw body base with gradient
   const bodyGrad = ctx.createLinearGradient(0, 0, CSS_WIDTH, CSS_HEIGHT);
-  bodyGrad.addColorStop(0, state.currentSkin.head);
-  bodyGrad.addColorStop(1, state.currentSkin.tail);
+  bodyGrad.addColorStop(0, headColor);
+  bodyGrad.addColorStop(1, tailColor);
   ctx.strokeStyle = bodyGrad;
   ctx.lineWidth = BODY_RADIUS * 2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  // Use rounded path so base and shine align with glow
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
 
@@ -336,9 +401,7 @@ function drawSnake() {
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
 
-  // Draw rounded caps at every segment to smooth corners when turning.
-  // Filling circles at segment centers masks any remaining sharp joints
-  // from stroke joins and creates a seamless rounded tube.
+  // Draw rounded caps at every segment
   ctx.save();
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = bodyGrad;
@@ -350,18 +413,476 @@ function drawSnake() {
   }
   ctx.restore();
 
-  // Draw segment details (scales) for visual definition
+  // Draw segment details (scales)
   ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-  for (let i = 1; i < points.length; i += 2) { // Every other segment for performance
+  for (let i = 1; i < points.length; i += 2) {
     const p = points[i];
-    // Scale down the last segment if growing
     const scale = (i === points.length - 1 && state.growTimer > 0) ? growProgress : 1;
     ctx.beginPath();
     ctx.arc(p.x, p.y, BODY_RADIUS * 0.6 * scale, 0, Math.PI * 2);
     ctx.fill();
   }
+}
 
-  drawSnakeHead(head, nx, ny);
+// ⚡ Electric Skin - Crackling lightning bolts
+function drawElectricSkin(points, growProgress, skin) {
+  const { primary, secondary, accent, glow } = skin.colors;
+
+  // Draw body with electric blue gradient
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = Math.round(BODY_RADIUS * 2.5);
+  ctx.shadowColor = glow;
+
+  // Outer glow
+  ctx.strokeStyle = primary;
+  ctx.lineWidth = BODY_RADIUS * 2.8;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Main body
+  const bodyGrad = ctx.createLinearGradient(0, 0, CSS_WIDTH, CSS_HEIGHT);
+  bodyGrad.addColorStop(0, accent);
+  bodyGrad.addColorStop(0.5, primary);
+  bodyGrad.addColorStop(1, secondary);
+  ctx.strokeStyle = bodyGrad;
+  ctx.lineWidth = BODY_RADIUS * 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Lightning bolts between segments (animated)
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  for (let i = 0; i < points.length - 1; i++) {
+    // Random lightning bolts based on time
+    const boltPhase = (state.elapsedSec * skin.animation.speed + i * 0.7) % 1;
+    if (boltPhase < 0.3) { // Show bolt 30% of the time
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const midX = (p1.x + p2.x) / 2;
+      const midY = (p1.y + p2.y) / 2;
+
+      // Add random offset for lightning effect
+      const offsetX = (Math.random() - 0.5) * BODY_RADIUS * 0.8;
+      const offsetY = (Math.random() - 0.5) * BODY_RADIUS * 0.8;
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(midX + offsetX, midY + offsetY);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+
+  // Energy core
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = BODY_RADIUS * 0.3;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+}
+
+// 🔥 Inferno Skin - Animated flames
+function drawInfernoSkin(points, growProgress, skin) {
+  const { primary, secondary, accent, core } = skin.colors;
+
+  // Draw flame glow
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = Math.round(BODY_RADIUS * 3);
+  ctx.shadowColor = accent;
+
+  // Outer flame glow
+  ctx.strokeStyle = primary;
+  ctx.lineWidth = BODY_RADIUS * 3.2;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Middle flame layer
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = secondary;
+  ctx.lineWidth = BODY_RADIUS * 2.4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner hot core
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = BODY_RADIUS * 1.6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Flickering core (animated)
+  const flicker = Math.sin(state.elapsedSec * skin.animation.flickerSpeed) * 0.3 + 0.7;
+  ctx.save();
+  ctx.globalAlpha = flicker;
+  ctx.strokeStyle = core;
+  ctx.lineWidth = BODY_RADIUS * 0.8;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Flame particles on segments
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < points.length; i += 2) {
+    const p = points[i];
+    const wave = Math.sin(state.elapsedSec * 3 + i * 0.5) * BODY_RADIUS * 0.6;
+    ctx.fillStyle = i % 4 === 0 ? accent : secondary;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y + wave, BODY_RADIUS * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// 🌈 Holographic Skin - Rainbow color-shifting
+function drawHolographicSkin(points, growProgress, skin) {
+  // Calculate shifting hue based on time
+  const hue = (state.elapsedSec * skin.animation.speed * 60) % 360;
+
+  // Draw with shifting rainbow colors
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Multiple layers with different hue offsets for iridescent effect
+  for (let layer = 0; layer < 3; layer++) {
+    const layerHue = (hue + layer * 30) % 360;
+    const color = `hsl(${layerHue}, 100%, 60%)`;
+    const blur = (3 - layer) * BODY_RADIUS * 0.8;
+
+    ctx.shadowBlur = blur;
+    ctx.shadowColor = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = BODY_RADIUS * (2.8 - layer * 0.4);
+    ctx.globalAlpha = 0.6 - layer * 0.1;
+
+    beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Shimmer effect on segments
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const segmentHue = (hue + i * 20) % 360;
+    const shimmer = Math.sin(state.elapsedSec * skin.animation.shimmerSpeed + i * 0.8) * 0.5 + 0.5;
+
+    ctx.fillStyle = `hsl(${segmentHue}, 100%, 70%)`;
+    ctx.globalAlpha = shimmer * 0.5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, BODY_RADIUS * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// 🐍 Python Skin - Striped pattern
+function drawPythonSkin(points, growProgress, skin) {
+  const { primary, secondary, accent } = skin.colors;
+
+  // Draw base black body
+  ctx.strokeStyle = primary;
+  ctx.lineWidth = BODY_RADIUS * 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Draw segment caps with alternating colors (stripes)
+  const stripeWidth = skin.pattern.stripeWidth;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const scale = (i === points.length - 1 && state.growTimer > 0) ? growProgress : 1;
+    const stripeIndex = Math.floor(i / stripeWidth) % 2;
+
+    ctx.fillStyle = stripeIndex === 0 ? secondary : primary;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, BODY_RADIUS * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Add red accent border to yellow stripes
+    if (stripeIndex === 0 && skin.pattern.border) {
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, BODY_RADIUS * scale * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // Add shine
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.lineWidth = BODY_RADIUS * 0.15;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+}
+
+// 🌌 Cosmic Skin - Galaxy/starfield texture
+function drawCosmicSkin(points, growProgress, skin) {
+  const { background, nebula1, nebula2, stars } = skin.colors;
+
+  // Draw deep space background
+  ctx.strokeStyle = background;
+  ctx.lineWidth = BODY_RADIUS * 2.4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Draw nebula clouds with soft glow
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.shadowBlur = Math.round(BODY_RADIUS * 2);
+
+  // Nebula layer 1
+  ctx.shadowColor = nebula1;
+  ctx.strokeStyle = nebula1;
+  ctx.lineWidth = BODY_RADIUS * 1.8;
+  ctx.globalAlpha = 0.4;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Nebula layer 2
+  ctx.shadowColor = nebula2;
+  ctx.strokeStyle = nebula2;
+  ctx.lineWidth = BODY_RADIUS * 1.4;
+  ctx.globalAlpha = 0.3;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw twinkling stars on segments
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    // Generate pseudo-random star positions based on segment index
+    for (let j = 0; j < 3; j++) {
+      const angle = (i * 137.5 + j * 60) * Math.PI / 180; // Golden angle distribution
+      const dist = (BODY_RADIUS * 0.6) * ((i * 7 + j * 13) % 10) / 10;
+      const sx = p.x + Math.cos(angle) * dist;
+      const sy = p.y + Math.sin(angle) * dist;
+
+      // Twinkle animation
+      const twinkle = skin.pattern.twinkle
+        ? Math.sin(state.elapsedSec * 4 + i * 0.5 + j) * 0.5 + 0.5
+        : 1;
+
+      ctx.fillStyle = stars;
+      ctx.globalAlpha = twinkle * 0.8;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ⚙️ Circuit Skin - Cyberpunk tech pattern
+function drawCircuitSkin(points, growProgress, skin) {
+  const { primary, lines, nodes, glow } = skin.colors;
+
+  // Draw dark circuit board base
+  ctx.strokeStyle = primary;
+  ctx.lineWidth = BODY_RADIUS * 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Draw segment caps
+  ctx.fillStyle = primary;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const scale = (i === points.length - 1 && state.growTimer > 0) ? growProgress : 1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, BODY_RADIUS * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Draw glowing circuit lines
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.shadowBlur = Math.round(BODY_RADIUS * 1.5);
+  ctx.shadowColor = glow;
+
+  // Pulsing effect
+  const pulse = Math.sin(state.elapsedSec * skin.pattern.pulseSpeed) * 0.3 + 0.7;
+  ctx.globalAlpha = pulse;
+
+  ctx.strokeStyle = lines;
+  ctx.lineWidth = skin.pattern.lineWidth;
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw circuit nodes at segments
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const nodePulse = Math.sin(state.elapsedSec * skin.pattern.pulseSpeed + i * 0.3) * 0.5 + 0.5;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = nodes;
+    ctx.fillStyle = nodes;
+    ctx.globalAlpha = nodePulse;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, skin.pattern.nodeSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// 💎 Crystal Skin - Faceted gem look
+function drawCrystalSkin(points, growProgress, skin) {
+  const { primary, secondary, highlight, sparkle } = skin.colors;
+
+  // Draw crystal glow
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.shadowBlur = Math.round(BODY_RADIUS * 2);
+  ctx.shadowColor = sparkle;
+  ctx.strokeStyle = secondary;
+  ctx.lineWidth = BODY_RADIUS * 2.6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw main crystal body with gradient
+  const bodyGrad = ctx.createLinearGradient(0, 0, CSS_WIDTH, CSS_HEIGHT);
+  bodyGrad.addColorStop(0, highlight);
+  bodyGrad.addColorStop(0.5, primary);
+  bodyGrad.addColorStop(1, secondary);
+  ctx.strokeStyle = bodyGrad;
+  ctx.lineWidth = BODY_RADIUS * 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+
+  // Draw facets on segments
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const scale = (i === points.length - 1 && state.growTimer > 0) ? growProgress : 1;
+
+    // Draw faceted appearance
+    for (let f = 0; f < skin.effect.facetCount; f++) {
+      const angle = (f / skin.effect.facetCount) * Math.PI * 2;
+      const facetDist = BODY_RADIUS * 0.5 * scale;
+      const fx = p.x + Math.cos(angle) * facetDist * 0.3;
+      const fy = p.y + Math.sin(angle) * facetDist * 0.3;
+
+      ctx.fillStyle = f % 2 === 0 ? highlight : 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.arc(fx, fy, BODY_RADIUS * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Sparkle effects (random)
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < points.length; i++) {
+    const sparklePhase = (state.elapsedSec * 2 + i * 0.7) % 1;
+    if (sparklePhase < skin.effect.sparkleRate) {
+      const p = points[i];
+      ctx.fillStyle = sparkle;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = sparkle;
+      ctx.globalAlpha = 1 - (sparklePhase / skin.effect.sparkleRate);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, BODY_RADIUS * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+// 👻 Phantom Skin - Ghostly transparent
+function drawPhantomSkin(points, growProgress, skin) {
+  const { primary, secondary, glow, inner } = skin.colors;
+
+  // Draw ethereal glow
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.shadowBlur = Math.round(BODY_RADIUS * 3.5);
+  ctx.shadowColor = glow;
+  ctx.strokeStyle = glow;
+  ctx.lineWidth = BODY_RADIUS * 3;
+  ctx.globalAlpha = 0.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw ghostly translucent body
+  const bodyGrad = ctx.createRadialGradient(
+    points[0].x, points[0].y, 0,
+    points[0].x, points[0].y, BODY_RADIUS * points.length * 0.3
+  );
+  bodyGrad.addColorStop(0, inner);
+  bodyGrad.addColorStop(0.5, primary);
+  bodyGrad.addColorStop(1, secondary);
+
+  ctx.globalAlpha = skin.effect.opacity;
+  ctx.strokeStyle = bodyGrad;
+  ctx.lineWidth = BODY_RADIUS * 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Draw inner glow
+  if (skin.effect.innerGlow) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.7;
+    ctx.strokeStyle = inner;
+    ctx.lineWidth = BODY_RADIUS * 0.8;
+    beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Floating wispy effects
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < points.length; i += 2) {
+    const p = points[i];
+    const wave = Math.sin(state.elapsedSec * 2 + i * 0.7) * BODY_RADIUS * 0.5;
+    const fade = Math.sin(state.elapsedSec * 3 + i) * 0.5 + 0.5;
+
+    ctx.fillStyle = glow;
+    ctx.globalAlpha = fade * 0.4;
+    ctx.beginPath();
+    ctx.arc(p.x + wave * 0.5, p.y + wave, BODY_RADIUS * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function drawParticles() {

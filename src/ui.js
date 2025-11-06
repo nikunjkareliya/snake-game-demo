@@ -205,10 +205,40 @@ function renderSkinCard(skin, owned) {
     const actionClass = isOwned ? (isSelected ? 'btn' : 'btn neon equipBtn') : 'btn neon buyBtn';
     const disabled = isSelected ? 'disabled' : '';
 
-    const gradientStyle = `background: linear-gradient(90deg, ${skin.head}, ${skin.tail});`;
+    // Generate preview style based on skin type
+    let previewStyle = '';
+    if (skin.type === 'gradient') {
+        previewStyle = `background: linear-gradient(90deg, ${skin.head}, ${skin.tail});`;
+    } else if (skin.type === 'animated') {
+        // Show representative colors for animated skins
+        if (skin.id === 'electric') {
+            previewStyle = `background: linear-gradient(135deg, ${skin.colors.primary}, ${skin.colors.secondary});`;
+        } else if (skin.id === 'inferno') {
+            previewStyle = `background: linear-gradient(0deg, ${skin.colors.primary}, ${skin.colors.accent});`;
+        } else if (skin.id === 'holographic') {
+            previewStyle = `background: linear-gradient(90deg, #ff0080, #ff8c00, #40ff00, #00ffff, #8000ff, #ff0080);`;
+        }
+    } else if (skin.type === 'pattern') {
+        // Show representative pattern colors
+        if (skin.id === 'python') {
+            previewStyle = `background: repeating-linear-gradient(90deg, ${skin.colors.primary} 0px, ${skin.colors.primary} 20px, ${skin.colors.secondary} 20px, ${skin.colors.secondary} 40px);`;
+        } else if (skin.id === 'cosmic') {
+            previewStyle = `background: radial-gradient(circle at 30% 50%, ${skin.colors.nebula1}, ${skin.colors.background});`;
+        } else if (skin.id === 'circuit') {
+            previewStyle = `background: ${skin.colors.primary}; border: 2px solid ${skin.colors.lines};`;
+        }
+    } else if (skin.type === 'special') {
+        // Show representative colors for special skins
+        if (skin.id === 'crystal') {
+            previewStyle = `background: linear-gradient(135deg, ${skin.colors.primary}, ${skin.colors.secondary}); position: relative;`;
+        } else if (skin.id === 'phantom') {
+            previewStyle = `background: radial-gradient(circle, ${skin.colors.inner}, ${skin.colors.primary}); opacity: 0.85;`;
+        }
+    }
+
     return `
       <div class="skin-card glass" data-skin-id="${skin.id}">
-        <div class="skin-preview" style="${gradientStyle}"></div>
+        <div class="skin-preview" style="${previewStyle}"></div>
         <div class="skin-name">${skin.name}</div>
         <div class="skin-actions">
           ${isOwned
@@ -253,7 +283,7 @@ function equipSkin(id, { silent } = {}) {
     const owned = new Set(state.ownedSkins || []);
     if (!owned.has(id) && skin.price > 0) return; // guard
     state.selectedSkinId = id;
-    state.currentSkin = { head: skin.head, tail: skin.tail };
+    state.currentSkin = skin; // Store full skin object for advanced rendering
     setStoredJSON('neonSnakeSelectedSkin', id);
     if (!silent) {
         // Update the UI card state
