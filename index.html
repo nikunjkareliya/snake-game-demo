@@ -26,23 +26,33 @@
         <div id="overlay" class="overlay visible">
           <div class="overlay-inner">
             <h1 class="title neon">NEON SNAKE</h1>
-            <p class="subtitle">Eat the glowing orbs. Don't hit the walls or yourself.</p>
-            <div class="controls">
-              <div><span class="key">W A S D</span> or <span class="key">Arrow Keys</span> to move</div>
-              <div><span class="key">Space</span> or <span class="key">P</span> to pause</div>
-              <div><span class="key">R</span> to restart</div>
+            
+            <div class="lobby-menu">
+                <button id="playBtn" class="btn neon">Play</button>
+                <button id="customizeBtn" class="btn">Customize</button>
+                <button id="settingsBtn" class="btn">Settings</button>
             </div>
-            <button id="startBtn" class="btn neon">Press Space to Start</button>
+
+            <div class="lobby-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Highest Score</div>
+                    <div id="lobbyHighScore" class="stat-value">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Currency</div>
+                    <div id="lobbyCurrency" class="stat-value">0</div>
+                </div>
+            </div>
+
+            <button id="howToPlayBtn" class="btn btn-small">How to Play</button>
           </div>
         </div>
       </main>
 
-      <footer id="help" class="glass">
-        <span>Controls: Arrow Keys / WASD • Space to Pause/Resume • R to Restart</span>
-      </footer>
+
     </div>
 
-    <script defer src="game.js"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
   </html>
 
