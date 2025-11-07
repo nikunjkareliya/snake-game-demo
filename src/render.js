@@ -17,8 +17,16 @@ import {
   COLOR_WHITE,
   COLOR_BLACK,
   COLOR_TONGUE,
+  COLOR_A,
+  COLOR_B,
   PARTICLE_CULL_MARGIN,
-  GROW_ANIMATION_DURATION
+  GROW_ANIMATION_DURATION,
+  SHINE_OVERLAY_OPACITY,
+  STAR_GOLDEN_ANGLE,
+  STAR_ANGLE_OFFSET,
+  CIRCUIT_NODE_SHADOW_BLUR,
+  FACET_ALTERNATE_COLOR,
+  SPARKLE_SHADOW_BLUR
 } from './config.js';
 
 function drawGrid() {
@@ -632,7 +640,7 @@ function drawPythonSkin(points, growProgress, skin) {
   }
 
   // Add shine
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.strokeStyle = `rgba(255, 255, 255, ${SHINE_OVERLAY_OPACITY})`;
   ctx.lineWidth = BODY_RADIUS * 0.15;
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
@@ -677,7 +685,7 @@ function drawCosmicSkin(points, growProgress, skin) {
     const p = points[i];
     // Generate pseudo-random star positions based on segment index
     for (let j = 0; j < 3; j++) {
-      const angle = (i * 137.5 + j * 60) * Math.PI / 180; // Golden angle distribution
+      const angle = (i * STAR_GOLDEN_ANGLE + j * STAR_ANGLE_OFFSET) * Math.PI / 180; // Golden angle distribution
       const dist = (BODY_RADIUS * 0.6) * ((i * 7 + j * 13) % 10) / 10;
       const sx = p.x + Math.cos(angle) * dist;
       const sy = p.y + Math.sin(angle) * dist;
@@ -742,7 +750,7 @@ function drawCircuitSkin(points, growProgress, skin) {
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = CIRCUIT_NODE_SHADOW_BLUR;
     ctx.shadowColor = nodes;
     ctx.fillStyle = nodes;
     ctx.globalAlpha = nodePulse;
@@ -794,7 +802,7 @@ function drawCrystalSkin(points, growProgress, skin) {
       const fx = p.x + Math.cos(angle) * facetDist * 0.3;
       const fy = p.y + Math.sin(angle) * facetDist * 0.3;
 
-      ctx.fillStyle = f % 2 === 0 ? highlight : 'rgba(255, 255, 255, 0.6)';
+      ctx.fillStyle = f % 2 === 0 ? highlight : FACET_ALTERNATE_COLOR;
       ctx.beginPath();
       ctx.arc(fx, fy, BODY_RADIUS * 0.15, 0, Math.PI * 2);
       ctx.fill();
@@ -809,7 +817,7 @@ function drawCrystalSkin(points, growProgress, skin) {
     if (sparklePhase < skin.effect.sparkleRate) {
       const p = points[i];
       ctx.fillStyle = sparkle;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = SPARKLE_SHADOW_BLUR;
       ctx.shadowColor = sparkle;
       ctx.globalAlpha = 1 - (sparklePhase / skin.effect.sparkleRate);
       ctx.beginPath();

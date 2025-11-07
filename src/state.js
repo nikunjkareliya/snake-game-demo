@@ -1,5 +1,5 @@
 import { Direction, COLOR_A, COLOR_B, DEFAULT_SKIN_ID, SKINS, getSkinById, BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX } from './config.js';
-import { getStoredNumber, getStoredJSON, randomInt, setStoredJSON } from './utils.js';
+import { getStoredNumber, getStoredJSON, setStoredJSON } from './utils.js';
 
 // Get all skin IDs that are free (price: 0)
 const allFreeSkinIds = SKINS.filter(skin => skin.price === 0).map(skin => skin.id);
