@@ -69,6 +69,14 @@ export const COLOR_WHITE = '#ffffff';
 export const COLOR_BLACK = '#000000';
 export const COLOR_TONGUE = '#ff3366';
 
+// Skin rendering constants
+export const SHINE_OVERLAY_OPACITY = 0.3;
+export const STAR_GOLDEN_ANGLE = 137.5; // degrees
+export const STAR_ANGLE_OFFSET = 60; // degrees
+export const CIRCUIT_NODE_SHADOW_BLUR = 8; // px
+export const FACET_ALTERNATE_COLOR = 'rgba(255, 255, 255, 0.6)';
+export const SPARKLE_SHADOW_BLUR = 10; // px
+
 // Debug
 export const DEBUG = false;
 // Particle rendering

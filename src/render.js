@@ -17,8 +17,16 @@ import {
   COLOR_WHITE,
   COLOR_BLACK,
   COLOR_TONGUE,
+  COLOR_A,
+  COLOR_B,
   PARTICLE_CULL_MARGIN,
-  GROW_ANIMATION_DURATION
+  GROW_ANIMATION_DURATION,
+  SHINE_OVERLAY_OPACITY,
+  STAR_GOLDEN_ANGLE,
+  STAR_ANGLE_OFFSET,
+  CIRCUIT_NODE_SHADOW_BLUR,
+  FACET_ALTERNATE_COLOR,
+  SPARKLE_SHADOW_BLUR
 } from './config.js';
 
 function drawGrid() {
@@ -311,6 +319,19 @@ function drawMouthAndTongue(head, nx, ny, px, py) {
   ctx.fill();
 }
 
+// Skin renderer registry
+const SKIN_RENDERERS = new Map([
+  ['neon', drawGradientSkin],
+  ['electric', drawElectricSkin],
+  ['inferno', drawInfernoSkin],
+  ['holographic', drawHolographicSkin],
+  ['python', drawPythonSkin],
+  ['cosmic', drawCosmicSkin],
+  ['circuit', drawCircuitSkin],
+  ['crystal', drawCrystalSkin],
+  ['phantom', drawPhantomSkin]
+]);
+
 function drawSnake() {
   // Convert grid positions to pixel coordinates
   const points = state.snake
@@ -339,27 +360,11 @@ function drawSnake() {
     ny = dy / len;
   }
 
-  // Dispatch to appropriate skin renderer based on skin type
+  // Dispatch to appropriate skin renderer using registry
   const skin = state.currentSkin;
-  if (!skin || skin.type === 'gradient') {
-    drawGradientSkin(points, growProgress, skin);
-  } else if (skin.type === 'animated') {
-    if (skin.id === 'electric') drawElectricSkin(points, growProgress, skin);
-    else if (skin.id === 'inferno') drawInfernoSkin(points, growProgress, skin);
-    else if (skin.id === 'holographic') drawHolographicSkin(points, growProgress, skin);
-    else drawGradientSkin(points, growProgress, skin); // fallback
-  } else if (skin.type === 'pattern') {
-    if (skin.id === 'python') drawPythonSkin(points, growProgress, skin);
-    else if (skin.id === 'cosmic') drawCosmicSkin(points, growProgress, skin);
-    else if (skin.id === 'circuit') drawCircuitSkin(points, growProgress, skin);
-    else drawGradientSkin(points, growProgress, skin); // fallback
-  } else if (skin.type === 'special') {
-    if (skin.id === 'crystal') drawCrystalSkin(points, growProgress, skin);
-    else if (skin.id === 'phantom') drawPhantomSkin(points, growProgress, skin);
-    else drawGradientSkin(points, growProgress, skin); // fallback
-  } else {
-    drawGradientSkin(points, growProgress, skin); // default fallback
-  }
+  const renderer = skin ? SKIN_RENDERERS.get(skin.id) : null;
+  const skinRenderer = renderer || drawGradientSkin;
+  skinRenderer(points, growProgress, skin);
 
   drawSnakeHead(head, nx, ny);
 }
@@ -424,6 +429,37 @@ function drawGradientSkin(points, growProgress, skin) {
   }
 }
 
+// Helper: Draw lightning bolts between segments for electric skin
+function drawLightningBolts(points, skin) {
+  const { accent } = skin.colors;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  
+  for (let i = 0; i < points.length - 1; i++) {
+    const boltPhase = (state.elapsedSec * skin.animation.speed + i * 0.7) % 1;
+    if (boltPhase < 0.3) { // Show bolt 30% of the time
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const midX = (p1.x + p2.x) / 2;
+      const midY = (p1.y + p2.y) / 2;
+
+      // Time-based pseudo-random offset for lightning effect
+      const timeOffset = state.elapsedSec * 5 + i * 1.3;
+      const offsetX = (Math.sin(timeOffset * 2.7) * 0.5) * BODY_RADIUS * 0.8;
+      const offsetY = (Math.cos(timeOffset * 3.1) * 0.5) * BODY_RADIUS * 0.8;
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(midX + offsetX, midY + offsetY);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 // ⚡ Electric Skin - Crackling lightning bolts
 function drawElectricSkin(points, growProgress, skin) {
   const { primary, secondary, accent, glow } = skin.colors;
@@ -456,37 +492,31 @@ function drawElectricSkin(points, growProgress, skin) {
   ctx.stroke();
 
   // Lightning bolts between segments (animated)
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 2;
-  for (let i = 0; i < points.length - 1; i++) {
-    // Random lightning bolts based on time
-    const boltPhase = (state.elapsedSec * skin.animation.speed + i * 0.7) % 1;
-    if (boltPhase < 0.3) { // Show bolt 30% of the time
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const midX = (p1.x + p2.x) / 2;
-      const midY = (p1.y + p2.y) / 2;
-
-      // Add random offset for lightning effect
-      const offsetX = (Math.random() - 0.5) * BODY_RADIUS * 0.8;
-      const offsetY = (Math.random() - 0.5) * BODY_RADIUS * 0.8;
-
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(midX + offsetX, midY + offsetY);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-    }
-  }
-  ctx.restore();
+  drawLightningBolts(points, skin);
 
   // Energy core
   ctx.strokeStyle = accent;
   ctx.lineWidth = BODY_RADIUS * 0.3;
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
+}
+
+// Helper: Draw flame particles for inferno skin
+function drawFlameParticles(points, skin) {
+  const { accent, secondary } = skin.colors;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  
+  for (let i = 0; i < points.length; i += 2) {
+    const p = points[i];
+    const wave = Math.sin(state.elapsedSec * 3 + i * 0.5) * BODY_RADIUS * 0.6;
+    ctx.fillStyle = i % 4 === 0 ? accent : secondary;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y + wave, BODY_RADIUS * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 // 🔥 Inferno Skin - Animated flames
@@ -538,18 +568,7 @@ function drawInfernoSkin(points, growProgress, skin) {
   ctx.restore();
 
   // Flame particles on segments
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < points.length; i += 2) {
-    const p = points[i];
-    const wave = Math.sin(state.elapsedSec * 3 + i * 0.5) * BODY_RADIUS * 0.6;
-    ctx.fillStyle = i % 4 === 0 ? accent : secondary;
-    ctx.globalAlpha = 0.6;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y + wave, BODY_RADIUS * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
+  drawFlameParticles(points, skin);
 }
 
 // 🌈 Holographic Skin - Rainbow color-shifting
@@ -632,7 +651,7 @@ function drawPythonSkin(points, growProgress, skin) {
   }
 
   // Add shine
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.strokeStyle = `rgba(255, 255, 255, ${SHINE_OVERLAY_OPACITY})`;
   ctx.lineWidth = BODY_RADIUS * 0.15;
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
@@ -673,11 +692,18 @@ function drawCosmicSkin(points, growProgress, skin) {
   ctx.restore();
 
   // Draw twinkling stars on segments
+  drawTwinklingStars(points, skin);
+}
+
+// Helper: Draw twinkling stars for cosmic skin
+function drawTwinklingStars(points, skin) {
+  const { stars } = skin.colors;
+  
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
     // Generate pseudo-random star positions based on segment index
     for (let j = 0; j < 3; j++) {
-      const angle = (i * 137.5 + j * 60) * Math.PI / 180; // Golden angle distribution
+      const angle = (i * STAR_GOLDEN_ANGLE + j * STAR_ANGLE_OFFSET) * Math.PI / 180;
       const dist = (BODY_RADIUS * 0.6) * ((i * 7 + j * 13) % 10) / 10;
       const sx = p.x + Math.cos(angle) * dist;
       const sy = p.y + Math.sin(angle) * dist;
@@ -742,7 +768,7 @@ function drawCircuitSkin(points, growProgress, skin) {
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = CIRCUIT_NODE_SHADOW_BLUR;
     ctx.shadowColor = nodes;
     ctx.fillStyle = nodes;
     ctx.globalAlpha = nodePulse;
@@ -783,33 +809,46 @@ function drawCrystalSkin(points, growProgress, skin) {
   ctx.stroke();
 
   // Draw facets on segments
+  drawCrystalFacets(points, growProgress, skin);
+
+  // Sparkle effects
+  drawCrystalSparkles(points, skin);
+}
+
+// Helper: Draw facets for crystal skin
+function drawCrystalFacets(points, growProgress, skin) {
+  const { highlight } = skin.colors;
+  
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
     const scale = (i === points.length - 1 && state.growTimer > 0) ? growProgress : 1;
 
-    // Draw faceted appearance
     for (let f = 0; f < skin.effect.facetCount; f++) {
       const angle = (f / skin.effect.facetCount) * Math.PI * 2;
       const facetDist = BODY_RADIUS * 0.5 * scale;
       const fx = p.x + Math.cos(angle) * facetDist * 0.3;
       const fy = p.y + Math.sin(angle) * facetDist * 0.3;
 
-      ctx.fillStyle = f % 2 === 0 ? highlight : 'rgba(255, 255, 255, 0.6)';
+      ctx.fillStyle = f % 2 === 0 ? highlight : FACET_ALTERNATE_COLOR;
       ctx.beginPath();
       ctx.arc(fx, fy, BODY_RADIUS * 0.15, 0, Math.PI * 2);
       ctx.fill();
     }
   }
+}
 
-  // Sparkle effects (random)
+// Helper: Draw sparkles for crystal skin
+function drawCrystalSparkles(points, skin) {
+  const { sparkle } = skin.colors;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  
   for (let i = 0; i < points.length; i++) {
     const sparklePhase = (state.elapsedSec * 2 + i * 0.7) % 1;
     if (sparklePhase < skin.effect.sparkleRate) {
       const p = points[i];
       ctx.fillStyle = sparkle;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = SPARKLE_SHADOW_BLUR;
       ctx.shadowColor = sparkle;
       ctx.globalAlpha = 1 - (sparklePhase / skin.effect.sparkleRate);
       ctx.beginPath();
@@ -869,8 +908,15 @@ function drawPhantomSkin(points, growProgress, skin) {
   }
 
   // Floating wispy effects
+  drawPhantomWispyEffects(points, skin);
+}
+
+// Helper: Draw wispy effects for phantom skin
+function drawPhantomWispyEffects(points, skin) {
+  const { glow } = skin.colors;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  
   for (let i = 0; i < points.length; i += 2) {
     const p = points[i];
     const wave = Math.sin(state.elapsedSec * 2 + i * 0.7) * BODY_RADIUS * 0.5;

@@ -260,7 +260,7 @@ function renderSkinCard(skin, owned) {
     `;
 }
 
-function tryBuySkin(id, startGame, hideOverlayCb) {
+function tryBuySkin(id, startGame, hideOverlayCb, options = {}) {
     const skin = getSkinById(id);
     if (!skin) return;
     const owned = new Set(state.ownedSkins || []);
@@ -287,7 +287,7 @@ function tryBuySkin(id, startGame, hideOverlayCb) {
     equipSkin(id, startGame, hideOverlayCb, { silent: true });
 
     // Rebuild UI to reflect changes
-    if (!arguments[3]?.silent) {
+    if (!options?.silent) {
         rebuildCustomizeUI(startGame, hideOverlayCb);
     }
 }
