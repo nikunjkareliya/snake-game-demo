@@ -272,21 +272,60 @@ body {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   font-size: 16px;
-  transition: background-color 0.2s, box-shadow 0.2s;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease, opacity 0.12s ease;
+  will-change: transform, box-shadow;
 }
 
-.btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+/* Base state: no glow unless neon */
+.btn:not(.neon) {
+  box-shadow: none;
 }
 
-.btn.neon {
+/* Regular button hover/focus: subtle glow */
+.btn:not(.neon):hover,
+.btn:not(.neon):focus,
+.btn:not(.neon):focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateZ(0) scale(1.04);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.45), 0 0 18px rgba(255,255,255,0.08);
   color: var(--neon-cyan);
   border-color: var(--neon-cyan);
-  text-shadow:
-    0 0 6px rgba(0, 234, 255, 0.9),
-    0 0 16px rgba(0, 234, 255, 0.7),
-    0 0 32px rgba(0, 234, 255, 0.35);
-    box-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+}
+
+/* Neon button: only glow on hover/focus (not by default) */
+.btn.neon {
+  /* Play button: neutral text color by default (override global .neon pink)
+     Keep neutral appearance and avoid any glow unless hovered; even on
+     hover we will avoid heavy glow for Play specifically per request. */
+  color: var(--text) !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Neon button hover/focus: enhanced glow */
+.btn.neon:hover,
+.btn.neon:focus,
+.btn.neon:focus-visible {
+  outline: none;
+  transform: translateZ(0) scale(1.06);
+  /* Change text/border to cyan on hover, but remove heavy glow for Play */
+  box-shadow: none;
+  background: rgba(0, 234, 255, 0.04);
+  color: var(--neon-cyan) !important;
+  border-color: var(--neon-cyan);
+  text-shadow: none !important;
+}
+
+/* Keep disabled buttons visually distinct and non-interactive */
+.btn[disabled],
+.btn.disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
 }
 
 .btn.btn-small {
