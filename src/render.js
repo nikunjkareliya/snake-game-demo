@@ -319,6 +319,19 @@ function drawMouthAndTongue(head, nx, ny, px, py) {
   ctx.fill();
 }
 
+// Skin renderer registry
+const SKIN_RENDERERS = new Map([
+  ['neon', drawGradientSkin],
+  ['electric', drawElectricSkin],
+  ['inferno', drawInfernoSkin],
+  ['holographic', drawHolographicSkin],
+  ['python', drawPythonSkin],
+  ['cosmic', drawCosmicSkin],
+  ['circuit', drawCircuitSkin],
+  ['crystal', drawCrystalSkin],
+  ['phantom', drawPhantomSkin]
+]);
+
 function drawSnake() {
   // Convert grid positions to pixel coordinates
   const points = state.snake
@@ -347,27 +360,11 @@ function drawSnake() {
     ny = dy / len;
   }
 
-  // Dispatch to appropriate skin renderer based on skin type
+  // Dispatch to appropriate skin renderer using registry
   const skin = state.currentSkin;
-  if (!skin || skin.type === 'gradient') {
-    drawGradientSkin(points, growProgress, skin);
-  } else if (skin.type === 'animated') {
-    if (skin.id === 'electric') drawElectricSkin(points, growProgress, skin);
-    else if (skin.id === 'inferno') drawInfernoSkin(points, growProgress, skin);
-    else if (skin.id === 'holographic') drawHolographicSkin(points, growProgress, skin);
-    else drawGradientSkin(points, growProgress, skin); // fallback
-  } else if (skin.type === 'pattern') {
-    if (skin.id === 'python') drawPythonSkin(points, growProgress, skin);
-    else if (skin.id === 'cosmic') drawCosmicSkin(points, growProgress, skin);
-    else if (skin.id === 'circuit') drawCircuitSkin(points, growProgress, skin);
-    else drawGradientSkin(points, growProgress, skin); // fallback
-  } else if (skin.type === 'special') {
-    if (skin.id === 'crystal') drawCrystalSkin(points, growProgress, skin);
-    else if (skin.id === 'phantom') drawPhantomSkin(points, growProgress, skin);
-    else drawGradientSkin(points, growProgress, skin); // fallback
-  } else {
-    drawGradientSkin(points, growProgress, skin); // default fallback
-  }
+  const renderer = skin ? SKIN_RENDERERS.get(skin.id) : null;
+  const skinRenderer = renderer || drawGradientSkin;
+  skinRenderer(points, growProgress, skin);
 
   drawSnakeHead(head, nx, ny);
 }
@@ -477,9 +474,10 @@ function drawElectricSkin(points, growProgress, skin) {
       const midX = (p1.x + p2.x) / 2;
       const midY = (p1.y + p2.y) / 2;
 
-      // Add random offset for lightning effect
-      const offsetX = (Math.random() - 0.5) * BODY_RADIUS * 0.8;
-      const offsetY = (Math.random() - 0.5) * BODY_RADIUS * 0.8;
+      // Time-based pseudo-random offset for lightning effect
+      const timeOffset = state.elapsedSec * 5 + i * 1.3;
+      const offsetX = (Math.sin(timeOffset * 2.7) * 0.5) * BODY_RADIUS * 0.8;
+      const offsetY = (Math.cos(timeOffset * 3.1) * 0.5) * BODY_RADIUS * 0.8;
 
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
