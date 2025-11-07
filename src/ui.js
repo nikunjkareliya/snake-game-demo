@@ -161,7 +161,18 @@ document.addEventListener('showGameOver', (e) => {
  */
 export function showCustomize(startGame, hideOverlayCb) {
     overlay.classList.add('visible');
+    rebuildCustomizeUI(startGame, hideOverlayCb);
+}
+
+/**
+ * Rebuild the customize UI and reattach all event listeners
+ */
+function rebuildCustomizeUI(startGame, hideOverlayCb) {
     overlay.innerHTML = buildCustomizeHTML();
+
+    // Update currency display
+    const currencyEl = document.getElementById('lobbyCurrency');
+    if (currencyEl) currencyEl.textContent = state.currency;
 
     // Wire back button
     const backBtn = document.getElementById('backToLobbyBtn');
@@ -173,8 +184,8 @@ export function showCustomize(startGame, hideOverlayCb) {
         const buyBtn = card.querySelector('.buyBtn');
         const equipBtn = card.querySelector('.equipBtn');
 
-        if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(id));
-        if (equipBtn) equipBtn.addEventListener('click', () => equipSkin(id));
+        if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(id, startGame, hideOverlayCb));
+        if (equipBtn) equipBtn.addEventListener('click', () => equipSkin(id, startGame, hideOverlayCb));
     });
 }
 
@@ -205,10 +216,40 @@ function renderSkinCard(skin, owned) {
     const actionClass = isOwned ? (isSelected ? 'btn' : 'btn neon equipBtn') : 'btn neon buyBtn';
     const disabled = isSelected ? 'disabled' : '';
 
-    const gradientStyle = `background: linear-gradient(90deg, ${skin.head}, ${skin.tail});`;
+    // Generate preview style based on skin type
+    let previewStyle = '';
+    if (skin.type === 'gradient') {
+        previewStyle = `background: linear-gradient(90deg, ${skin.head}, ${skin.tail});`;
+    } else if (skin.type === 'animated') {
+        // Show representative colors for animated skins
+        if (skin.id === 'electric') {
+            previewStyle = `background: linear-gradient(135deg, ${skin.colors.primary}, ${skin.colors.secondary});`;
+        } else if (skin.id === 'inferno') {
+            previewStyle = `background: linear-gradient(0deg, ${skin.colors.primary}, ${skin.colors.accent});`;
+        } else if (skin.id === 'holographic') {
+            previewStyle = `background: linear-gradient(90deg, #ff0080, #ff8c00, #40ff00, #00ffff, #8000ff, #ff0080);`;
+        }
+    } else if (skin.type === 'pattern') {
+        // Show representative pattern colors
+        if (skin.id === 'python') {
+            previewStyle = `background: repeating-linear-gradient(90deg, ${skin.colors.primary} 0px, ${skin.colors.primary} 20px, ${skin.colors.secondary} 20px, ${skin.colors.secondary} 40px);`;
+        } else if (skin.id === 'cosmic') {
+            previewStyle = `background: radial-gradient(circle at 30% 50%, ${skin.colors.nebula1}, ${skin.colors.background});`;
+        } else if (skin.id === 'circuit') {
+            previewStyle = `background: ${skin.colors.primary}; border: 2px solid ${skin.colors.lines};`;
+        }
+    } else if (skin.type === 'special') {
+        // Show representative colors for special skins
+        if (skin.id === 'crystal') {
+            previewStyle = `background: linear-gradient(135deg, ${skin.colors.primary}, ${skin.colors.secondary}); position: relative;`;
+        } else if (skin.id === 'phantom') {
+            previewStyle = `background: radial-gradient(circle, ${skin.colors.inner}, ${skin.colors.primary}); opacity: 0.85;`;
+        }
+    }
+
     return `
       <div class="skin-card glass" data-skin-id="${skin.id}">
-        <div class="skin-preview" style="${gradientStyle}"></div>
+        <div class="skin-preview" style="${previewStyle}"></div>
         <div class="skin-name">${skin.name}</div>
         <div class="skin-actions">
           ${isOwned
@@ -219,51 +260,64 @@ function renderSkinCard(skin, owned) {
     `;
 }
 
-function tryBuySkin(id) {
+function tryBuySkin(id, startGame, hideOverlayCb, options = {}) {
     const skin = getSkinById(id);
     if (!skin) return;
     const owned = new Set(state.ownedSkins || []);
-    if (owned.has(id) || skin.price === 0) return;
-    if (state.currency < skin.price) {
+
+    // If already owned, just return (don't block free skins here)
+    if (owned.has(id)) return;
+
+    // Check if user has enough currency (skip for free skins)
+    if (skin.price > 0 && state.currency < skin.price) {
         // Optional: flash not enough currency
         return;
     }
-    state.currency -= skin.price;
+
+    // Deduct currency and add to owned
+    if (skin.price > 0) {
+        state.currency -= skin.price;
+    }
     owned.add(id);
     state.ownedSkins = Array.from(owned);
     setStoredValue('neonSnakeCurrency', state.currency);
     setStoredJSON('neonSnakeOwnedSkins', state.ownedSkins);
+
     // Auto-equip on purchase
-    equipSkin(id, { silent: true });
+    equipSkin(id, startGame, hideOverlayCb, { silent: true });
+
     // Rebuild UI to reflect changes
-    overlay.innerHTML = buildCustomizeHTML();
-    // Reattach listeners
-    overlay.querySelectorAll('[data-skin-id]').forEach(card => {
-        const sid = card.getAttribute('data-skin-id');
-        const buyBtn = card.querySelector('.buyBtn');
-        const equipBtn = card.querySelector('.equipBtn');
-        if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(sid));
-        if (equipBtn) equipBtn.addEventListener('click', () => equipSkin(sid));
-    });
+    if (!options?.silent) {
+        rebuildCustomizeUI(startGame, hideOverlayCb);
+    }
 }
 
-function equipSkin(id, { silent } = {}) {
+function equipSkin(id, startGame, hideOverlayCb, options = {}) {
     const skin = getSkinById(id);
     if (!skin) return;
+
     const owned = new Set(state.ownedSkins || []);
-    if (!owned.has(id) && skin.price > 0) return; // guard
+
+    // Allow equipping if owned OR if it's free
+    if (!owned.has(id) && skin.price > 0) {
+        // Not owned and not free, can't equip
+        return;
+    }
+
+    // For free skins, add to owned if not already there
+    if (skin.price === 0 && !owned.has(id)) {
+        owned.add(id);
+        state.ownedSkins = Array.from(owned);
+        setStoredJSON('neonSnakeOwnedSkins', state.ownedSkins);
+    }
+
+    // Equip the skin
     state.selectedSkinId = id;
-    state.currentSkin = { head: skin.head, tail: skin.tail };
+    state.currentSkin = skin; // Store full skin object for advanced rendering
     setStoredJSON('neonSnakeSelectedSkin', id);
-    if (!silent) {
-        // Update the UI card state
-        overlay.innerHTML = buildCustomizeHTML();
-        overlay.querySelectorAll('[data-skin-id]').forEach(card => {
-            const sid = card.getAttribute('data-skin-id');
-            const buyBtn = card.querySelector('.buyBtn');
-            const equipBtn = card.querySelector('.equipBtn');
-            if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(sid));
-            if (equipBtn) equipBtn.addEventListener('click', () => equipSkin(sid));
-        });
+
+    // Rebuild UI unless silent mode
+    if (!options.silent) {
+        rebuildCustomizeUI(startGame, hideOverlayCb);
     }
 }

@@ -69,6 +69,14 @@ export const COLOR_WHITE = '#ffffff';
 export const COLOR_BLACK = '#000000';
 export const COLOR_TONGUE = '#ff3366';
 
+// Skin rendering constants
+export const SHINE_OVERLAY_OPACITY = 0.3;
+export const STAR_GOLDEN_ANGLE = 137.5; // degrees
+export const STAR_ANGLE_OFFSET = 60; // degrees
+export const CIRCUIT_NODE_SHADOW_BLUR = 8; // px
+export const FACET_ALTERNATE_COLOR = 'rgba(255, 255, 255, 0.6)';
+export const SPARKLE_SHADOW_BLUR = 10; // px
+
 // Debug
 export const DEBUG = false;
 // Particle rendering
@@ -76,15 +84,167 @@ export const PARTICLE_CULL_MARGIN = 50; // px beyond viewport to still render
 
 // Skins
 // Define available snake skins for the customization system.
-// Each skin uses a head/tail gradient pair and a price in coins.
+// Skin types: 'gradient' | 'pattern' | 'animated' | 'special'
+// Tiers for future pricing: 'basic' (0-90) | 'pattern' (100-150) | 'special' (150-250)
 export const DEFAULT_SKIN_ID = 'neon';
 export const SKINS = [
-    { id: 'neon',     name: 'Neon',      head: COLOR_B,       tail: COLOR_A,       price: 0 },
-    { id: 'aqua',     name: 'Aqua',      head: '#00ffd1',     tail: '#0066ff',     price: 50 },
-    { id: 'sunset',   name: 'Sunset',    head: '#ff4d88',     tail: '#ffb84d',     price: 75 },
-    { id: 'lime',     name: 'Lime',      head: '#ccff33',     tail: '#33ff99',     price: 60 },
-    { id: 'violet',   name: 'Violet',    head: '#b366ff',     tail: '#ff66cc',     price: 80 },
-    { id: 'ember',    name: 'Ember',     head: '#ff6a00',     tail: '#ffd000',     price: 90 },
+    // Basic gradient (default, free)
+    {
+        id: 'neon',
+        name: 'Neon',
+        type: 'gradient',
+        tier: 'basic',
+        price: 0,
+        head: COLOR_B,
+        tail: COLOR_A
+    },
+    // Animated skins
+    {
+        id: 'electric',
+        name: 'Electric',
+        type: 'animated',
+        tier: 'special',
+        price: 0, // Free for now
+        colors: {
+            primary: '#00ffff',
+            secondary: '#0099ff',
+            accent: '#ffffff',
+            glow: '#00ddff'
+        },
+        animation: {
+            speed: 3.0,
+            boltFrequency: 0.15, // seconds between lightning bolts
+            boltDuration: 0.08    // seconds bolt stays visible
+        }
+    },
+    {
+        id: 'inferno',
+        name: 'Inferno',
+        type: 'animated',
+        tier: 'special',
+        price: 0,
+        colors: {
+            primary: '#ff4500',
+            secondary: '#ff8c00',
+            accent: '#ffd700',
+            core: '#ffff00'
+        },
+        animation: {
+            speed: 2.5,
+            flameHeight: 0.6,
+            flickerSpeed: 15
+        }
+    },
+    {
+        id: 'holographic',
+        name: 'Holographic',
+        type: 'animated',
+        tier: 'special',
+        price: 0,
+        colors: {
+            // HSL-based rainbow shift
+            hueShift: true,
+            saturation: 1.0,
+            lightness: 0.6
+        },
+        animation: {
+            speed: 1.0, // hue rotation speed
+            shimmerSpeed: 8.0
+        }
+    },
+    // Pattern skins
+    {
+        id: 'python',
+        name: 'Python',
+        type: 'pattern',
+        tier: 'pattern',
+        price: 0,
+        colors: {
+            primary: '#000000',
+            secondary: '#ffff00',
+            accent: '#ff0000'
+        },
+        pattern: {
+            type: 'stripes',
+            stripeWidth: 2, // segments per stripe
+            border: true
+        }
+    },
+    {
+        id: 'cosmic',
+        name: 'Cosmic',
+        type: 'pattern',
+        tier: 'special',
+        price: 0,
+        colors: {
+            background: '#0a0a2e',
+            nebula1: '#7b2cbf',
+            nebula2: '#240046',
+            stars: '#ffffff'
+        },
+        pattern: {
+            type: 'starfield',
+            starCount: 40,
+            twinkle: true
+        }
+    },
+    {
+        id: 'circuit',
+        name: 'Circuit',
+        type: 'pattern',
+        tier: 'special',
+        price: 0,
+        colors: {
+            primary: '#0d1117',
+            lines: '#00ff41',
+            nodes: '#00ffff',
+            glow: '#00ff41'
+        },
+        pattern: {
+            type: 'circuit',
+            lineWidth: 2,
+            nodeSize: 3,
+            pulseSpeed: 2.0
+        }
+    },
+    // Special skins
+    {
+        id: 'crystal',
+        name: 'Crystal',
+        type: 'special',
+        tier: 'special',
+        price: 0,
+        colors: {
+            primary: '#e0f7ff',
+            secondary: '#a8e6ff',
+            highlight: '#ffffff',
+            sparkle: '#00ffff'
+        },
+        effect: {
+            type: 'faceted',
+            facetCount: 6,
+            sparkleRate: 0.2
+        }
+    },
+    {
+        id: 'phantom',
+        name: 'Phantom',
+        type: 'special',
+        tier: 'special',
+        price: 0,
+        colors: {
+            primary: '#b19cd9',
+            secondary: '#7b68ee',
+            glow: '#da70d6',
+            inner: '#e6e6fa'
+        },
+        effect: {
+            type: 'ghost',
+            opacity: 0.6,
+            innerGlow: true,
+            smokeTrail: true
+        }
+    }
 ];
 
 // Utility to fetch a skin object by id
