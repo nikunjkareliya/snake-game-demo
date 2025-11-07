@@ -85,8 +85,19 @@ export function updateParticles(dt) {
 function spawnMotionTrail() {
   if (state.snake.length === 0) return;
   const head = state.snake[0];
-  const centerX = head.x * CELL_SIZE + CELL_SIZE / 2;
-  const centerY = head.y * CELL_SIZE + CELL_SIZE / 2;
+  
+  // Use interpolated position for smoother trail placement
+  let centerX = head.x * CELL_SIZE + CELL_SIZE / 2;
+  let centerY = head.y * CELL_SIZE + CELL_SIZE / 2;
+  
+  if (state.prevSnake && state.prevSnake[0] && state.moveProgress < 1) {
+    const prevHead = state.prevSnake[0];
+    const prevX = prevHead.x * CELL_SIZE + CELL_SIZE / 2;
+    const prevY = prevHead.y * CELL_SIZE + CELL_SIZE / 2;
+    const alpha = state.moveProgress;
+    centerX = prevX + (centerX - prevX) * alpha;
+    centerY = prevY + (centerY - prevY) * alpha;
+  }
   
   addParticle({
     x: centerX + (Math.random() - 0.5) * CELL_SIZE * 0.5,

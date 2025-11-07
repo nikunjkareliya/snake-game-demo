@@ -41,9 +41,16 @@ function tick(now) {
   }
 
   if (state.gameState === 'playing') {
-    if (now - state.lastTickAt >= state.speedMs) {
+    // Update interpolation progress
+    const timeSinceTick = now - state.lastTickAt;
+    state.moveProgress = Math.min(1, timeSinceTick / state.speedMs);
+
+    if (timeSinceTick >= state.speedMs) {
       state.lastTickAt = now;
+      // Store previous positions before updating
+      state.prevSnake = state.snake.map(seg => ({ ...seg }));
       stepSnake();
+      state.moveProgress = 0;
     }
   } else if (state.gameState === 'dying') {
     state.deathTimer -= dt;

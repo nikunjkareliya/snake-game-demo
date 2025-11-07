@@ -333,12 +333,23 @@ const SKIN_RENDERERS = new Map([
 ]);
 
 function drawSnake() {
-  // Convert grid positions to pixel coordinates
-  const points = state.snake
-    .map(seg => ({
-      x: seg.x * CELL_SIZE + CELL_SIZE / 2,
-      y: seg.y * CELL_SIZE + CELL_SIZE / 2
-    }));
+  // Convert grid positions to pixel coordinates with interpolation
+  const points = state.snake.map((seg, i) => {
+    let x = seg.x * CELL_SIZE + CELL_SIZE / 2;
+    let y = seg.y * CELL_SIZE + CELL_SIZE / 2;
+
+    // Interpolate between previous and current position
+    if (state.prevSnake && state.prevSnake[i] && state.moveProgress < 1) {
+      const prev = state.prevSnake[i];
+      const prevX = prev.x * CELL_SIZE + CELL_SIZE / 2;
+      const prevY = prev.y * CELL_SIZE + CELL_SIZE / 2;
+      const alpha = state.moveProgress;
+      x = prevX + (x - prevX) * alpha;
+      y = prevY + (y - prevY) * alpha;
+    }
+
+    return { x, y };
+  });
 
   if (points.length === 0) return;
 

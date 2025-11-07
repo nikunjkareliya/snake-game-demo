@@ -26,6 +26,8 @@ export const state = {
     selectedSkinId: initialSkin?.id || DEFAULT_SKIN_ID,
     currentSkin: initialSkin || { head: COLOR_B, tail: COLOR_A },
     snake: [],
+    prevSnake: [], // Previous snake positions for interpolation
+    moveProgress: 0, // 0 to 1, how far between prevSnake and snake
     direction: Direction.Right,
     nextDirection: Direction.Right,
     food: { x: 10, y: 10 },

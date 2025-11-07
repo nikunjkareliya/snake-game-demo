@@ -19,6 +19,10 @@ export function resetGame() {
     { x: startX - 2, y: startY }
   ];
   
+  // Initialize previous positions for smooth interpolation
+  state.prevSnake = state.snake.map(seg => ({ ...seg }));
+  state.moveProgress = 0;
+  
   state.direction = Direction.Right;
   state.nextDirection = Direction.Right;
   spawnFood();
