@@ -429,6 +429,37 @@ function drawGradientSkin(points, growProgress, skin) {
   }
 }
 
+// Helper: Draw lightning bolts between segments for electric skin
+function drawLightningBolts(points, skin) {
+  const { accent } = skin.colors;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  
+  for (let i = 0; i < points.length - 1; i++) {
+    const boltPhase = (state.elapsedSec * skin.animation.speed + i * 0.7) % 1;
+    if (boltPhase < 0.3) { // Show bolt 30% of the time
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const midX = (p1.x + p2.x) / 2;
+      const midY = (p1.y + p2.y) / 2;
+
+      // Time-based pseudo-random offset for lightning effect
+      const timeOffset = state.elapsedSec * 5 + i * 1.3;
+      const offsetX = (Math.sin(timeOffset * 2.7) * 0.5) * BODY_RADIUS * 0.8;
+      const offsetY = (Math.cos(timeOffset * 3.1) * 0.5) * BODY_RADIUS * 0.8;
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(midX + offsetX, midY + offsetY);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 // ⚡ Electric Skin - Crackling lightning bolts
 function drawElectricSkin(points, growProgress, skin) {
   const { primary, secondary, accent, glow } = skin.colors;
@@ -461,38 +492,31 @@ function drawElectricSkin(points, growProgress, skin) {
   ctx.stroke();
 
   // Lightning bolts between segments (animated)
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 2;
-  for (let i = 0; i < points.length - 1; i++) {
-    // Random lightning bolts based on time
-    const boltPhase = (state.elapsedSec * skin.animation.speed + i * 0.7) % 1;
-    if (boltPhase < 0.3) { // Show bolt 30% of the time
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const midX = (p1.x + p2.x) / 2;
-      const midY = (p1.y + p2.y) / 2;
-
-      // Time-based pseudo-random offset for lightning effect
-      const timeOffset = state.elapsedSec * 5 + i * 1.3;
-      const offsetX = (Math.sin(timeOffset * 2.7) * 0.5) * BODY_RADIUS * 0.8;
-      const offsetY = (Math.cos(timeOffset * 3.1) * 0.5) * BODY_RADIUS * 0.8;
-
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(midX + offsetX, midY + offsetY);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-    }
-  }
-  ctx.restore();
+  drawLightningBolts(points, skin);
 
   // Energy core
   ctx.strokeStyle = accent;
   ctx.lineWidth = BODY_RADIUS * 0.3;
   beginRoundedPath(points, Math.round(BODY_RADIUS * 0.9));
   ctx.stroke();
+}
+
+// Helper: Draw flame particles for inferno skin
+function drawFlameParticles(points, skin) {
+  const { accent, secondary } = skin.colors;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  
+  for (let i = 0; i < points.length; i += 2) {
+    const p = points[i];
+    const wave = Math.sin(state.elapsedSec * 3 + i * 0.5) * BODY_RADIUS * 0.6;
+    ctx.fillStyle = i % 4 === 0 ? accent : secondary;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y + wave, BODY_RADIUS * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 // 🔥 Inferno Skin - Animated flames
@@ -544,18 +568,7 @@ function drawInfernoSkin(points, growProgress, skin) {
   ctx.restore();
 
   // Flame particles on segments
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < points.length; i += 2) {
-    const p = points[i];
-    const wave = Math.sin(state.elapsedSec * 3 + i * 0.5) * BODY_RADIUS * 0.6;
-    ctx.fillStyle = i % 4 === 0 ? accent : secondary;
-    ctx.globalAlpha = 0.6;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y + wave, BODY_RADIUS * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
+  drawFlameParticles(points, skin);
 }
 
 // 🌈 Holographic Skin - Rainbow color-shifting
@@ -679,11 +692,18 @@ function drawCosmicSkin(points, growProgress, skin) {
   ctx.restore();
 
   // Draw twinkling stars on segments
+  drawTwinklingStars(points, skin);
+}
+
+// Helper: Draw twinkling stars for cosmic skin
+function drawTwinklingStars(points, skin) {
+  const { stars } = skin.colors;
+  
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
     // Generate pseudo-random star positions based on segment index
     for (let j = 0; j < 3; j++) {
-      const angle = (i * STAR_GOLDEN_ANGLE + j * STAR_ANGLE_OFFSET) * Math.PI / 180; // Golden angle distribution
+      const angle = (i * STAR_GOLDEN_ANGLE + j * STAR_ANGLE_OFFSET) * Math.PI / 180;
       const dist = (BODY_RADIUS * 0.6) * ((i * 7 + j * 13) % 10) / 10;
       const sx = p.x + Math.cos(angle) * dist;
       const sy = p.y + Math.sin(angle) * dist;
@@ -789,11 +809,20 @@ function drawCrystalSkin(points, growProgress, skin) {
   ctx.stroke();
 
   // Draw facets on segments
+  drawCrystalFacets(points, growProgress, skin);
+
+  // Sparkle effects
+  drawCrystalSparkles(points, skin);
+}
+
+// Helper: Draw facets for crystal skin
+function drawCrystalFacets(points, growProgress, skin) {
+  const { highlight } = skin.colors;
+  
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
     const scale = (i === points.length - 1 && state.growTimer > 0) ? growProgress : 1;
 
-    // Draw faceted appearance
     for (let f = 0; f < skin.effect.facetCount; f++) {
       const angle = (f / skin.effect.facetCount) * Math.PI * 2;
       const facetDist = BODY_RADIUS * 0.5 * scale;
@@ -806,10 +835,14 @@ function drawCrystalSkin(points, growProgress, skin) {
       ctx.fill();
     }
   }
+}
 
-  // Sparkle effects (random)
+// Helper: Draw sparkles for crystal skin
+function drawCrystalSparkles(points, skin) {
+  const { sparkle } = skin.colors;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  
   for (let i = 0; i < points.length; i++) {
     const sparklePhase = (state.elapsedSec * 2 + i * 0.7) % 1;
     if (sparklePhase < skin.effect.sparkleRate) {
@@ -875,8 +908,15 @@ function drawPhantomSkin(points, growProgress, skin) {
   }
 
   // Floating wispy effects
+  drawPhantomWispyEffects(points, skin);
+}
+
+// Helper: Draw wispy effects for phantom skin
+function drawPhantomWispyEffects(points, skin) {
+  const { glow } = skin.colors;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  
   for (let i = 0; i < points.length; i += 2) {
     const p = points[i];
     const wave = Math.sin(state.elapsedSec * 2 + i * 0.7) * BODY_RADIUS * 0.5;
