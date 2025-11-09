@@ -4,6 +4,7 @@ import { spawnFood } from './food.js';
 
 export function resetGame() {
   state.score = 0;
+  state.foodCollected = 0;
   state.particles = [];
   state.foodSparkTimer = 0;
   state.deathTimer = 0;
@@ -33,6 +34,9 @@ export function startGame() {
   resetGame();
   state.gameState = 'playing';
   state.lastTickAt = performance.now();
+  // Hide the stage title during gameplay
+  const titleEl = document.querySelector('.stage-title');
+  if (titleEl) titleEl.classList.add('hidden');
 }
 
 export function togglePause() {
@@ -47,12 +51,23 @@ export function togglePause() {
 export function finalizeGameOver() {
   const currencyEarned = Math.floor(state.score / 10);
   const newHighScore = state.score > state.highScore;
-  
+
   state.gameState = 'gameover';
+  // Show the stage title again
+  const titleEl = document.querySelector('.stage-title');
+  if (titleEl) titleEl.classList.remove('hidden');
+
   const title = newHighScore ? 'NEW HIGH SCORE!' : 'GAME OVER';
-  const subtitle = `Score: ${state.score}\nCurrency Earned: ${currencyEarned}`;
-  
+
+  // Dispatch with detailed stats
   document.dispatchEvent(new CustomEvent('showGameOver', {
-    detail: { title, subtitle }
+    detail: {
+      title,
+      score: state.score,
+      foodEaten: state.foodCollected,
+      coinsEarned: currencyEarned,
+      highScore: state.highScore,
+      isNewHighScore: newHighScore
+    }
   }));
 }

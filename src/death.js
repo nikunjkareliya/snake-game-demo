@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { CELL_SIZE, PARTICLE_COUNT_DEATH, PARTICLE_SPEED_DEATH_MIN, PARTICLE_SPEED_DEATH_MAX } from './config.js';
+import { calculateDeathReward } from './gameConfig.js';
 import { createBurst } from './particles.js';
 import { setStoredValue } from './utils.js';
 
@@ -57,9 +58,9 @@ export function startDeathSequence() {
   state.gameState = 'dying';
   state.deathTimer = 1.0;
   state.hitShakeTimer = 0.5;
-  
-  // Calculate currency earned
-  const currencyEarned = Math.floor(state.score / 10);
+
+  // Calculate currency earned using ECONOMY settings
+  const currencyEarned = calculateDeathReward(state.score);
   state.currency += currencyEarned;
   setStoredValue('neonSnakeCurrency', state.currency);
   

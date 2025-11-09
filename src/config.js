@@ -1,3 +1,5 @@
+import { getSkinPrice } from './gameConfig.js';
+
 export const CSS_WIDTH = 1024;
 export const CSS_HEIGHT = 768;
 export const DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
@@ -94,7 +96,7 @@ export const SKINS = [
         name: 'Neon',
         type: 'gradient',
         tier: 'basic',
-        price: 0,
+        get price() { return getSkinPrice('neon'); },
         head: COLOR_B,
         tail: COLOR_A
     },
@@ -104,7 +106,7 @@ export const SKINS = [
         name: 'Electric',
         type: 'animated',
         tier: 'special',
-        price: 0, // Free for now
+        get price() { return getSkinPrice('electric'); },
         colors: {
             primary: '#00ffff',
             secondary: '#0099ff',
@@ -122,7 +124,7 @@ export const SKINS = [
         name: 'Inferno',
         type: 'animated',
         tier: 'special',
-        price: 0,
+        get price() { return getSkinPrice('inferno'); },
         colors: {
             primary: '#ff4500',
             secondary: '#ff8c00',
@@ -140,7 +142,7 @@ export const SKINS = [
         name: 'Holographic',
         type: 'animated',
         tier: 'special',
-        price: 0,
+        get price() { return getSkinPrice('holographic'); },
         colors: {
             // HSL-based rainbow shift
             hueShift: true,
@@ -158,7 +160,7 @@ export const SKINS = [
         name: 'Python',
         type: 'pattern',
         tier: 'pattern',
-        price: 0,
+        get price() { return getSkinPrice('python'); },
         colors: {
             primary: '#000000',
             secondary: '#ffff00',
@@ -175,7 +177,7 @@ export const SKINS = [
         name: 'Cosmic',
         type: 'pattern',
         tier: 'special',
-        price: 0,
+        get price() { return getSkinPrice('cosmic'); },
         colors: {
             background: '#0a0a2e',
             nebula1: '#7b2cbf',
@@ -193,7 +195,7 @@ export const SKINS = [
         name: 'Circuit',
         type: 'pattern',
         tier: 'special',
-        price: 0,
+        get price() { return getSkinPrice('circuit'); },
         colors: {
             primary: '#0d1117',
             lines: '#00ff41',
@@ -213,7 +215,7 @@ export const SKINS = [
         name: 'Crystal',
         type: 'special',
         tier: 'special',
-        price: 0,
+        get price() { return getSkinPrice('crystal'); },
         colors: {
             primary: '#e0f7ff',
             secondary: '#a8e6ff',
@@ -231,7 +233,7 @@ export const SKINS = [
         name: 'Phantom',
         type: 'special',
         tier: 'special',
-        price: 0,
+        get price() { return getSkinPrice('phantom'); },
         colors: {
             primary: '#b19cd9',
             secondary: '#7b68ee',

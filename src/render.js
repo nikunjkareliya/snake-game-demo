@@ -246,11 +246,45 @@ function drawEyes(head, nx, ny, px, py) {
 }
 
 function drawMouthAndTongue(head, nx, ny, px, py) {
-  if (state.mouthOpenTimer <= 0) return;
-  // mouthOpenTimer counts down from MOUTH_ANIM_DURATION to 0
-  const t = 1 - Math.max(0, Math.min(1, state.mouthOpenTimer / MOUTH_ANIM_DURATION)); // 0..1
-  // smooth ease in/out
-  const openness = Math.sin(Math.PI * t); // 0 -> 1 -> 0 like before but driven by normalized t
+  // Compute openness: driven by mouthOpenTimer when active, otherwise allow a small
+  // anticipatory slide when the snake is near the food to create a smooth eat animation.
+  let openness = 0;
+  if (state.mouthOpenTimer > 0) {
+    // mouthOpenTimer counts down from MOUTH_ANIM_DURATION to 0
+    const t = 1 - Math.max(0, Math.min(1, state.mouthOpenTimer / MOUTH_ANIM_DURATION)); // 0..1
+    // smooth ease in/out
+    openness = Math.sin(Math.PI * t); // 0 -> 1 -> 0
+  } else {
+    // anticipation: if the food is within 2 grid cells ahead of the head (in movement
+    // direction) we slowly slide the tongue out a bit. This does not affect game logic.
+    try {
+      const headGrid = state.snake && state.snake[0];
+      const food = state.food;
+      if (headGrid && food) {
+        const dx = food.x - headGrid.x;
+        const dy = food.y - headGrid.y;
+        const manhattan = Math.abs(dx) + Math.abs(dy);
+        // Dot product to check if food is roughly in front of movement direction
+        const dirVec = (function(){
+          const d = state.direction;
+          if (d === 'Up') return {x:0,y:-1};
+          if (d === 'Down') return {x:0,y:1};
+          if (d === 'Left') return {x:-1,y:0};
+          return {x:1,y:0};
+        })();
+        const frontness = dx * dirVec.x + dy * dirVec.y; // positive if in front
+        if (manhattan > 0 && manhattan <= 2 && frontness > -1) {
+          // Closer -> stronger anticipation. Map manhattan 2->0.25, 1->0.6
+          const map = manhattan === 1 ? 0.6 : 0.25;
+          // Slight pulsing so it feels alive
+          openness = map * (0.6 + 0.4 * (Math.sin(state.elapsedSec * 8) * 0.5 + 0.5));
+        }
+      }
+    } catch (e) {
+      // defensive: if state isn't ready, skip anticipation
+      openness = 0;
+    }
+  }
 
   // Reverse tongue direction: use the inverse of the movement vector so the tongue
   // extends to the opposite side of the head.
@@ -263,9 +297,13 @@ function drawMouthAndTongue(head, nx, ny, px, py) {
 
   // Tongue parameters
   const flick = Math.sin(state.elapsedSec * 30) * 0.25 + 0.75; // subtle flick
-  const maxTongueLen = HEAD_RADIUS * (0.9 + 0.6 * flick);
+  // Increase tongue thickness for a more toony, visible tongue
+  // Bump base width so the tongue is noticeably thicker when extended
+  const TONGUE_WIDTH_BASE = HEAD_RADIUS * 0.6; // was 0.36, increased for bolder tongue
+  const maxTongueLen = HEAD_RADIUS * (1.0 + 0.8 * flick);
   const tongueLen = maxTongueLen * openness; // animate length by openness
-  const tongueWidth = Math.max(1.5, HEAD_RADIUS * 0.22 * (0.5 + 0.5 * openness));
+  // Combine base width with openness so tongue becomes thicker when extended
+  const tongueWidth = Math.max(2, TONGUE_WIDTH_BASE * (0.6 + 0.8 * openness));
 
   // Positions along reversed axis
   const tongueTipX = head.x + tx * (HEAD_RADIUS * 0.8 + tongueLen);
@@ -1016,27 +1054,71 @@ function drawParticles() {
 function drawFood() {
   const cx = state.food.x * CELL_SIZE + CELL_SIZE / 2;
   const cy = state.food.y * CELL_SIZE + CELL_SIZE / 2;
-  const r = CELL_SIZE * 0.28;
+  const r = CELL_SIZE * 0.35;
 
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
 
-  // Inner glow
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2);
-  grad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-  grad.addColorStop(0.1, 'rgba(255, 0, 255, 0.5)');
-  grad.addColorStop(0.4, 'rgba(0, 255, 255, 0.3)');
-  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  // Pulsing breathing animation (more dramatic for better bloom effect)
+  const pulse = 0.85 + 0.15 * Math.sin(state.elapsedSec * 2.8);
+  const glowRadius = r * 4.0 * pulse;  // Increased from 2.2 to 4.0 for much larger bloom
+  const midGlowRadius = r * 2.8 * pulse;
 
-  ctx.fillStyle = grad;
+  // Outer bloom glow (largest, softest)
+  const outerBloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowRadius);
+  outerBloom.addColorStop(0, 'rgba(255, 150, 200, 0.8)');     // Brighter inner
+  outerBloom.addColorStop(0.25, 'rgba(255, 100, 180, 0.5)');  // Pink bloom
+  outerBloom.addColorStop(0.5, 'rgba(255, 0, 150, 0.25)');    // Magenta fade
+  outerBloom.addColorStop(0.75, 'rgba(0, 200, 255, 0.15)');   // Cyan hint
+  outerBloom.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = outerBloom;
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 2, 0, Math.PI * 2);
+  ctx.arc(cx, cy, glowRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Core
-  ctx.fillStyle = COLOR_WHITE;
+  // Middle bloom layer (secondary glow for depth)
+  const midBloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, midGlowRadius);
+  midBloom.addColorStop(0, 'rgba(255, 120, 180, 0.9)');
+  midBloom.addColorStop(0.4, 'rgba(255, 0, 150, 0.5)');
+  midBloom.addColorStop(0.8, 'rgba(0, 200, 255, 0.1)');
+  midBloom.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = midBloom;
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.7, 0, Math.PI * 2);
+  ctx.arc(cx, cy, midGlowRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Main gradient sphere (3D look with light-to-dark gradient)
+  const sphereGrad = ctx.createRadialGradient(
+    cx - r * 0.25, cy - r * 0.25, r * 0.15,
+    cx, cy, r * 1.1
+  );
+  sphereGrad.addColorStop(0, '#ffccff');    // Light highlight
+  sphereGrad.addColorStop(0.2, '#ff99ff');  // Light pink
+  sphereGrad.addColorStop(0.5, '#ff0099');  // Medium pink
+  sphereGrad.addColorStop(0.85, '#cc0066'); // Dark pink
+  sphereGrad.addColorStop(1, '#660033');    // Very dark shadow
+
+  ctx.fillStyle = sphereGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bright highlight shine (upper left, 3D effect)
+  const shineGrad = ctx.createRadialGradient(
+    cx - r * 0.35, cy - r * 0.35, 0,
+    cx - r * 0.35, cy - r * 0.35, r * 0.45
+  );
+  shineGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+  shineGrad.addColorStop(0.4, 'rgba(255, 200, 255, 0.4)');
+  shineGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+  ctx.fillStyle = shineGrad;
+  ctx.beginPath();
+  ctx.arc(cx - r * 0.25, cy - r * 0.25, r * 0.4, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -1058,6 +1140,34 @@ function drawVignette() {
   ctx.fillRect(0, 0, CSS_WIDTH, CSS_HEIGHT);
 }
 
+function drawPauseIndicator() {
+  if (state.gameState !== 'paused') return;
+
+  // Semi-transparent dark overlay
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillRect(0, 0, CSS_WIDTH, CSS_HEIGHT);
+
+  // "PAUSED" text
+  ctx.save();
+  ctx.font = 'bold 72px Orbitron, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Neon glow effect
+  ctx.shadowColor = COLOR_A;
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = COLOR_A;
+  ctx.fillText('PAUSED', CSS_WIDTH / 2, CSS_HEIGHT / 2 - 20);
+
+  // Subtitle
+  ctx.font = '20px Orbitron, sans-serif';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = COLOR_WHITE;
+  ctx.fillText('Press SPACE to resume', CSS_WIDTH / 2, CSS_HEIGHT / 2 + 40);
+
+  ctx.restore();
+}
+
 export function drawWorld() {
   ctx.clearRect(0, 0, CSS_WIDTH, CSS_HEIGHT);
   drawGrid();
@@ -1065,6 +1175,7 @@ export function drawWorld() {
   drawFood();
   drawSnake();
   drawVignette();
+  drawPauseIndicator();
 }
 
 export const render = drawWorld;

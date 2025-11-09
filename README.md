@@ -1,10 +1,10 @@
-# Neon Snake
+# Snake Frenzy
 
 A neon-styled Snake game for the web. Built with HTML5 Canvas, CSS, and vanilla JavaScript.
 
 ## 🎮 Play Online
 
-**Live Demo**: [Play Neon Snake](https://nikunjkareliya.github.io/snake-game-demo/)
+**Live Demo**: [Play Snake Frenzy](https://nikunjkareliya.github.io/snake-game-demo/)
 
 ## 🎯 How to Play
 

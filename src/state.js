@@ -4,11 +4,17 @@ import { getStoredNumber, getStoredJSON, setStoredJSON } from './utils.js';
 // Get all skin IDs that are free (price: 0)
 const allFreeSkinIds = SKINS.filter(skin => skin.price === 0).map(skin => skin.id);
 
-// Get stored owned skins or default to all free skins
-const storedOwned = getStoredJSON('neonSnakeOwnedSkins', allFreeSkinIds);
+// Get stored owned skins (default to empty array to force fresh start)
+const storedOwned = getStoredJSON('neonSnakeOwnedSkins', []);
 
-// Ensure all free skins are owned (merge stored with all free skins)
-const mergedOwnedSkins = Array.from(new Set([...storedOwned, ...allFreeSkinIds]));
+// Validate stored skins: only keep skins that still exist and are either free or were legitimately purchased
+const validStoredSkins = storedOwned.filter(id => {
+    const skin = SKINS.find(s => s.id === id);
+    return skin && (skin.price === 0 || storedOwned.includes(id));
+});
+
+// Merge valid stored skins with current free skins
+const mergedOwnedSkins = Array.from(new Set([...validStoredSkins, ...allFreeSkinIds]));
 
 // Store the updated owned skins list
 setStoredJSON('neonSnakeOwnedSkins', mergedOwnedSkins);
@@ -16,9 +22,17 @@ setStoredJSON('neonSnakeOwnedSkins', mergedOwnedSkins);
 const storedSelected = getStoredJSON('neonSnakeSelectedSkin', DEFAULT_SKIN_ID);
 const initialSkin = getSkinById(storedSelected);
 
+// Settings (persisted)
+const storedSettings = getStoredJSON('neonSnakeSettings', {
+    soundOn: true,
+    musicOn: true,
+    speedMs: 120,
+});
+
 export const state = {
     gameState: 'init', // init | playing | paused | dying | gameover
     score: 0,
+    foodCollected: 0, // Track food eaten in current game
     highScore: getStoredNumber('neonSnakeHighScore', '0'),
     currency: getStoredNumber('neonSnakeCurrency', '0'),
     // Skins - all free skins are automatically owned
@@ -31,7 +45,9 @@ export const state = {
     direction: Direction.Right,
     nextDirection: Direction.Right,
     food: { x: 10, y: 10 },
-    speedMs: 120, // lower is faster
+    // Settings
+    settings: storedSettings,
+    speedMs: storedSettings?.speedMs ?? 120, // lower is faster
     lastTickAt: 0,
     lastFrameAt: 0,
     elapsedSec: 0,

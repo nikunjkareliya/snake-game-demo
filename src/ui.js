@@ -1,16 +1,19 @@
 // Regenerating file to force cache refresh.
 import { state } from './state.js';
 import { SKINS, getSkinById, DEFAULT_SKIN_ID } from './config.js';
-import { setStoredJSON, setStoredValue } from './utils.js';
+import { setStoredJSON, setStoredValue, formatNumber } from './utils.js';
 import { canvas } from './canvas.js';
 import { UI_FOCUS_DELAY, DEBUG } from './config.js';
 
 export const overlay = document.getElementById('overlay');
 export const scoreEl = document.getElementById('score');
 export const highScoreEl = document.getElementById('highScore');
+export const hudCurrencyEl = document.getElementById('hudCurrency');
+export const foodCollectedEl = document.getElementById('foodCollected');
 
 let lobbyHighScoreEl, lobbyCurrencyEl;
 let currentStartGame, currentHideOverlay;
+let lastCurrency = 0;
 
 /**
  * Show a generic overlay with a title, subtitle and a primary button.
@@ -63,30 +66,30 @@ export function showLobby(startGame, hideOverlay) {
 
 function buildLobbyHTML() {
     return `
+        <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
         <div class="overlay-inner">
-            <h1 class="title neon">NEON SNAKE</h1>
+            <h1 class="title neon">SNAKE FRENZY</h1>
 
             <div class="lobby-menu">
-                <button id="playBtn" class="btn neon">Play</button>
-                <button id="customizeBtn" class="btn">Customize</button>
-                <button id="settingsBtn" class="btn">Settings</button>
+                <button id="playBtn" class="btn btn-hero neon">Play</button>
+                <div class="secondary-actions">
+                    <button id="customizeBtn" class="btn">Customize</button>
+                    <button id="settingsBtn" class="btn">Settings</button>
+                </div>
             </div>
 
             <div class="lobby-stats">
                 <div class="stat-box">
-                    <div class="stat-label">Highest Score</div>
+                    <div class="stat-label">🏆 Highest Score</div>
                     <div id="lobbyHighScore" class="stat-value neon">${state.highScore}</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-label">Currency</div>
-                    <div id="lobbyCurrency" class="stat-value neon">${state.currency}</div>
+                <div class="stat-box stat-inline">
+                    <span class="coin-icon"></span>
+                    <div id="lobbyCurrency" class="stat-value neon">${formatNumber(state.currency)}</div>
                 </div>
-            </div>
-
-            <div class="controls">
-                <div><span class="key">W A S D</span> or <span class="key">Arrow Keys</span> to move</div>
-                <div><span class="key">Space</span> or <span class="key">P</span> to pause</div>
-                <div><span class="key">R</span> to restart</div>
             </div>
 
             <button id="howToPlayBtn" class="btn btn-small">How to Play</button>
@@ -115,14 +118,23 @@ function attachLobbyListeners(startGame, hideOverlay) {
     const settingsBtn = document.getElementById('settingsBtn');
     if (settingsBtn) {
         settingsBtn.addEventListener('click', () => {
-            if (DEBUG) console.log('Settings clicked');
+            showSettingsModal();
         });
     }
 
     const howBtn = document.getElementById('howToPlayBtn');
     if (howBtn) {
         howBtn.addEventListener('click', () => {
-            showOverlay('How to Play', 'Collect food to grow longer and earn points!\nAvoid hitting walls and yourself.', 'Back', () => showLobby(startGame, hideOverlay));
+            const howToPlayContent = `
+                <div style="text-align: left; line-height: 1.8; color: var(--text);">
+                    <div style="margin-bottom: 20px;">Collect food to grow longer and earn points! Avoid hitting walls and yourself.</div>
+                    <div style="text-align: center; margin-bottom: 16px; opacity: 0.9; font-size: 14px;">Keyboard Controls</div>
+                    <div><span class="key">W A S D</span> or <span class="key">Arrow Keys</span> to move</div>
+                    <div><span class="key">Space</span> or <span class="key">P</span> to pause</div>
+                    <div><span class="key">R</span> to restart</div>
+                </div>
+            `;
+            showOverlay('How to Play', howToPlayContent, 'Back', () => showLobby(startGame, hideOverlay));
         });
     }
 }
@@ -133,9 +145,29 @@ function attachLobbyListeners(startGame, hideOverlay) {
  */
 export function updateStats() {
     if (lobbyHighScoreEl) lobbyHighScoreEl.textContent = state.highScore;
-    if (lobbyCurrencyEl) lobbyCurrencyEl.textContent = state.currency;
-    if (highScoreEl) highScoreEl.textContent = state.highScore;
-    if (scoreEl) scoreEl.textContent = state.score;
+    if (lobbyCurrencyEl) lobbyCurrencyEl.textContent = formatNumber(state.currency);
+    // HUD no longer displays score/high score
+    
+    // Update HUD currency with animation on change
+    if (hudCurrencyEl) {
+        const formatted = formatNumber(state.currency);
+        if (state.currency !== lastCurrency) {
+            hudCurrencyEl.textContent = formatted;
+            // Add pop animation
+            hudCurrencyEl.parentElement?.classList.add('coin-pop');
+            setTimeout(() => {
+                hudCurrencyEl.parentElement?.classList.remove('coin-pop');
+            }, 400);
+            lastCurrency = state.currency;
+        } else {
+            hudCurrencyEl.textContent = formatted;
+        }
+    }
+    
+    // Update food collected counter
+    if (foodCollectedEl) {
+        foodCollectedEl.textContent = state.foodCollected || 0;
+    }
 }
 
 /**
@@ -149,8 +181,19 @@ export function hideOverlay() {
 
 // Listen for game over events
 document.addEventListener('showGameOver', (e) => {
-    const { title, subtitle } = e.detail;
-    showOverlay(title, subtitle, 'Play Again', () => {
+    const { title, score, foodEaten, coinsEarned, highScore, isNewHighScore } = e.detail;
+
+    // Create detailed stats display with icons
+    const statsHtml = `
+        <div style="text-align: center; font-size: 20px; line-height: 2; color: var(--text);">
+            <div>📊 <span style="font-size: 24px; color: var(--neon-yellow);">Score: ${score}</span></div>
+            <div><span class="food-sphere-icon" style="margin-right: 6px;"></span><span style="font-size: 24px; color: var(--neon-lime);">Food Eaten: ${foodEaten}</span></div>
+            <div>💰 <span style="font-size: 24px; color: var(--neon-cyan);">Coins Earned: ${coinsEarned}</span></div>
+            ${isNewHighScore ? '<div style="margin-top: 10px; font-size: 18px; color: var(--neon-orange);">⭐ NEW HIGH SCORE! ⭐</div>' : `<div>🏆 <span style="font-size: 18px;">High Score: ${highScore}</span></div>`}
+        </div>
+    `;
+
+    showOverlay(title, statsHtml, 'Play Again', () => {
         showLobby(currentStartGame, currentHideOverlay);
     });
 });
@@ -172,7 +215,7 @@ function rebuildCustomizeUI(startGame, hideOverlayCb) {
 
     // Update currency display
     const currencyEl = document.getElementById('lobbyCurrency');
-    if (currencyEl) currencyEl.textContent = state.currency;
+    if (currencyEl) currencyEl.textContent = formatNumber(state.currency);
 
     // Wire back button
     const backBtn = document.getElementById('backToLobbyBtn');
@@ -196,9 +239,9 @@ function buildCustomizeHTML() {
         <div class="overlay-inner">
             <h1 class="title neon">Customize</h1>
             <div class="lobby-stats" style="margin-top:-8px;">
-                <div class="stat-box">
-                    <div class="stat-label">Currency</div>
-                    <div id="lobbyCurrency" class="stat-value neon">${state.currency}</div>
+                <div class="stat-box stat-inline">
+                    <span class="coin-icon"></span>
+                    <div id="lobbyCurrency" class="stat-value neon">${formatNumber(state.currency)}</div>
                 </div>
             </div>
             <div class="skin-grid">${skinCards}</div>
@@ -210,11 +253,14 @@ function buildCustomizeHTML() {
 }
 
 function renderSkinCard(skin, owned) {
-    const isOwned = owned.has(skin.id) || skin.price === 0;
+    const isOwned = owned.has(skin.id);
     const isSelected = state.selectedSkinId === skin.id;
+    const canAfford = isOwned || state.currency >= skin.price;
     const action = isOwned ? (isSelected ? 'Equipped' : 'Equip') : `Buy ${skin.price}`;
     const actionClass = isOwned ? (isSelected ? 'btn' : 'btn neon equipBtn') : 'btn neon buyBtn';
+    // Only disable already-equipped skins; allow clicking unaffordable skins to show feedback
     const disabled = isSelected ? 'disabled' : '';
+    const ariaLabel = !isOwned && !canAfford ? `${skin.name} - Insufficient coins. Need ${skin.price - state.currency} more.` : skin.name;
 
     // Generate preview style based on skin type
     let previewStyle = '';
@@ -248,13 +294,13 @@ function renderSkinCard(skin, owned) {
     }
 
     return `
-      <div class="skin-card glass" data-skin-id="${skin.id}">
+      <div class="skin-card glass" data-skin-id="${skin.id}" aria-label="${ariaLabel}">
         <div class="skin-preview" style="${previewStyle}"></div>
         <div class="skin-name">${skin.name}</div>
         <div class="skin-actions">
           ${isOwned
             ? `<button class="${actionClass}" ${disabled}>${action}</button>`
-            : `<button class="${actionClass}">${action}</button>`}
+            : `<button class="${actionClass}" ${disabled}>${action}</button>`}
         </div>
       </div>
     `;
@@ -270,7 +316,22 @@ function tryBuySkin(id, startGame, hideOverlayCb, options = {}) {
 
     // Check if user has enough currency (skip for free skins)
     if (skin.price > 0 && state.currency < skin.price) {
-        // Optional: flash not enough currency
+        // Show insufficient funds feedback
+        const skinCard = document.querySelector(`.skin-card[data-skin-id="${id}"]`);
+        const ariaLive = document.getElementById('ariaLive');
+        const needed = skin.price - state.currency;
+
+        if (skinCard) {
+            skinCard.classList.add('shake');
+            setTimeout(() => skinCard.classList.remove('shake'), 400);
+        }
+
+        if (ariaLive) {
+            ariaLive.textContent = `Not enough coins. You need ${needed} more coins to purchase ${skin.name}.`;
+            // Clear the message after it's been read
+            setTimeout(() => ariaLive.textContent = '', 3000);
+        }
+
         return;
     }
 
@@ -282,6 +343,13 @@ function tryBuySkin(id, startGame, hideOverlayCb, options = {}) {
     state.ownedSkins = Array.from(owned);
     setStoredValue('neonSnakeCurrency', state.currency);
     setStoredJSON('neonSnakeOwnedSkins', state.ownedSkins);
+
+    // Announce purchase success
+    const ariaLive = document.getElementById('ariaLive');
+    if (ariaLive && skin.price > 0) {
+        ariaLive.textContent = `Successfully purchased ${skin.name} for ${skin.price} coins!`;
+        setTimeout(() => ariaLive.textContent = '', 3000);
+    }
 
     // Auto-equip on purchase
     equipSkin(id, startGame, hideOverlayCb, { silent: true });
@@ -298,17 +366,10 @@ function equipSkin(id, startGame, hideOverlayCb, options = {}) {
 
     const owned = new Set(state.ownedSkins || []);
 
-    // Allow equipping if owned OR if it's free
-    if (!owned.has(id) && skin.price > 0) {
-        // Not owned and not free, can't equip
+    // Allow equipping only if owned
+    if (!owned.has(id)) {
+        // Not owned, can't equip
         return;
-    }
-
-    // For free skins, add to owned if not already there
-    if (skin.price === 0 && !owned.has(id)) {
-        owned.add(id);
-        state.ownedSkins = Array.from(owned);
-        setStoredJSON('neonSnakeOwnedSkins', state.ownedSkins);
     }
 
     // Equip the skin
@@ -320,4 +381,174 @@ function equipSkin(id, startGame, hideOverlayCb, options = {}) {
     if (!options.silent) {
         rebuildCustomizeUI(startGame, hideOverlayCb);
     }
+}
+
+// -----------------------
+// Settings Modal
+// -----------------------
+
+let settingsBackdrop = null;
+let lastFocusedEl = null;
+
+function createSettingsModalIfNeeded() {
+        if (settingsBackdrop) return settingsBackdrop;
+        settingsBackdrop = document.createElement('div');
+        settingsBackdrop.className = 'modal-backdrop';
+        settingsBackdrop.setAttribute('aria-hidden', 'true');
+        settingsBackdrop.innerHTML = `
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+                <div class="modal-header">
+                    <h2 id="settingsTitle" class="neon">Settings</h2>
+                    <button id="settingsCloseBtn" class="btn btn-small" aria-label="Close settings">✕</button>
+                </div>
+                <div class="modal-body">
+                    <label class="row">
+                        <input id="toggleSound" type="checkbox" />
+                        <span>Sound Effects</span>
+                    </label>
+                    <label class="row">
+                        <input id="toggleMusic" type="checkbox" />
+                        <span>Music</span>
+                    </label>
+                    <div class="row column">
+                        <label for="speedRange">Game Speed</label>
+                        <input id="speedRange" type="range" min="50" max="250" step="10" />
+                        <div class="hint" id="speedHint"></div>
+                    </div>
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="row column">
+                        <button id="resetProgressBtn" class="btn" style="background: rgba(255,0,0,0.1); border-color: #ff4444; color: #ff6666;">
+                            Reset Progress
+                        </button>
+                        <div class="hint">Clear all saved data (high score, currency, owned skins)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="settingsSaveBtn" class="btn neon">Save</button>
+                    <button id="settingsCancelBtn" class="btn">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(settingsBackdrop);
+        return settingsBackdrop;
+}
+
+export function showSettingsModal() {
+        createSettingsModalIfNeeded();
+        lastFocusedEl = document.activeElement;
+
+        // Populate controls
+        const soundEl = settingsBackdrop.querySelector('#toggleSound');
+        const musicEl = settingsBackdrop.querySelector('#toggleMusic');
+        const speedEl = settingsBackdrop.querySelector('#speedRange');
+        const speedHint = settingsBackdrop.querySelector('#speedHint');
+
+        soundEl.checked = !!state.settings?.soundOn;
+        musicEl.checked = !!state.settings?.musicOn;
+        speedEl.value = String(state.speedMs);
+        speedHint.textContent = `Tick: ${state.speedMs} ms (lower is faster)`;
+
+        // Wire handlers
+        const closeBtn = settingsBackdrop.querySelector('#settingsCloseBtn');
+        const saveBtn = settingsBackdrop.querySelector('#settingsSaveBtn');
+        const cancelBtn = settingsBackdrop.querySelector('#settingsCancelBtn');
+        const resetBtn = settingsBackdrop.querySelector('#resetProgressBtn');
+
+        const onInput = () => {
+                speedHint.textContent = `Tick: ${speedEl.value} ms (lower is faster)`;
+        };
+        speedEl.addEventListener('input', onInput);
+
+        const onResetProgress = () => {
+                const confirmed = confirm(
+                        'Are you sure you want to reset all progress?\n\n' +
+                        'This will clear:\n' +
+                        '• High score\n' +
+                        '• Currency (coins)\n' +
+                        '• Owned skins\n' +
+                        '• Selected skin\n\n' +
+                        'This action cannot be undone!'
+                );
+
+                if (confirmed) {
+                        // Clear all game data from localStorage
+                        localStorage.removeItem('neonSnakeHighScore');
+                        localStorage.removeItem('neonSnakeCurrency');
+                        localStorage.removeItem('neonSnakeOwnedSkins');
+                        localStorage.removeItem('neonSnakeSelectedSkin');
+
+                        // Announce to screen reader
+                        const ariaLive = document.getElementById('ariaLive');
+                        if (ariaLive) {
+                                ariaLive.textContent = 'Progress reset. Reloading game...';
+                        }
+
+                        // Reload the page to reset state
+                        setTimeout(() => {
+                                window.location.reload();
+                        }, 500);
+                }
+        };
+        resetBtn.addEventListener('click', onResetProgress, { once: true });
+
+        const onKeyDown = (e) => {
+                if (e.key === 'Escape') {
+                        hideSettingsModal();
+                }
+                if (e.key === 'Tab') {
+                        trapFocus(e);
+                }
+        };
+        settingsBackdrop.addEventListener('keydown', onKeyDown);
+
+        const onSave = () => {
+                const newSettings = {
+                        soundOn: !!soundEl.checked,
+                        musicOn: !!musicEl.checked,
+                        speedMs: Number(speedEl.value)
+                };
+                state.settings = newSettings;
+                state.speedMs = newSettings.speedMs;
+                setStoredJSON('neonSnakeSettings', newSettings);
+                hideSettingsModal();
+        };
+        const onCancel = () => hideSettingsModal();
+
+        saveBtn.addEventListener('click', onSave, { once: true });
+        cancelBtn.addEventListener('click', onCancel, { once: true });
+        closeBtn.addEventListener('click', onCancel, { once: true });
+        settingsBackdrop.addEventListener('click', (e) => {
+                if (e.target === settingsBackdrop) onCancel();
+        }, { once: true });
+
+        // Show modal and focus first control
+        settingsBackdrop.classList.add('show');
+        settingsBackdrop.setAttribute('aria-hidden', 'false');
+        const firstFocusable = settingsBackdrop.querySelector('#toggleSound');
+        setTimeout(() => firstFocusable?.focus(), UI_FOCUS_DELAY);
+}
+
+export function hideSettingsModal() {
+        if (!settingsBackdrop) return;
+        settingsBackdrop.classList.remove('show');
+        settingsBackdrop.setAttribute('aria-hidden', 'true');
+        // Restore focus
+        if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+                lastFocusedEl.focus();
+        }
+}
+
+function trapFocus(e) {
+        const focusable = settingsBackdrop.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const list = Array.from(focusable).filter(el => !el.hasAttribute('disabled'));
+        if (list.length === 0) return;
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+                last.focus();
+                e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+                first.focus();
+                e.preventDefault();
+        }
 }

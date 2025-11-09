@@ -18,11 +18,12 @@ function tick(now) {
   state.lastFrameAt = now;
   state.elapsedSec += dt;
 
-// Always update particles and ambient effects
+// Update particles (eat particles only, no idle food particles)
   updateParticles(dt);
-  if (state.gameState !== 'init') {
-    spawnFoodAmbient(dt);
-  }
+  // Disabled idle food ambient particles - only show effect when snake eats food
+  // if (state.gameState !== 'init') {
+  //   spawnFoodAmbient(dt);
+  // }
 
 // update eat pulse lifetimes
   if (state.mouthOpenTimer > 0) state.mouthOpenTimer = Math.max(0, state.mouthOpenTimer - dt);
