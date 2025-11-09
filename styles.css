@@ -9,6 +9,25 @@
   --neon-yellow: #ffe800;
   --neon-orange: #ff7a00;
   --text: #e6f1ff;
+
+  /* UI Animation Timings (from gameConfig.js UI_ANIMATIONS) */
+  --title-gradient-speed: 5s;
+  --title-wave-amplitude: 6px;
+  --title-wave-scale: 1.03;
+  --title-wave-duration: 7s;
+  --title-entrance-duration: 0.3s;
+  --title-bounce-height: 5px;
+  --title-bounce-scale: 1.05;
+  --glow-pulse-min: 0.15;
+  --glow-pulse-max: 0.35;
+  --glow-pulse-duration: 4s;
+  --particle-float-duration: 8s;
+  --menu-slide-delay: 0.2s;
+  --menu-slide-duration: 0.7s;
+  --hero-button-pulse-speed: 2.5s;
+  --hero-button-pulse-scale: 1.02;
+  --stats-fade-delay: 0.5s;
+  --stats-fade-duration: 0.7s;
 }
 
 * {
@@ -269,18 +288,127 @@ body {
   margin: 0 0 20px;
   font-size: 48px;
   letter-spacing: 2px;
-  animation: slideInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* SVG title sizing */
+  width: 90%;
+  max-width: 800px;
+  height: auto;
+  display: block;
+  /* Position relative for pseudo-element glow layer */
+  position: relative;
+  z-index: 1;
+}
+
+.title-text {
+  filter: drop-shadow(0 0 4px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 8px rgba(255, 0, 255, 0.5)) drop-shadow(0 0 16px rgba(255, 0, 255, 0.2));
 }
 
 @keyframes slideInDown {
   from {
     opacity: 0;
-    transform: translateY(-30px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes titleEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Soft glow pulse applied via pseudo-element so we animate opacity only (GPU friendly)
+   Pulses with moderate amplitude for presence without distraction. */
+@keyframes glowPulse {
+  0%, 100% { opacity: var(--glow-pulse-min); }
+  50% { opacity: var(--glow-pulse-max); }
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: -6px;
+  bottom: -6px;
+  border-radius: 6px;
+  z-index: 0;
+  pointer-events: none;
+  /* gradient glow behind the text */
+  background: linear-gradient(90deg, rgba(255,0,255,0.18), rgba(0,234,255,0.12));
+  filter: blur(10px);
+  opacity: 0.06;
+  will-change: opacity;
+  animation: glowPulse var(--glow-pulse-duration) ease-in-out infinite;
+}
+
+/* Per-letter stagger reveal: 300ms per-letter, 50ms stagger
+   Gradient flows continuously across all letters from the single linearGradient */
+.title-text .title-char,
+.title-text .title-char.spacer {
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: transform, opacity;
+  /* Entrance animation with configurable duration */
+  animation: charEnter var(--title-entrance-duration) cubic-bezier(0.22, 0.9, 0.35, 1) both;
+  /* 50ms stagger per character */
+  animation-delay: calc(var(--i, 0) * 0.05s);
+}
+
+/* Add wave animation to tspans after entrance */
+.title-text .title-char {
+  animation-name: charEnter, charWave;
+  animation-duration: var(--title-entrance-duration), var(--title-wave-duration);
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.35, 1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-delay: calc(var(--i, 0) * 0.05s), calc(var(--i, 0) * 0.08s);
+}
+
+/* spacer should not animate wave */
+.title-text .title-char.spacer { animation-name: charEnter; }
+
+@keyframes charEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  60% {
+    transform: translateY(calc(-1 * var(--title-bounce-height))) scale(var(--title-bounce-scale));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Continuous floating wave: smooth gentle motion with subtle scale breathing */
+@keyframes charWave {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(calc(-1 * var(--title-wave-amplitude))) scale(var(--title-wave-scale));
+  }
+}
+
+.title .title-char {
+  animation-name: charEnter, charWave;
+  animation-duration: var(--title-entrance-duration), var(--title-wave-duration);
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.35, 1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-delay: calc(var(--i, 0) * 0.05s), calc(var(--i, 0) * 0.08s);
+}
+
+/* spacer should not animate wave */
+.title .title-char.spacer {
+  animation-name: charEnter;
 }
 
 @keyframes slideInUp {
@@ -368,6 +496,38 @@ body {
   box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
 }
 
+.lobby-bg-particle:nth-child(5) {
+  left: 25%;
+  bottom: -30px;
+  animation-duration: 9s;
+  animation-delay: 2s;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(6) {
+  left: 35%;
+  bottom: -10px;
+  animation-duration: 7.5s;
+  animation-delay: 1.2s;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(7) {
+  left: 70%;
+  bottom: -20px;
+  animation-duration: 8.5s;
+  animation-delay: 0.8s;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(8) {
+  left: 90%;
+  bottom: -15px;
+  animation-duration: 10s;
+  animation-delay: 1.8s;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
 /* Settings Modal */
 .modal-backdrop {
   position: fixed;
@@ -448,7 +608,7 @@ body {
     padding: 18px 48px !important;
     background: linear-gradient(135deg, rgba(0, 234, 255, 0.1), rgba(255, 0, 255, 0.1)) !important;
     border: 2px solid rgba(0, 234, 255, 0.3) !important;
-    animation: pulseHero 2.5s ease-in-out infinite;
+    animation: pulseHero var(--hero-button-pulse-speed) ease-in-out infinite;
     transition: all 0.3s ease;
     min-width: 280px;
 }
@@ -460,7 +620,7 @@ body {
     }
     50% {
         box-shadow: 0 0 30px rgba(0, 234, 255, 0.6), 0 0 60px rgba(255, 0, 255, 0.3);
-        transform: scale(1.02);
+        transform: scale(var(--hero-button-pulse-scale));
     }
 }
 
@@ -510,37 +670,230 @@ body {
 
 .stat-value { font-size:24px; font-weight:bold; }
 
+/* Customization screen header */
+.customize-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.customize-heading {
+font-size: 40px;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.customize-coin-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(0, 234, 255, 0.08);
+  border: 1px solid rgba(0, 234, 255, 0.3);
+  border-radius: 18px;
+  white-space: nowrap;
+}
+
+.coin-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--neon-cyan);
+}
+
 /* Skins grid */
 .skin-grid {
   display: grid;
-  grid-template-columns: repeat(3, 220px);
-  gap: 16px;
+  grid-template-columns: repeat(3, 160px);
+  gap: 14px;
   justify-content: center;
+  padding: 0 16px;
+}
+
+/* Responsive grid */
+@media (max-width: 900px) {
+  .skin-grid {
+    grid-template-columns: repeat(2, 150px);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .skin-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-width: 160px;
+    margin: 0 auto;
+  }
 }
 
 .skin-card {
-  padding: 12px;
+  padding: 8px;
   border-radius: 12px;
   text-align: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  border: 2px solid transparent;
+  animation: cardSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  /* Staggered delay set via inline style attribute in renderSkinCard */
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Rarity tier borders */
+.skin-card.rarity-free {
+  border-color: rgba(150, 150, 150, 0.4);
+}
+
+.skin-card.rarity-common {
+  border-color: rgba(100, 150, 255, 0.3);
+}
+
+.skin-card.rarity-rare {
+  border-color: rgba(200, 100, 255, 0.4);
+}
+
+.skin-card.rarity-epic {
+  border-color: rgba(255, 200, 0, 0.5);
+}
+
+/* Locked state styling */
+.skin-card[data-locked="true"] {
+  opacity: 0.65;
+}
+
+.skin-card[data-locked="true"] .skin-preview {
+  filter: brightness(0.85);
+}
+
+/* Equipped state: glowing border */
+.skin-card[data-equipped="true"] {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 234, 255, 0.5), inset 0 0 10px rgba(0, 234, 255, 0.1);
+}
+
+/* Hover effect: Scale + glow */
+.skin-card:hover {
+  transform: scale(1.05);
+  border-color: currentColor;
+}
+
+.skin-card.rarity-free:hover {
+  box-shadow: 0 0 20px rgba(150, 150, 150, 0.5);
+}
+
+.skin-card.rarity-common:hover {
+  box-shadow: 0 0 25px rgba(100, 150, 255, 0.6);
+  border-color: rgba(100, 150, 255, 0.8);
+}
+
+.skin-card.rarity-rare:hover {
+  box-shadow: 0 0 25px rgba(200, 100, 255, 0.6);
+  border-color: rgba(200, 100, 255, 0.8);
+}
+
+.skin-card.rarity-epic:hover {
+  box-shadow: 0 0 30px rgba(255, 200, 0, 0.7);
+  border-color: rgba(255, 200, 0, 0.9);
+}
+
+/* Equipped + hover: Super bright */
+.skin-card[data-equipped="true"]:hover {
+  box-shadow: 0 0 40px rgba(0, 234, 255, 0.8), inset 0 0 15px rgba(0, 234, 255, 0.2);
+  border-color: var(--neon-cyan);
 }
 
 .skin-card:focus-within {
   outline: 2px solid var(--neon-cyan);
   outline-offset: 2px;
-  box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 234, 255, 0.6);
+}
+
+/* Status badges positioning and styling */
+.skin-status-badges {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+}
+
+.status-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-badge.equipped-badge {
+  background: rgba(255, 200, 0, 0.4);
+  border-color: rgba(255, 200, 0, 0.8);
+  box-shadow: 0 0 12px rgba(255, 200, 0, 0.6);
+}
+
+.status-badge.owned-badge {
+  background: rgba(0, 255, 100, 0.3);
+  border-color: rgba(0, 255, 100, 0.7);
+  box-shadow: 0 0 10px rgba(0, 255, 100, 0.5);
+}
+
+.status-badge.locked-badge {
+  background: rgba(255, 80, 80, 0.2);
+  border-color: rgba(255, 80, 80, 0.6);
+  box-shadow: 0 0 10px rgba(255, 80, 80, 0.4);
+}
+
+/* Price badge styling */
+.skin-price-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  padding: 3px 8px;
+  background: rgba(0, 234, 255, 0.12);
+  border-radius: 10px;
+  margin-bottom: 4px;
+  display: inline-block;
+  border: 1px solid rgba(0, 234, 255, 0.3);
 }
 
 .skin-preview {
   width: 100%;
-  height: 54px;
+  height: 55px;
   border-radius: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+  transition: filter 0.3s ease;
+}
+
+.skin-card:hover .skin-preview {
+  filter: brightness(1.1);
 }
 
 .skin-name {
-  font-size: 14px;
-  margin: 6px 0 10px;
+  font-size: 12px;
+  margin: 4px 0 8px;
   opacity: 0.9;
 }
 
@@ -654,10 +1007,30 @@ body {
 
 .neon {
   color: var(--neon-magenta);
+  /* Reduced glow intensity by ~50% for better readability */
   text-shadow:
-    0 0 6px rgba(255, 0, 255, 0.9),
-    0 0 16px rgba(255, 0, 255, 0.7),
-    0 0 32px rgba(255, 0, 255, 0.35);
+    0 0 4px rgba(255, 0, 255, 0.8),
+    0 0 8px rgba(255, 0, 255, 0.5),
+    0 0 16px rgba(255, 0, 255, 0.2);
+}
+
+/* Override for title to avoid double glow */
+.title.neon {
+  text-shadow: none;
+  color: unset;
+}
+
+.tagline {
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--neon-cyan);
+  margin: 0 0 20px;
+  opacity: 0.85;
+  text-transform: uppercase;
+  font-weight: 500;
+  /* Appear slightly after title finishes (0.4s + 0.1s delay) */
+  animation: titleEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
+  text-shadow: 0 0 4px rgba(0, 234, 255, 0.6), 0 0 8px rgba(0, 234, 255, 0.3);
 }
 
 #help {
@@ -714,4 +1087,65 @@ body {
   animation: shake 0.5s ease-in-out;
   /* Add a red glow to make it more obvious */
   box-shadow: 0 0 20px rgba(255, 68, 68, 0.6) !important;
+}
+
+/* Accessibility: Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Remove heavy glows for reduced-motion users */
+  .neon {
+    text-shadow: none;
+    color: var(--neon-magenta);
+  }
+
+  /* Simplify button glows */
+  .btn.neon:focus,
+  .btn.neon:focus-visible {
+    box-shadow: 0 0 10px rgba(0, 234, 255, 0.4) !important;
+    text-shadow: none !important;
+  }
+
+  /* Remove pulse animation from Play button */
+  .btn-hero {
+    animation: none !important;
+  }
+
+  .btn-hero:hover {
+    box-shadow: none !important;
+  }
+
+  /* Reduce overlay breathing glow */
+  #overlay {
+    animation: none !important;
+  }
+
+  /* Static particles - no float animation */
+  .lobby-bg-particle {
+    animation: none !important;
+  }
+
+  /* When motion is reduced, ensure title letters are visible (don't remain at opacity:0)
+     and keep a subtle static glow behind the title */
+  .title-text .title-char,
+  .title-text .title-char.spacer {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .title::after {
+    animation: none !important;
+    opacity: 0.08 !important;
+  }
+
+  .tagline {
+    animation: none !important;
+    opacity: 0.85 !important;
+    transform: none !important;
+  }
 }

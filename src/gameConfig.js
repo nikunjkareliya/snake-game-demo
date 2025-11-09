@@ -81,6 +81,46 @@ export const VISUAL = {
 };
 
 // ============================================================================
+// UI ANIMATION SETTINGS
+// ============================================================================
+
+export const UI_ANIMATIONS = {
+    // Title gradient animation (lobby screen)
+    titleGradientSpeed: 5,           // Duration in seconds (lower = faster)
+
+    // Title floating wave (continuous idle animation)
+    titleWaveAmplitude: 6,           // Pixels (vertical movement)
+    titleWaveScale: 1.03,            // Scale at peak (1.0 = no scale)
+    titleWaveDuration: 7,            // Duration in seconds per cycle
+
+    // Title entrance bounce animation
+    titleEntranceDuration: 0.3,      // Duration in seconds
+    titleBounceHeight: 5,            // Pixels of overshoot
+    titleBounceScale: 1.05,          // Scale at peak
+
+    // Background glow pulse (title)
+    glowPulseMin: 0.15,              // Minimum opacity
+    glowPulseMax: 0.35,              // Maximum opacity
+    glowPulseDuration: 4,            // Duration in seconds
+
+    // Lobby background particles
+    particleCount: 8,                // Number of floating particles
+    particleFloatDuration: 8,        // Average duration in seconds
+
+    // Menu animations
+    menuSlideDelay: 0.2,             // Delay before menu appears
+    menuSlideDuration: 0.7,          // Duration of slide-in
+
+    // Hero Play button animations
+    heroButtonPulseSpeed: 2.5,       // Duration of pulse cycle in seconds
+    heroButtonPulseScale: 1.02,      // Scale at pulse peak
+
+    // Stat boxes
+    statsFadeDelay: 0.5,             // Delay before stats appear
+    statsFadeDuration: 0.7,          // Duration of fade-in
+};
+
+// ============================================================================
 // PERSISTENCE SETTINGS
 // ============================================================================
 

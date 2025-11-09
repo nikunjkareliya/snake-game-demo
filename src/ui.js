@@ -4,6 +4,7 @@ import { SKINS, getSkinById, DEFAULT_SKIN_ID } from './config.js';
 import { setStoredJSON, setStoredValue, formatNumber } from './utils.js';
 import { canvas } from './canvas.js';
 import { UI_FOCUS_DELAY, DEBUG } from './config.js';
+import { UI_ANIMATIONS } from './gameConfig.js';
 
 export const overlay = document.getElementById('overlay');
 export const scoreEl = document.getElementById('score');
@@ -65,13 +66,40 @@ export function showLobby(startGame, hideOverlay) {
 }
 
 function buildLobbyHTML() {
+    const titleText = 'SNAKE FRENZY';
+    // Create SVG tspans for each character so we can animate them individually
+    // but keep a single continuous gradient across the whole title
+    const tspans = Array.from(titleText).map((ch, i) => {
+        if (ch === ' ') return `<tspan class="title-char spacer" style="--i:${i}">\u00A0</tspan>`;
+        return `<tspan class="title-char" style="--i:${i}">${ch}</tspan>`;
+    }).join('');
+
     return `
         <div class="lobby-bg-particle"></div>
         <div class="lobby-bg-particle"></div>
         <div class="lobby-bg-particle"></div>
         <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
+        <div class="lobby-bg-particle"></div>
         <div class="overlay-inner">
-            <h1 class="title neon">SNAKE FRENZY</h1>
+            <svg class="title neon" viewBox="0 0 800 80" preserveAspectRatio="xMidYMid meet" aria-label="SNAKE FRENZY" role="img">
+                <defs>
+                    <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#ff00ff;stop-opacity:1">
+                            <animate attributeName="stop-color" values="#ff00ff;#ff0080;#ff00ff" dur="${UI_ANIMATIONS.titleGradientSpeed}s" repeatCount="indefinite" />
+                        </stop>
+                        <stop offset="100%" style="stop-color:#00eaff;stop-opacity:1">
+                            <animate attributeName="stop-color" values="#00eaff;#00ffaa;#00eaff" dur="${UI_ANIMATIONS.titleGradientSpeed}s" repeatCount="indefinite" />
+                        </stop>
+                    </linearGradient>
+                </defs>
+                <text class="title-text" x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="url(#titleGradient)" font-family="Audiowide, cursive" font-size="72" letter-spacing="2" font-weight="400">
+                    ${tspans}
+                </text>
+            </svg>
+            <p class="tagline">Collect. Grow. Survive.</p>
 
             <div class="lobby-menu">
                 <button id="playBtn" class="btn btn-hero neon">Play</button>
@@ -85,10 +113,6 @@ function buildLobbyHTML() {
                 <div class="stat-box">
                     <div class="stat-label">🏆 Highest Score</div>
                     <div id="lobbyHighScore" class="stat-value neon">${state.highScore}</div>
-                </div>
-                <div class="stat-box stat-inline">
-                    <span class="coin-icon"></span>
-                    <div id="lobbyCurrency" class="stat-value neon">${formatNumber(state.currency)}</div>
                 </div>
             </div>
 
@@ -234,25 +258,21 @@ function rebuildCustomizeUI(startGame, hideOverlayCb) {
 
 function buildCustomizeHTML() {
     const owned = new Set(state.ownedSkins || []);
-    const skinCards = SKINS.map(skin => renderSkinCard(skin, owned)).join('');
+    const skinCards = SKINS.map((skin, index) => renderSkinCard(skin, owned, index)).join('');
     return `
         <div class="overlay-inner">
-            <h1 class="title neon">Customize</h1>
-            <div class="lobby-stats" style="margin-top:-8px;">
-                <div class="stat-box stat-inline">
-                    <span class="coin-icon"></span>
-                    <div id="lobbyCurrency" class="stat-value neon">${formatNumber(state.currency)}</div>
-                </div>
+            <div class="customize-header">
+                <h2 class="customize-heading">Customization</h2>
             </div>
             <div class="skin-grid">${skinCards}</div>
-            <div style="margin-top:24px">
+            <div style="margin-top:12px;">
                 <button id="backToLobbyBtn" class="btn">Back</button>
             </div>
         </div>
     `;
 }
 
-function renderSkinCard(skin, owned) {
+function renderSkinCard(skin, owned, index = 0) {
     const isOwned = owned.has(skin.id);
     const isSelected = state.selectedSkinId === skin.id;
     const canAfford = isOwned || state.currency >= skin.price;
@@ -261,6 +281,12 @@ function renderSkinCard(skin, owned) {
     // Only disable already-equipped skins; allow clicking unaffordable skins to show feedback
     const disabled = isSelected ? 'disabled' : '';
     const ariaLabel = !isOwned && !canAfford ? `${skin.name} - Insufficient coins. Need ${skin.price - state.currency} more.` : skin.name;
+
+    // Determine rarity tier based on price
+    let rarity = 'common';
+    if (skin.price === 0) rarity = 'free';
+    else if (skin.price >= 90) rarity = 'epic';
+    else if (skin.price >= 60) rarity = 'rare';
 
     // Generate preview style based on skin type
     let previewStyle = '';
@@ -293,9 +319,24 @@ function renderSkinCard(skin, owned) {
         }
     }
 
+    // Build status badges HTML
+    let statusBadgesHtml = '';
+    if (isOwned && isSelected) {
+        statusBadgesHtml += '<div class="status-badge equipped-badge" title="Currently equipped">⭐</div>';
+    } else if (isOwned) {
+        statusBadgesHtml += '<div class="status-badge owned-badge" title="Owned">✓</div>';
+    } else if (!canAfford) {
+        statusBadgesHtml += '<div class="status-badge locked-badge" title="Locked">🔒</div>';
+    }
+
+    // Price badge text
+    const priceBadgeText = skin.price === 0 ? 'FREE' : `${skin.price}`;
+
     return `
-      <div class="skin-card glass" data-skin-id="${skin.id}" aria-label="${ariaLabel}">
+      <div class="skin-card glass rarity-${rarity}" data-skin-id="${skin.id}" aria-label="${ariaLabel}" ${isSelected ? 'data-equipped="true"' : ''} ${!canAfford ? 'data-locked="true"' : ''} style="animation-delay: ${index * 0.05}s;">
+        <div class="skin-status-badges">${statusBadgesHtml}</div>
         <div class="skin-preview" style="${previewStyle}"></div>
+        <div class="skin-price-badge">${priceBadgeText}${!isOwned && skin.price > 0 ? ' <span class="coin-icon" style="width: 12px; height: 12px; display: inline-block; margin-left: 4px;"></span>' : ''}</div>
         <div class="skin-name">${skin.name}</div>
         <div class="skin-actions">
           ${isOwned
