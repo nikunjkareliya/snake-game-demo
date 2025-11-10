@@ -30,7 +30,8 @@ const storedSettings = getStoredJSON('neonSnakeSettings', {
 });
 
 export const state = {
-    gameState: 'init', // init | playing | paused | dying | gameover
+    gameState: 'init', // init | intro | playing | paused | dying | gameover
+    introAnimation: null, // null or { progress: number, snake: [...] }
     score: 0,
     foodCollected: 0, // Track food eaten in current game
     highScore: getStoredNumber('neonSnakeHighScore', '0'),

@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { showLobby, hideOverlay } from './ui.js';
 import { initInput } from './input.js';
-import { startGame, togglePause, finalizeGameOver } from './game.js';
+import { startGame, togglePause, finalizeGameOver, stepIntroAnimation } from './game.js';
 import { render } from './render.js';
 import { spawnFoodAmbient } from './food.js';
 import { stepSnake, updateParticles } from './snake.js';
@@ -41,7 +41,9 @@ function tick(now) {
     }
   }
 
-  if (state.gameState === 'playing') {
+  if (state.gameState === 'intro') {
+    stepIntroAnimation(dt);
+  } else if (state.gameState === 'playing') {
     // Update interpolation progress
     const timeSinceTick = now - state.lastTickAt;
     state.moveProgress = Math.min(1, timeSinceTick / state.speedMs);

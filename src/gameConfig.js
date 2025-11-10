@@ -6,6 +6,17 @@
  */
 
 // ============================================================================
+// INTRO ANIMATION SETTINGS
+// ============================================================================
+
+export const INTRO_ANIMATION = {
+    DURATION: 2.0 / 1.5, // seconds, 1.5x faster
+    SCALE: 4,            // 4 times larger
+    LENGTH: 30,          // Half of the original scaled length
+    OFFSET: 100,         // Pixels of space between the two snakes
+};
+
+// ============================================================================
 // ECONOMY SETTINGS
 // ============================================================================
 
