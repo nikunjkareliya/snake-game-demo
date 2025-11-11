@@ -257,11 +257,11 @@ body {
   flex-direction: column; /* Arrange items vertically */
   justify-content: center; /* Center vertically */
   align-items: center; /* Center horizontally */
-  background: var(--bg-deep);
+  background: rgba(6, 8, 17, 0.7);
   opacity: 0;
   pointer-events: none;
   transition: opacity 260ms ease;
-  animation: breatheGlow 8s ease-in-out infinite;
+  backdrop-filter: blur(8px);
 }
 
 #overlay.visible {
@@ -530,9 +530,9 @@ body {
 
 /* Settings Modal */
 .modal-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(6, 8, 17, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -540,6 +540,7 @@ body {
   pointer-events: none;
   transition: opacity 200ms ease;
   z-index: 50;
+  backdrop-filter: blur(8px);
 }
 .modal-backdrop.show {
   opacity: 1;
@@ -575,6 +576,163 @@ body {
 @media (max-width:600px) {
   .modal { width: 98vw; padding: 16px 16px 18px; }
 }
+
+/* --- Settings Modal Refinements --- */
+
+/* Consistent dialog titles */
+.modal-header h2 {
+  font-family: 'Audiowide', cursive;
+  font-size: 32px;
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+/* Improved close button */
+.btn-close {
+  padding: 4px 10px !important;
+  font-size: 20px !important;
+  line-height: 1;
+  min-width: auto;
+}
+
+/* Centered footer buttons */
+.modal-footer.centered {
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Danger zone for critical actions */
+.danger-zone {
+  background: rgba(255, 0, 0, 0.05);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.btn-danger {
+  background: rgba(255, 50, 50, 0.15);
+  border-color: rgba(255, 50, 50, 0.4);
+  color: #ff8888;
+}
+.btn-danger:hover {
+  background: rgba(255, 50, 50, 0.3);
+  border-color: rgba(255, 50, 50, 0.7);
+  color: #ffaaaa;
+  box-shadow: 0 0 15px rgba(255, 50, 50, 0.4);
+}
+
+/* Custom Checkbox */
+.modal-body label.row input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.modal-body label.row {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modal-body label.row span {
+  user-select: none;
+}
+.modal-body label.row:before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+.modal-body label.row:has(input:checked):before {
+  background-color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+}
+/* Checkmark */
+.modal-body label.row:after {
+  content: '✓';
+  position: absolute;
+  left: 29px;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--bg-deep);
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+.modal-body label.row:has(input:checked):after {
+  transform: scale(1);
+}
+
+
+/* Custom Range Slider */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type=range]:focus {
+  outline: none;
+}
+
+/* Track */
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Thumb */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -7px; /* (track-height - thumb-height) / 2 - border */
+  height: 20px;
+  width: 20px;
+  background: var(--bg);
+  border-radius: 50%;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+  transition: transform 0.2s ease;
+}
+input[type=range]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  background: var(--bg);
+  border-radius: 50%;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+  transition: transform 0.2s ease;
+}
+
+input[type=range]:hover::-webkit-slider-thumb,
+input[type=range]:focus::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+input[type=range]:hover::-moz-range-thumb,
+input[type=range]:focus::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
+/* --- End Settings Modal Refinements --- */
 
 .subtitle {
   margin: 0 0 18px;
@@ -670,48 +828,46 @@ body {
 
 .stat-value { font-size:24px; font-weight:bold; }
 
-/* Customization screen header */
-.customize-header {
+/* --- Customization Dialog --- */
+.customize-dialog {
+  width: 100%;
+  max-width: 580px; /* Accommodates 3 cards + padding */
+  max-height: 680px; /* Ensure it fits vertically within the stage-wrap */
+  padding: 24px 30px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 8px 16px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-direction: column;
+  gap: 20px;
+  animation: modalPop 240ms cubic-bezier(.25,.8,.25,1);
 }
 
-.customize-heading {
-font-size: 40px;
-  font-weight: 600;
-  color: var(--neon-cyan);
+.customize-dialog .customize-heading {
+  font-family: 'Audiowide', cursive;
+  font-size: 32px;
+  letter-spacing: 1px;
   margin: 0;
-  letter-spacing: 0.5px;
-}
-
-.customize-coin-display {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  background: rgba(0, 234, 255, 0.08);
-  border: 1px solid rgba(0, 234, 255, 0.3);
-  border-radius: 18px;
-  white-space: nowrap;
-}
-
-.coin-amount {
-  font-size: 16px;
-  font-weight: 700;
+  text-align: center;
   color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
+
+.customize-dialog .customize-header {
+    border-bottom: none;
+    padding: 0;
+    margin-bottom: 0;
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+/* --- End Customization Dialog --- */
 
 /* Skins grid */
 .skin-grid {
   display: grid;
-  grid-template-columns: repeat(3, 160px);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px;
   justify-content: center;
   padding: 0 16px;
+  overflow-y: auto; /* Allow the grid itself to scroll */
+  flex-grow: 1; /* Allow grid to take up available space */
 }
 
 /* Responsive grid */
@@ -1004,6 +1160,116 @@ font-size: 40px;
     font-size: 12px;
     animation: fadeInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
 }
+
+/* --- How to Play Overlay Styles --- */
+.how-to-play-dialog {
+  width: 100%;
+  max-width: 600px;
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: modalPop 240ms cubic-bezier(.25,.8,.25,1);
+}
+
+.how-to-play-dialog h2 {
+  font-family: 'Audiowide', cursive;
+  font-size: 32px;
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.how-to-play-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.how-to-play-section h3 {
+  font-size: 20px;
+  margin: 0 0 15px;
+  color: var(--text);
+  opacity: 0.9;
+  text-align: center;
+}
+
+.controls-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.key-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.wasd-grid {
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(2, 50px);
+  grid-template-areas:
+    ". w ."
+    "a s d";
+}
+
+.arrow-grid {
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(2, 50px);
+  grid-template-areas:
+    ". up ."
+    "left down right";
+}
+
+.key-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #222, #111);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 5px rgba(0,0,0,0.5), inset 0 0 2px rgba(255,255,255,0.1);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.key-icon.grid-w { grid-area: w; }
+.key-icon.grid-a { grid-area: a; }
+.key-icon.grid-s { grid-area: s; }
+.key-icon.grid-d { grid-area: d; }
+.key-icon.grid-up { grid-area: up; }
+.key-icon.grid-left { grid-area: left; }
+.key-icon.grid-down { grid-area: down; }
+.key-icon.grid-right { grid-area: right; }
+
+.key-icon.space {
+  width: 220px;
+}
+
+.how-to-play-dialog .btn {
+  align-self: center;
+  min-width: 120px;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 3px 5px rgba(0,0,0,0.5), 0 0 5px rgba(0, 234, 255, 0.3), 0 0 10px rgba(255, 0, 255, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 3px 5px rgba(0,0,0,0.5), 0 0 15px rgba(0, 234, 255, 0.6), 0 0 25px rgba(255, 0, 255, 0.4);
+    transform: scale(1.05);
+  }
+}
+/* --- End How to Play --- */
 
 .neon {
   color: var(--neon-magenta);

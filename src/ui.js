@@ -4,7 +4,7 @@ import { SKINS, getSkinById, DEFAULT_SKIN_ID } from './config.js';
 import { setStoredJSON, setStoredValue, formatNumber } from './utils.js';
 import { canvas } from './canvas.js';
 import { UI_FOCUS_DELAY, DEBUG } from './config.js';
-import { UI_ANIMATIONS } from './gameConfig.js';
+import { UI_ANIMATIONS, GAMEPLAY } from './gameConfig.js';
 
 export const overlay = document.getElementById('overlay');
 export const scoreEl = document.getElementById('score');
@@ -106,6 +106,7 @@ function buildLobbyHTML() {
                 <div class="secondary-actions">
                     <button id="customizeBtn" class="btn">Customize</button>
                     <button id="settingsBtn" class="btn">Settings</button>
+                    <button id="howToPlayBtn" class="btn">How to Play</button>
                 </div>
             </div>
 
@@ -114,11 +115,57 @@ function buildLobbyHTML() {
                     <div class="stat-label">🏆 Highest Score</div>
                     <div id="lobbyHighScore" class="stat-value neon">${state.highScore}</div>
                 </div>
+                <div class="stat-box">
+                    <div class="stat-label">💰 Coins</div>
+                    <div id="lobbyCurrency" class="stat-value neon">${state.currency}</div>
+                </div>
             </div>
-
-            <button id="howToPlayBtn" class="btn btn-small">How to Play</button>
         </div>
     `;
+}
+
+function showHowToPlay() {
+    overlay.innerHTML = `
+        <div class="how-to-play-dialog glass">
+            <h2>How to Play</h2>
+            
+            <div class="how-to-play-section">
+                <h3>MOVE</h3>
+                <div class="controls-grid">
+                    <div class="key-grid wasd-grid">
+                        <div class="key-icon grid-w">W</div>
+                        <div class="key-icon grid-a">A</div>
+                        <div class="key-icon grid-s">S</div>
+                        <div class="key-icon grid-d">D</div>
+                    </div>
+                    <span class="or-divider">OR</span>
+                    <div class="key-grid arrow-grid">
+                        <div class="key-icon grid-up">↑</div>
+                        <div class="key-icon grid-left">←</div>
+                        <div class="key-icon grid-down">↓</div>
+                        <div class="key-icon grid-right">→</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="how-to-play-section">
+                <h3>ACTIONS</h3>
+                <div class="controls-grid">
+                    <div class="key-icon space">SPACE</div>
+                    <span style="margin: 0 10px;">Pause / Resume</span>
+                </div>
+            </div>
+
+            <button id="howToPlayBackBtn" class="btn">Got it!</button>
+        </div>
+    `;
+    overlay.classList.add('visible');
+    // We don't add overlay-glass to the main overlay anymore,
+    // as the dialog itself has the .glass style.
+
+    document.getElementById('howToPlayBackBtn').addEventListener('click', () => {
+        showLobby(currentStartGame, currentHideOverlay);
+    });
 }
 
 function attachLobbyListeners(startGame, hideOverlay) {
@@ -149,16 +196,7 @@ function attachLobbyListeners(startGame, hideOverlay) {
     const howBtn = document.getElementById('howToPlayBtn');
     if (howBtn) {
         howBtn.addEventListener('click', () => {
-            const howToPlayContent = `
-                <div style="text-align: left; line-height: 1.8; color: var(--text);">
-                    <div style="margin-bottom: 20px;">Collect food to grow longer and earn points! Avoid hitting walls and yourself.</div>
-                    <div style="text-align: center; margin-bottom: 16px; opacity: 0.9; font-size: 14px;">Keyboard Controls</div>
-                    <div><span class="key">W A S D</span> or <span class="key">Arrow Keys</span> to move</div>
-                    <div><span class="key">Space</span> or <span class="key">P</span> to pause</div>
-                    <div><span class="key">R</span> to restart</div>
-                </div>
-            `;
-            showOverlay('How to Play', howToPlayContent, 'Back', () => showLobby(startGame, hideOverlay));
+            showHowToPlay();
         });
     }
 }
@@ -260,13 +298,13 @@ function buildCustomizeHTML() {
     const owned = new Set(state.ownedSkins || []);
     const skinCards = SKINS.map((skin, index) => renderSkinCard(skin, owned, index)).join('');
     return `
-        <div class="overlay-inner">
+        <div class="customize-dialog glass">
             <div class="customize-header">
                 <h2 class="customize-heading">Customization</h2>
             </div>
             <div class="skin-grid">${skinCards}</div>
-            <div style="margin-top:12px;">
-                <button id="backToLobbyBtn" class="btn">Back</button>
+            <div style="margin-top: 24px; text-align: center;">
+                <button id="backToLobbyBtn" class="btn">Back to Lobby</button>
             </div>
         </div>
     `;
@@ -439,8 +477,8 @@ function createSettingsModalIfNeeded() {
         settingsBackdrop.innerHTML = `
             <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
                 <div class="modal-header">
-                    <h2 id="settingsTitle" class="neon">Settings</h2>
-                    <button id="settingsCloseBtn" class="btn btn-small" aria-label="Close settings">✕</button>
+                    <h2 id="settingsTitle">Settings</h2>
+                    <button id="settingsCloseBtn" class="btn btn-close" aria-label="Close settings">✕</button>
                 </div>
                 <div class="modal-body">
                     <label class="row">
@@ -453,24 +491,26 @@ function createSettingsModalIfNeeded() {
                     </label>
                     <div class="row column">
                         <label for="speedRange">Game Speed</label>
-                        <input id="speedRange" type="range" min="50" max="250" step="10" />
+                        <input id="speedRange" type="range" min="${GAMEPLAY.speedMin}" max="${GAMEPLAY.speedMax}" step="10" />
                         <div class="hint" id="speedHint"></div>
                     </div>
-                    <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <div class="row column">
-                        <button id="resetProgressBtn" class="btn" style="background: rgba(255,0,0,0.1); border-color: #ff4444; color: #ff6666;">
-                            Reset Progress
-                        </button>
-                        <div class="hint">Clear all saved data (high score, currency, owned skins)</div>
+                    <div class="danger-zone">
+                        <div class="row column">
+                            <button id="resetProgressBtn" class="btn btn-danger">
+                                Reset Progress
+                            </button>
+                            <div class="hint">Clear all saved data (high score, currency, owned skins)</div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button id="settingsSaveBtn" class="btn neon">Save</button>
+                <div class="modal-footer centered">
                     <button id="settingsCancelBtn" class="btn">Cancel</button>
+                    <button id="settingsSaveBtn" class="btn neon">Save</button>
                 </div>
             </div>
         `;
-        document.body.appendChild(settingsBackdrop);
+        const stageWrap = document.getElementById('stage-wrap');
+        stageWrap.appendChild(settingsBackdrop);
         return settingsBackdrop;
 }
 
