@@ -124,7 +124,7 @@ export const UI_ANIMATIONS = {
 
     // Hero Play button animations
     heroButtonPulseSpeed: 2.5,       // Duration of pulse cycle in seconds
-    heroButtonPulseScale: 1.02,      // Scale at pulse peak
+    heroButtonPulseScale: 1.015,     // Scale at pulse peak (reduced for subtlety)
 
     // Stat boxes
     statsFadeDelay: 0.5,             // Delay before stats appear

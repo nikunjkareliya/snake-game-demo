@@ -83,6 +83,18 @@ function buildLobbyHTML() {
         <div class="lobby-bg-particle"></div>
         <div class="lobby-bg-particle"></div>
         <div class="lobby-bg-particle"></div>
+
+        <!-- Coins stat in top-left corner -->
+        <div class="lobby-stats">
+            <div class="stat-box stat-left glass">
+                <span class="coin-icon"></span>
+                <div id="lobbyCurrency" class="stat-value">${state.currency}</div>
+            </div>
+        </div>
+
+        <!-- Settings icon button in top-right corner -->
+        <button id="lobbySettingsBtn" class="settings-icon-btn glass" aria-label="Settings">⚙️</button>
+
         <div class="overlay-inner">
             <svg class="title neon" viewBox="0 0 800 80" preserveAspectRatio="xMidYMid meet" aria-label="SNAKE FRENZY" role="img">
                 <defs>
@@ -103,21 +115,10 @@ function buildLobbyHTML() {
 
             <div class="lobby-menu">
                 <button id="playBtn" class="btn btn-hero neon">Play</button>
+                <div class="button-separator"></div>
                 <div class="secondary-actions">
-                    <button id="customizeBtn" class="btn">Customize</button>
-                    <button id="settingsBtn" class="btn">Settings</button>
-                    <button id="howToPlayBtn" class="btn">How to Play</button>
-                </div>
-            </div>
-
-            <div class="lobby-stats">
-                <div class="stat-box">
-                    <div class="stat-label">🏆 Highest Score</div>
-                    <div id="lobbyHighScore" class="stat-value neon">${state.highScore}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">💰 Coins</div>
-                    <div id="lobbyCurrency" class="stat-value neon">${state.currency}</div>
+                    <button id="customizeBtn" class="btn"><span class="btn-icon">✨</span>Customize</button>
+                    <button id="howToPlayBtn" class="btn"><span class="btn-icon">❓</span>How to Play</button>
                 </div>
             </div>
         </div>
@@ -186,9 +187,9 @@ function attachLobbyListeners(startGame, hideOverlay) {
         });
     }
 
-    const settingsBtn = document.getElementById('settingsBtn');
-    if (settingsBtn) {
-        settingsBtn.addEventListener('click', () => {
+    const lobbySettingsBtn = document.getElementById('lobbySettingsBtn');
+    if (lobbySettingsBtn) {
+        lobbySettingsBtn.addEventListener('click', () => {
             showSettingsModal();
         });
     }
