@@ -27,7 +27,7 @@ Open `index.html` in any modern browser, or visit the live demo above.
 
 ## 🏗️ Architecture & Module Analysis
 
-This project follows a modular architecture with clear separation of concerns. The codebase is organized into 14 distinct modules, each responsible for specific functionality.
+This project follows a modular architecture with clear separation of concerns. The codebase is organized into 16 distinct modules, each responsible for specific functionality.
 
 ### 📁 Module Overview
 
@@ -127,21 +127,19 @@ This project follows a modular architecture with clear separation of concerns. T
 - Handles gameplay snake movement and physics
 - Collision detection (walls, self, food)
 - Growth mechanics when eating food
-- Particle system management
-- Visual effects (eating animation, death explosion)
+- Visual effects coordination (eating animation, death explosion)
 
 **Key Functions:**
 - `stepSnake()` - Moves snake one step in current direction
 - `updateParticles(dt)` - Updates all particle positions and lifetimes
-- `createEatEffect(pos)` - Spawns 8 particles when eating food
-- `createSnakeDeathEffect()` - Creates explosion effect on death
+- `createEatEffect(pos)` - Spawns particles when eating food
 
 **Collision Detection:**
 - Wall collision: Checks if next position is outside grid bounds
 - Self collision: Checks if head collides with body segments
 - Food collision: Checks if head reaches food position
 
-**Dependencies:** `state.js`, `config.js`, `death.js`, `food.js`
+**Dependencies:** `state.js`, `config.js`, `death.js`, `food.js`, `particles.js`
 
 ---
 
@@ -159,9 +157,9 @@ This project follows a modular architecture with clear separation of concerns. T
 **Visual Effects:**
 - Particles spawn in circular pattern around food
 - Upward floating motion with randomized velocity
-- Alternating cyan/magenta colors
+- Skin-aware particle colors
 
-**Dependencies:** `state.js`, `config.js`, `utils.js`
+**Dependencies:** `state.js`, `config.js`, `utils.js`, `particles.js`
 
 ---
 
@@ -175,7 +173,7 @@ This project follows a modular architecture with clear separation of concerns. T
 
 **Key Functions:**
 - `startDeathSequence()` - Triggers 1-second death animation
-- `createSnakeDeathEffect()` - Spawns 6 particles per snake segment
+- `createSnakeDeathEffect()` - Creates particle burst for each snake segment
 
 **Death Flow:**
 1. Sets game state to 'dying'
@@ -185,11 +183,64 @@ This project follows a modular architecture with clear separation of concerns. T
 5. Clears snake array
 6. Sets timers for death animation (1.0s) and screen shake (0.5s)
 
-**Dependencies:** `state.js`, `config.js`
+**Dependencies:** `state.js`, `config.js`, `particles.js`
 
 ---
 
-#### **9. `render.js` - Canvas Rendering Engine**
+#### **9. `particles.js` - Particle System Manager**
+**Responsibilities:**
+- Centralized particle creation and management
+- Enforces maximum particle count to prevent memory issues
+- Provides reusable particle burst creation
+- Manages particle lifecycle and capacity limits
+
+**Key Functions:**
+- `addParticle(particle)` - Adds particle to state array with capacity management
+- `createBurst(x, y, count, speedMin, speedMax, options)` - Creates radial particle burst
+
+**Features:**
+- **Capacity Control**: Automatically removes oldest particles when MAX_PARTICLES is reached
+- **Burst Patterns**: Creates circular patterns with customizable count and speed
+- **Skin Integration**: Uses skin-specific color palettes via skinPalette.js
+- **Customizable Options**: Supports overrides for life, color, shape, and size
+
+**Particle Properties:**
+- Position (x, y) and velocity (vx, vy)
+- Lifetime tracking
+- Visual properties (color, shape, size)
+- Shape types: circle or square
+
+**Dependencies:** `state.js`, `config.js`, `skinPalette.js`
+
+---
+
+#### **10. `skinPalette.js` - Skin Color Palette Manager**
+**Responsibilities:**
+- Manages color palettes for different snake skins
+- Provides skin-specific particle colors
+- Handles animated skin color generation
+- Supports various skin types (animated, pattern, special)
+
+**Key Functions:**
+- `getSkinParticlePalette(skin, elapsedSec)` - Returns color array based on skin type
+
+**Skin Type Support:**
+- **Animated Skins**: Electric, Inferno, Holographic (time-based colors)
+- **Pattern Skins**: Python, Cosmic, Circuit (themed colors)
+- **Special Skins**: Crystal, Phantom (unique effects)
+- **Default Fallback**: Returns cyan/magenta/white for undefined skins
+
+**Features:**
+- Color deduplication to avoid redundant palette entries
+- Shadow color generation with alpha transparency
+- Dynamic color calculation for animated skins
+- RGB/RGBA/Hex color format support
+
+**Dependencies:** `config.js`
+
+---
+
+#### **11. `render.js` - Canvas Rendering Engine**
 **Responsibilities:**
 - All canvas drawing operations
 - Implements advanced visual effects for gameplay and intro.
@@ -199,7 +250,7 @@ This project follows a modular architecture with clear separation of concerns. T
 - Multi-layered rendering (glow → base → shine)
 
 **Key Functions:**
-- `drawWorld()` - Main render function (exported)
+- `render()` - Main render function (exported as alias to drawWorld)
 - `drawIntroSnake()` - Renders the two snakes for the intro animation.
 - `drawSnake()` - Complex snake rendering with segments
 - `drawSnakeHead(head, nx, ny, scale)` - Detailed head with eyes, pupils, mouth, tongue
@@ -212,12 +263,13 @@ This project follows a modular architecture with clear separation of concerns. T
 - **Mouth Animation**: Opens/closes with tongue flicking when eating
 - **Multi-layer Body**: Glow layer + gradient base + white shine highlight
 - **Particle Effects**: Additive blending for light bloom
+- **Skin Support**: Renders various skin types with unique visual effects
 
 **Dependencies:** `state.js`, `canvas.js`, `config.js`
 
 ---
 
-#### **10. `input.js` - Input Handler**
+#### **12. `input.js` - Input Handler**
 **Responsibilities:**
 - Keyboard event management
 - Key mapping for multiple control schemes
@@ -237,16 +289,18 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **11. `ui.js` - User Interface Manager**
+#### **13. `ui.js` - User Interface Manager**
 **Responsibilities:**
-- Manages overlay system (lobby, game over, how-to-play)
-- Updates HUD elements (score, high score)
-- Handles menu interactions
+- Manages overlay system (lobby, game over, customization, settings)
+- Updates HUD elements (score, high score, currency, food collected)
+- Handles menu interactions and skin selection
 - Dynamic DOM generation for different screens
 - Focus management for keyboard input
 
 **Key Functions:**
 - `showLobby(startGame, hideOverlay)` - Displays main menu with stats
+- `showCustomize(startGame, hideOverlay)` - Shows skin selection interface
+- `showSettingsModal()` / `hideSettingsModal()` - Settings screen management
 - `showOverlay(title, subtitle, buttonText, onButtonClick)` - Generic overlay
 - `updateStats()` - Updates all score displays
 - `hideOverlay()` - Hides overlay and focuses canvas
@@ -255,7 +309,7 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **12. `transition.js` - Play Button Transition Animation**
+#### **14. `transition.js` - Play Button Transition Animation**
 **Responsibilities:**
 - Displays an animated snake crawling across the screen as a wipe transition.
 - Triggered when the player clicks the "Play" button in the lobby.
@@ -263,12 +317,13 @@ This project follows a modular architecture with clear separation of concerns. T
 
 **Key Functions:**
 - `startTransition()` - Creates and animates the DOM-based snake segments.
+- `cleanupTransition()` - Removes transition elements after animation completes
 
 **Dependencies:** `gameConfig.js`
 
 ---
 
-#### **13. `canvas.js` - Canvas Initialization**
+#### **15. `canvas.js` - Canvas Initialization**
 **Responsibilities:**
 - Canvas element acquisition and setup
 - High DPI (Retina) display support
@@ -283,15 +338,23 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **14. `utils.js` - Utility Functions**
+#### **16. `utils.js` - Utility Functions**
 **Responsibilities:**
 - Common helper functions
 - Math utilities
 - Color manipulation
+- LocalStorage helpers with error handling
 
 **Exported Functions:**
 - `clamp(value, min, max)` - Constrains value to range
 - `randomInt(min, max)` - Random integer in range (inclusive)
+- `hypot(x, y)` - Calculate hypotenuse (distance)
+- `formatNumber(num)` - Format number with commas
+- `applyAlphaToColor(color, alpha)` - Add transparency to colors
+- `getStoredNumber(key, defaultValue)` - Safe localStorage number retrieval
+- `setStoredValue(key, value)` - Safe localStorage write
+- `getStoredJSON(key, fallback)` - Safe JSON object retrieval
+- `setStoredJSON(key, value)` - Safe JSON object storage
 
 **Dependencies:** None
 
@@ -303,11 +366,18 @@ This project follows a modular architecture with clear separation of concerns. T
 User Input → input.js → state.js
                             ↓
 main.js (Game Loop) ← game.js ← snake.js → food.js
+        ↓                         ↓   ↓        ↓
+    render.js → canvas.js        particles.js
         ↓                              ↓
-    render.js → canvas.js          death.js
-        ↓
-    ui.js (HUD Updates) → transition.js
+    ui.js (HUD Updates)            death.js
+        ↓                              ↓
+    transition.js                 skinPalette.js
 ```
+
+**Module Dependencies:**
+- **particles.js** is used by snake.js, food.js, and death.js for all particle effects
+- **skinPalette.js** provides color palettes to particles.js for skin-aware particle colors
+- **config.js** and **utils.js** are shared utility modules used across the codebase
 
 ---
 
@@ -342,25 +412,25 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
 ## 🚀 Suggested Next Tasks
 
 ### **High Priority**
-1. **🐛 Fix Missing Export Bug**: `render.js` exports `drawWorld()` but `main.js` imports `render()` - needs alias or rename
-2. **⚙️ Implement Settings Menu**: Currently logs to console, needs actual functionality
-3. **🎨 Implement Customization System**: Snake skins/colors with currency-based unlocks
-4. **📱 Mobile Controls**: Touch-based directional controls for mobile devices
-5. **🔊 Add Sound Effects**: Eating, collision, background music using Web Audio API
+1. **📱 Mobile Controls**: Touch-based directional controls for mobile devices
+2. **🔊 Add Sound Effects**: Eating, collision, background music using Web Audio API
+3. **🏆 Add Leaderboard**: Local or online leaderboard system
+4. **⚡ Power-ups**: Speed boost, invincibility, score multiplier
+5. **🎯 Level System**: Progressive difficulty with obstacles and level themes
 
 ### **Medium Priority**
-6. **🏆 Add Leaderboard**: Local or online leaderboard system
-7. **⚡ Power-ups**: Speed boost, invincibility, score multiplier
-8. **🎯 Level System**: Progressive difficulty with obstacles and level themes
-9. **🌈 More Visual Effects**: Trail effects, screen shake on collision, combo animations
-10. **📊 Statistics Tracking**: Games played, total score, average score, longest snake
+6. **🌈 More Visual Effects**: Trail effects, screen shake on collision, combo animations
+7. **📊 Statistics Tracking**: Games played, total score, average score, longest snake
+8. **🎮 Game Modes**: Time attack, survival, multiplayer, endless
+9. **🏪 Shop System**: Expand shop with more skins, power-ups, themes
+10. **🎓 Tutorial System**: Interactive first-time user tutorial
 
 ### **Low Priority**
-11. **🎮 Game Modes**: Time attack, survival, multiplayer, endless
-12. **🏪 Shop System**: Use currency to buy skins, power-ups, themes
-13. **🎓 Tutorial System**: Interactive first-time user tutorial
-14. **♿ Accessibility**: Keyboard navigation, screen reader support, colorblind modes
-15. **🔧 Developer Mode**: Debug overlay with FPS, collision boxes, state inspector
+11. **♿ Accessibility**: Enhanced keyboard navigation, screen reader support, colorblind modes
+12. **🔧 Developer Mode**: Debug overlay with FPS, collision boxes, state inspector
+13. **🌐 Internationalization**: Multi-language support
+14. **🎨 Theme System**: Light/dark mode, custom background themes
+15. **📈 Achievement System**: Unlock achievements for milestones
 
 ### **Code Quality**
 16. **✅ Add Unit Tests**: Test collision detection, scoring, state transitions
@@ -398,6 +468,8 @@ snake-game-demo/
     ├── snake.js        # Snake entity
     ├── food.js         # Food entity
     ├── death.js        # Death handling
+    ├── particles.js    # Particle system
+    ├── skinPalette.js  # Skin color palettes
     ├── render.js       # Rendering engine
     ├── input.js        # Input handling
     ├── ui.js           # UI management
