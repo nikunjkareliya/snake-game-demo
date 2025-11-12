@@ -144,6 +144,7 @@ body {
   justify-content: space-between;
   padding: 10px 18px;
   pointer-events: none;
+  z-index: 100; /* Keep HUD above overlay but below modals */
 }
 
 #stage-hud .corner {
@@ -160,6 +161,12 @@ body {
 }
 
 #stage-hud .corner.right { flex-direction: row; }
+
+/* When overlay (lobby) is open we hide the right corner HUD (food counter)
+   to avoid visual conflict with the settings button placed in the overlay. */
+#stage-wrap.overlay-open #stage-hud .corner.right {
+  display: none;
+}
 
 .hud-item { display:flex; align-items:center; gap:8px; font-size:15px; }
 
@@ -262,6 +269,7 @@ body {
   pointer-events: none;
   transition: opacity 260ms ease;
   backdrop-filter: blur(8px);
+  z-index: 50; /* Below HUD (z-index: 100) */
 }
 
 #overlay.visible {
@@ -921,6 +929,7 @@ input[type=range]:focus::-moz-range-thumb {
   flex-direction: column;
   gap: 20px;
   animation: modalPop 240ms cubic-bezier(.25,.8,.25,1);
+  font-family: 'Orbitron', sans-serif; /* Consistent font */
 }
 
 .customize-dialog .customize-heading {
@@ -951,6 +960,32 @@ input[type=range]:focus::-moz-range-thumb {
   padding: 0 16px;
   overflow-y: auto; /* Allow the grid itself to scroll */
   flex-grow: 1; /* Allow grid to take up available space */
+  
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 234, 255, 0.4) rgba(10, 10, 25, 0.3);
+}
+
+/* WebKit scrollbar (Chrome, Safari, Edge) */
+.skin-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.skin-grid::-webkit-scrollbar-track {
+  background: rgba(10, 10, 25, 0.3);
+  border-radius: 4px;
+}
+
+.skin-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 234, 255, 0.4), rgba(255, 0, 255, 0.3));
+  border-radius: 4px;
+  border: 1px solid rgba(0, 234, 255, 0.2);
+  transition: background 0.2s ease;
+}
+
+.skin-grid::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0, 234, 255, 0.7), rgba(255, 0, 255, 0.5));
+  box-shadow: 0 0 12px rgba(0, 234, 255, 0.5);
 }
 
 /* Responsive grid */
@@ -1105,16 +1140,80 @@ input[type=range]:focus::-moz-range-thumb {
 }
 
 /* Price badge styling */
-.skin-price-badge {
-  font-size: 11px;
+/* Compact coin price chip (replaces Buy buttons & price badge) */
+.price-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 80px;
+  border-radius: 10px;
+  background: rgba(0, 234, 255, 0.08);
+  border: 1px solid rgba(0, 234, 255, 0.35);
+  cursor: pointer;
+  font-size: 13px;
   font-weight: 600;
   color: var(--neon-cyan);
-  padding: 3px 8px;
-  background: rgba(0, 234, 255, 0.12);
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-sizing: border-box;
+}
+.price-chip:hover,
+.price-chip:focus-visible {
+  outline: none;
+  background: rgba(0, 234, 255, 0.18);
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(0, 234, 255, 0.4);
+}
+.price-chip:active { transform: scale(0.96); }
+.price-chip[disabled] { opacity: .55; cursor: default; transform: none; }
+.price-chip .coin-icon { width:16px; height:16px; box-shadow: 0 0 6px rgba(255, 200, 0, 0.6); }
+.price-chip .price-value { font-family: 'Orbitron', sans-serif; }
+.skin-actions { display:flex; justify-content:center; min-height: 36px; align-items: center; }
+
+/* Button state styles for Select/Selected - consistent sizing */
+.btn-select {
+  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 80px;
+  background: rgba(0, 234, 255, 0.1);
+  border: 1px solid rgba(0, 234, 255, 0.4);
   border-radius: 10px;
-  margin-bottom: 4px;
-  display: inline-block;
-  border: 1px solid rgba(0, 234, 255, 0.3);
+  color: var(--neon-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-sizing: border-box;
+}
+.btn-select:hover,
+.btn-select:focus-visible {
+  background: rgba(0, 234, 255, 0.2);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 234, 255, 0.5);
+  transform: scale(1.05);
+}
+.btn-selected {
+  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 80px;
+  background: rgba(255, 200, 0, 0.15);
+  border: 1px solid rgba(255, 200, 0, 0.5);
+  border-radius: 10px;
+  color: rgba(255, 200, 0, 0.9);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: default;
+  opacity: 0.8;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.btn-selected:disabled {
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .skin-preview {
@@ -1131,9 +1230,11 @@ input[type=range]:focus::-moz-range-thumb {
 }
 
 .skin-name {
-  font-size: 12px;
+  font-size: 13px;
   margin: 4px 0 8px;
   opacity: 0.9;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 500;
 }
 
 .skin-actions .btn[disabled] {
@@ -1439,6 +1540,194 @@ input[type=range]:focus::-moz-range-thumb {
 }
 
 /* Accessibility: Respect user motion preferences */
+/* ============================================================================
+   GAME OVER SCREEN STYLING
+   ============================================================================ */
+
+/* Game over background particles */
+.gameover-bg-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(0, 234, 255, 0.4);
+  pointer-events: none;
+  animation: float linear infinite;
+}
+
+.gameover-bg-particle:nth-child(1) { left: 15%; bottom: -10px; animation-duration: 7s; }
+.gameover-bg-particle:nth-child(2) { left: 35%; bottom: -15px; animation-duration: 9s; }
+.gameover-bg-particle:nth-child(3) { left: 65%; bottom: -20px; animation-duration: 8s; }
+.gameover-bg-particle:nth-child(4) { left: 85%; bottom: -10px; animation-duration: 10s; }
+
+/* Game over container with glass effect */
+.gameover-container {
+  max-width: 500px;
+  width: 90%;
+  padding: 40px 30px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  animation: gameoverSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Game over title */
+.gameover-title {
+  font-family: 'Audiowide', cursive;
+  font-size: 42px;
+  margin: 0;
+  letter-spacing: 2px;
+  text-align: center;
+  animation: titleBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.gameover-title.highlight {
+  color: var(--neon-orange);
+  text-shadow: 0 0 10px rgba(255, 122, 0, 0.8), 0 0 20px rgba(255, 122, 0, 0.4);
+  animation: pulseTitle 1.5s ease-in-out infinite;
+}
+
+/* Stats grid layout - Compact */
+.gameover-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+/* Individual stat card - Compact size */
+.stat-card {
+  padding: 14px 12px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: statCardSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 234, 255, 0.15);
+}
+
+/* Stat icon styling - Smaller */
+.stat-icon {
+  font-size: 24px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon.food-sphere-icon,
+.stat-icon.coin-icon {
+  font-size: 18px;
+  width: 28px;
+}
+
+/* Stat value and label - Smaller */
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 10px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Game over buttons group */
+.gameover-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 22px; /* increased vertical spacing for better separation */
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Hero button for Play Again - Slightly larger */
+.gameover-buttons .btn-hero {
+  font-size: 20px;
+  padding: 16px 44px;
+  min-width: 280px;
+  align-self: center;
+  animation: buttonSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+/* Secondary button for Back to Lobby - Similar proportions */
+.gameover-buttons .btn.secondary {
+  font-size: 14px;
+  padding: 11px 28px;
+  min-width: 160px;
+  align-self: center;
+  animation: buttonSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+/* ============================================================================
+   GAME OVER ANIMATIONS
+   ============================================================================ */
+
+@keyframes gameoverSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes titleBounce {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulseTitle {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255, 122, 0, 0.8), 0 0 20px rgba(255, 122, 0, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 122, 0, 1), 0 0 40px rgba(255, 122, 0, 0.6);
+  }
+}
+
+@keyframes statCardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes buttonSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Disable all animations */
   * {

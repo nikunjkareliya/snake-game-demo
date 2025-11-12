@@ -12,7 +12,8 @@ export const highScoreEl = document.getElementById('highScore');
 export const hudCurrencyEl = document.getElementById('hudCurrency');
 export const foodCollectedEl = document.getElementById('foodCollected');
 
-let lobbyHighScoreEl, lobbyCurrencyEl;
+// lobby overlay no longer renders standalone high-score/currency stat boxes above the title
+// (these are displayed in the persistent stage HUD). Keep variables removed to avoid unused warnings.
 let currentStartGame, currentHideOverlay;
 let lastCurrency = 0;
 
@@ -24,7 +25,9 @@ let lastCurrency = 0;
  * @param {Function} onButtonClick
  */
 export function showOverlay(title, subtitle, buttonText, onButtonClick) {
-        overlay.classList.add('visible');
+    overlay.classList.add('visible');
+    // Add modifier to stage to hide certain HUD items (e.g., food counter) while overlay is visible
+    document.getElementById('stage-wrap')?.classList.add('overlay-open');
         overlay.innerHTML = `
             <div class="overlay-inner">
                 <h1 class="title neon">${title}</h1>
@@ -55,11 +58,11 @@ export function showLobby(startGame, hideOverlay) {
     currentHideOverlay = hideOverlay;
 
     overlay.classList.add('visible');
+    // Hide non-essential HUD items while lobby overlay is visible
+    document.getElementById('stage-wrap')?.classList.add('overlay-open');
     overlay.innerHTML = buildLobbyHTML();
 
-    // Update stats display
-    lobbyHighScoreEl = document.getElementById('lobbyHighScore');
-    lobbyCurrencyEl = document.getElementById('lobbyCurrency');
+    // Update stats display (HUD values handled by persistent stage HUD)
     updateStats();
 
     attachLobbyListeners(startGame, hideOverlay);
@@ -84,15 +87,7 @@ function buildLobbyHTML() {
         <div class="lobby-bg-particle"></div>
         <div class="lobby-bg-particle"></div>
 
-        <!-- Coins stat in top-left corner -->
-        <div class="lobby-stats">
-            <div class="stat-box stat-left glass">
-                <span class="coin-icon"></span>
-                <div id="lobbyCurrency" class="stat-value">${state.currency}</div>
-            </div>
-        </div>
-
-        <!-- Settings icon button in top-right corner -->
+        <!-- Settings icon button in top-right corner (visible while overlay shown) -->
         <button id="lobbySettingsBtn" class="settings-icon-btn glass" aria-label="Settings">⚙️</button>
 
         <div class="overlay-inner">
@@ -207,9 +202,8 @@ function attachLobbyListeners(startGame, hideOverlay) {
  * @returns {void}
  */
 export function updateStats() {
-    if (lobbyHighScoreEl) lobbyHighScoreEl.textContent = state.highScore;
-    if (lobbyCurrencyEl) lobbyCurrencyEl.textContent = formatNumber(state.currency);
-    // HUD no longer displays score/high score
+    // Lobby overlay no longer shows high score or coins above the title;
+    // persistent stage HUD handles currency/food counters.
     
     // Update HUD currency with animation on change
     if (hudCurrencyEl) {
@@ -239,26 +233,90 @@ export function updateStats() {
  */
 export function hideOverlay() {
     overlay.classList.remove('visible');
+    // Restore HUD visibility
+    document.getElementById('stage-wrap')?.classList.remove('overlay-open');
     setTimeout(() => canvas.focus(), UI_FOCUS_DELAY);
+}
+
+/**
+ * Build game over screen HTML with structured layout
+ * @param {object} detail - Game over event detail object
+ * @returns {string} HTML for game over screen
+ */
+function buildGameOverHTML(detail) {
+    const { title, score, foodEaten, coinsEarned, highScore, isNewHighScore } = detail;
+
+    return `
+        <!-- Floating background particles -->
+        <div class="gameover-bg-particle"></div>
+        <div class="gameover-bg-particle"></div>
+        <div class="gameover-bg-particle"></div>
+        <div class="gameover-bg-particle"></div>
+
+        <!-- Game over container -->
+        <div class="gameover-container glass">
+            <!-- Title -->
+            <h1 class="gameover-title neon ${isNewHighScore ? 'highlight' : ''}">
+                ${title}
+            </h1>
+
+            <!-- Stats grid -->
+            <div class="gameover-stats">
+                <div class="stat-card glass" style="animation-delay: 0s;">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value neon">${score}</div>
+                    <div class="stat-label">Score</div>
+                </div>
+                <div class="stat-card glass" style="animation-delay: 0.1s;">
+                    <span class="food-sphere-icon stat-icon"></span>
+                    <div class="stat-value neon">${foodEaten}</div>
+                    <div class="stat-label">Food Eaten</div>
+                </div>
+                <div class="stat-card glass" style="animation-delay: 0.2s;">
+                    <span class="coin-icon stat-icon"></span>
+                    <div class="stat-value neon">${coinsEarned}</div>
+                    <div class="stat-label">Coins Earned</div>
+                </div>
+                <div class="stat-card glass" style="animation-delay: 0.3s;">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value neon">${highScore}</div>
+                    <div class="stat-label">High Score</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="gameover-buttons">
+                <button id="gameoverPlayAgainBtn" class="btn btn-hero neon">Play Again</button>
+                <button id="gameoverBackBtn" class="btn secondary">Back to Lobby</button>
+            </div>
+        </div>
+    `;
 }
 
 // Listen for game over events
 document.addEventListener('showGameOver', (e) => {
-    const { title, score, foodEaten, coinsEarned, highScore, isNewHighScore } = e.detail;
+    overlay.classList.add('visible');
+    overlay.innerHTML = buildGameOverHTML(e.detail);
 
-    // Create detailed stats display with icons
-    const statsHtml = `
-        <div style="text-align: center; font-size: 20px; line-height: 2; color: var(--text);">
-            <div>📊 <span style="font-size: 24px; color: var(--neon-yellow);">Score: ${score}</span></div>
-            <div><span class="food-sphere-icon" style="margin-right: 6px;"></span><span style="font-size: 24px; color: var(--neon-lime);">Food Eaten: ${foodEaten}</span></div>
-            <div>💰 <span style="font-size: 24px; color: var(--neon-cyan);">Coins Earned: ${coinsEarned}</span></div>
-            ${isNewHighScore ? '<div style="margin-top: 10px; font-size: 18px; color: var(--neon-orange);">⭐ NEW HIGH SCORE! ⭐</div>' : `<div>🏆 <span style="font-size: 18px;">High Score: ${highScore}</span></div>`}
-        </div>
-    `;
+    // Wire up button handlers
+    const playAgainBtn = document.getElementById('gameoverPlayAgainBtn');
+    const backBtn = document.getElementById('gameoverBackBtn');
 
-    showOverlay(title, statsHtml, 'Play Again', () => {
-        showLobby(currentStartGame, currentHideOverlay);
-    });
+    if (playAgainBtn) {
+        playAgainBtn.addEventListener('click', () => {
+            currentStartGame();
+            hideOverlay();
+        });
+    }
+
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            showLobby(currentStartGame, hideOverlay);
+        });
+    }
+
+    // Focus on Play Again button for accessibility
+    setTimeout(() => playAgainBtn?.focus(), 100);
 });
 
 /**
@@ -268,6 +326,73 @@ document.addEventListener('showGameOver', (e) => {
 export function showCustomize(startGame, hideOverlayCb) {
     overlay.classList.add('visible');
     rebuildCustomizeUI(startGame, hideOverlayCb);
+}
+
+/**
+ * Update a single skin card without rebuilding entire UI (prevents flickering)
+ */
+function updateSkinCard(skinId, startGame, hideOverlayCb) {
+    const card = overlay.querySelector(`[data-skin-id="${skinId}"]`);
+    if (!card) return;
+
+    const skin = getSkinById(skinId);
+    if (!skin) return;
+
+    const owned = new Set(state.ownedSkins || []);
+    const isOwned = owned.has(skinId);
+    const isSelected = state.selectedSkinId === skinId;
+
+    // Update equipped badge
+    const statusBadges = card.querySelector('.skin-status-badges');
+    if (statusBadges) {
+        let badgeHtml = '';
+        if (isOwned && isSelected) {
+            badgeHtml = '<div class="status-badge equipped-badge" title="Currently equipped">⭐</div>';
+        } else if (!isOwned) {
+            badgeHtml = '<div class="status-badge locked-badge" title="Locked">🔒</div>';
+        }
+        statusBadges.innerHTML = badgeHtml;
+    }
+
+    // Update action button
+    const skinActions = card.querySelector('.skin-actions');
+    if (skinActions) {
+        let actionHtml = '';
+        if (isOwned) {
+            if (isSelected) {
+                actionHtml = '<button class="btn btn-selected" disabled>Selected</button>';
+            } else {
+                actionHtml = '<button class="btn btn-select equipBtn">Select</button>';
+            }
+        } else if (skin.price > 0) {
+            actionHtml = `<button class="price-chip buyChip" aria-label="Buy ${skin.name} for ${skin.price} coins"><span class="coin-icon"></span><span class="price-value">${skin.price}</span></button>`;
+        }
+        skinActions.innerHTML = actionHtml;
+
+        // Rewire event listeners for this card only
+        const buyBtn = skinActions.querySelector('.buyChip');
+        const equipBtn = skinActions.querySelector('.equipBtn');
+        if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(skinId, startGame, hideOverlayCb));
+        if (equipBtn) equipBtn.addEventListener('click', () => equipSkin(skinId, startGame, hideOverlayCb));
+    }
+
+    // Update card attributes
+    if (isSelected) {
+        card.setAttribute('data-equipped', 'true');
+    } else {
+        card.removeAttribute('data-equipped');
+    }
+
+    // Update currency display
+    const currencyEl = document.getElementById('lobbyCurrency');
+    if (currencyEl) currencyEl.textContent = formatNumber(state.currency);
+}
+
+/**
+ * Update all skin cards (used when multiple cards need updates, like after purchase + equip)
+ */
+function updateAllSkinCards(startGame, hideOverlayCb) {
+    SKINS.forEach(skin => updateSkinCard(skin.id, startGame, hideOverlayCb));
 }
 
 /**
@@ -287,7 +412,7 @@ function rebuildCustomizeUI(startGame, hideOverlayCb) {
     // Wire skin actions
     overlay.querySelectorAll('[data-skin-id]').forEach(card => {
         const id = card.getAttribute('data-skin-id');
-        const buyBtn = card.querySelector('.buyBtn');
+        const buyBtn = card.querySelector('.buyChip');
         const equipBtn = card.querySelector('.equipBtn');
 
         if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(id, startGame, hideOverlayCb));
@@ -315,10 +440,6 @@ function renderSkinCard(skin, owned, index = 0) {
     const isOwned = owned.has(skin.id);
     const isSelected = state.selectedSkinId === skin.id;
     const canAfford = isOwned || state.currency >= skin.price;
-    const action = isOwned ? (isSelected ? 'Equipped' : 'Equip') : `Buy ${skin.price}`;
-    const actionClass = isOwned ? (isSelected ? 'btn' : 'btn neon equipBtn') : 'btn neon buyBtn';
-    // Only disable already-equipped skins; allow clicking unaffordable skins to show feedback
-    const disabled = isSelected ? 'disabled' : '';
     const ariaLabel = !isOwned && !canAfford ? `${skin.name} - Insufficient coins. Need ${skin.price - state.currency} more.` : skin.name;
 
     // Determine rarity tier based on price
@@ -362,25 +483,30 @@ function renderSkinCard(skin, owned, index = 0) {
     let statusBadgesHtml = '';
     if (isOwned && isSelected) {
         statusBadgesHtml += '<div class="status-badge equipped-badge" title="Currently equipped">⭐</div>';
-    } else if (isOwned) {
-        statusBadgesHtml += '<div class="status-badge owned-badge" title="Owned">✓</div>';
-    } else if (!canAfford) {
+    } else if (!isOwned) {
+        // Show locked badge for all not-owned skins
         statusBadgesHtml += '<div class="status-badge locked-badge" title="Locked">🔒</div>';
     }
-
-    // Price badge text
-    const priceBadgeText = skin.price === 0 ? 'FREE' : `${skin.price}`;
 
     return `
       <div class="skin-card glass rarity-${rarity}" data-skin-id="${skin.id}" aria-label="${ariaLabel}" ${isSelected ? 'data-equipped="true"' : ''} ${!canAfford ? 'data-locked="true"' : ''} style="animation-delay: ${index * 0.05}s;">
         <div class="skin-status-badges">${statusBadgesHtml}</div>
         <div class="skin-preview" style="${previewStyle}"></div>
-        <div class="skin-price-badge">${priceBadgeText}${!isOwned && skin.price > 0 ? ' <span class="coin-icon" style="width: 12px; height: 12px; display: inline-block; margin-left: 4px;"></span>' : ''}</div>
         <div class="skin-name">${skin.name}</div>
         <div class="skin-actions">
-          ${isOwned
-            ? `<button class="${actionClass}" ${disabled}>${action}</button>`
-            : `<button class="${actionClass}" ${disabled}>${action}</button>`}
+                    ${
+                        isOwned
+                            ? (
+                                    isSelected
+                                        ? `<button class="btn btn-selected" disabled>Selected</button>`
+                                        : `<button class="btn btn-select equipBtn">Select</button>`
+                                )
+                            : (
+                                    skin.price > 0
+                                        ? `<button class="price-chip buyChip" aria-label="Buy ${skin.name} for ${skin.price} coins"><span class="coin-icon"></span><span class="price-value">${skin.price}</span></button>`
+                                        : ''
+                                )
+                    }
         </div>
       </div>
     `;
@@ -431,12 +557,16 @@ function tryBuySkin(id, startGame, hideOverlayCb, options = {}) {
         setTimeout(() => ariaLive.textContent = '', 3000);
     }
 
-    // Auto-equip on purchase
+    // Auto-equip on purchase (will update all cards)
+    const previousSkinId = state.selectedSkinId;
     equipSkin(id, startGame, hideOverlayCb, { silent: true });
 
-    // Rebuild UI to reflect changes
+    // Update UI to reflect changes - update all cards since purchase affects multiple:
+    // 1. The purchased skin (lock -> select button)
+    // 2. The previously equipped skin (selected -> select)
+    // 3. The newly equipped skin (select -> selected)
     if (!options?.silent) {
-        rebuildCustomizeUI(startGame, hideOverlayCb);
+        updateAllSkinCards(startGame, hideOverlayCb);
     }
 }
 
@@ -452,14 +582,21 @@ function equipSkin(id, startGame, hideOverlayCb, options = {}) {
         return;
     }
 
+    const previousSkinId = state.selectedSkinId;
+
     // Equip the skin
     state.selectedSkinId = id;
     state.currentSkin = skin; // Store full skin object for advanced rendering
     setStoredJSON('neonSnakeSelectedSkin', id);
 
-    // Rebuild UI unless silent mode
+    // Update UI unless silent mode - update both old and new equipped skins
     if (!options.silent) {
-        rebuildCustomizeUI(startGame, hideOverlayCb);
+        // Update previously equipped skin (if different)
+        if (previousSkinId && previousSkinId !== id) {
+            updateSkinCard(previousSkinId, startGame, hideOverlayCb);
+        }
+        // Update newly equipped skin
+        updateSkinCard(id, startGame, hideOverlayCb);
     }
 }
 
