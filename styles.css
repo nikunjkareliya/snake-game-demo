@@ -885,6 +885,19 @@ input[type=range]:focus::-moz-range-thumb {
     opacity: 0.9;
 }
 
+/* Hide icons specifically for lobby Customize and How to Play buttons
+   so the buttons show only text in the lobby overlay. This keeps
+   .btn-icon usable elsewhere (skin cards, price chips, etc.). */
+#customizeBtn .btn-icon,
+#howToPlayBtn .btn-icon {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 /* Lobby stats repositioned to top corners (mirrors in-game HUD) */
 .lobby-stats {
   position: absolute;
