@@ -1,35 +1,66 @@
 import { Direction, COLOR_A, COLOR_B, DEFAULT_SKIN_ID, SKINS, getSkinById, BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX } from './config.js';
+import { TESTING } from './gameConfig.js';
 import { getStoredNumber, getStoredJSON, setStoredJSON } from './utils.js';
 
 // Get all skin IDs that are free (price: 0)
 const allFreeSkinIds = SKINS.filter(skin => skin.price === 0).map(skin => skin.id);
 
-// Get stored owned skins or default to all free skins
-const storedOwned = getStoredJSON('neonSnakeOwnedSkins', allFreeSkinIds);
+// Get stored owned skins (default to empty array to force fresh start)
+const storedOwned = getStoredJSON('neonSnakeOwnedSkins', []);
 
-// Ensure all free skins are owned (merge stored with all free skins)
-const mergedOwnedSkins = Array.from(new Set([...storedOwned, ...allFreeSkinIds]));
+// Validate stored skins: only keep skins that still exist and are either free or were legitimately purchased
+const validStoredSkins = storedOwned.filter(id => {
+    const skin = SKINS.find(s => s.id === id);
+    return skin && (skin.price === 0 || storedOwned.includes(id));
+});
 
-// Store the updated owned skins list
-setStoredJSON('neonSnakeOwnedSkins', mergedOwnedSkins);
+// Merge valid stored skins with current free skins
+const mergedOwnedSkins = Array.from(new Set([...validStoredSkins, ...allFreeSkinIds]));
+
+// If TESTING.unlockAllSkins is enabled, treat all SKINS as owned at runtime
+// for QA/visual tests. Do NOT persist this change to localStorage so we
+// don't accidentally modify user data while testing. Otherwise, persist
+// the merged owned skins list as normal.
+let runtimeOwnedSkins;
+if (TESTING && TESTING.unlockAllSkins) {
+    runtimeOwnedSkins = SKINS.map(s => s.id);
+    // Intentionally do not call setStoredJSON here
+} else {
+    runtimeOwnedSkins = mergedOwnedSkins;
+    // Store the updated owned skins list
+    setStoredJSON('neonSnakeOwnedSkins', mergedOwnedSkins);
+}
 
 const storedSelected = getStoredJSON('neonSnakeSelectedSkin', DEFAULT_SKIN_ID);
 const initialSkin = getSkinById(storedSelected);
 
+// Settings (persisted)
+const storedSettings = getStoredJSON('neonSnakeSettings', {
+    soundOn: true,
+    musicOn: true,
+    speedMs: 120,
+});
+
 export const state = {
-    gameState: 'init', // init | playing | paused | dying | gameover
+    gameState: 'init', // init | intro | playing | paused | dying | gameover
+    introAnimation: null, // null or { progress: number, snake: [...] }
     score: 0,
+    foodCollected: 0, // Track food eaten in current game
     highScore: getStoredNumber('neonSnakeHighScore', '0'),
     currency: getStoredNumber('neonSnakeCurrency', '0'),
-    // Skins - all free skins are automatically owned
-    ownedSkins: mergedOwnedSkins,
+    // Skins - all free skins are automatically owned (or all skins when TESTING.unlockAllSkins)
+    ownedSkins: runtimeOwnedSkins,
     selectedSkinId: initialSkin?.id || DEFAULT_SKIN_ID,
     currentSkin: initialSkin || { head: COLOR_B, tail: COLOR_A },
     snake: [],
+    prevSnake: [], // Previous snake positions for interpolation
+    moveProgress: 0, // 0 to 1, how far between prevSnake and snake
     direction: Direction.Right,
     nextDirection: Direction.Right,
     food: { x: 10, y: 10 },
-    speedMs: 120, // lower is faster
+    // Settings
+    settings: storedSettings,
+    speedMs: storedSettings?.speedMs ?? 120, // lower is faster
     lastTickAt: 0,
     lastFrameAt: 0,
     elapsedSec: 0,

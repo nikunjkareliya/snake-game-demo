@@ -1,10 +1,10 @@
-# Neon Snake
+# Snake Frenzy
 
 A neon-styled Snake game for the web. Built with HTML5 Canvas, CSS, and vanilla JavaScript.
 
 ## 🎮 Play Online
 
-**Live Demo**: [Play Neon Snake](https://nikunjkareliya.github.io/snake-game-demo/)
+**Live Demo**: [Play Snake Frenzy](https://nikunjkareliya.github.io/snake-game-demo/)
 
 ## 🎯 How to Play
 
@@ -21,13 +21,13 @@ Open `index.html` in any modern browser, or visit the live demo above.
 - Score increases by 10 per food
 - Speed increases slightly after eating
 - Best score is saved to `localStorage`
-- Neon visual effects and smooth animations
+- Dynamic Intro Animation: Features two large, fast-moving snakes traversing the screen diagonally in opposite, offset paths before gameplay begins.
 
 ---
 
 ## 🏗️ Architecture & Module Analysis
 
-This project follows a modular architecture with clear separation of concerns. The codebase is organized into 12 distinct modules, each responsible for specific functionality.
+This project follows a modular architecture with clear separation of concerns. The codebase is organized into 14 distinct modules, each responsible for specific functionality.
 
 ### 📁 Module Overview
 
@@ -37,7 +37,7 @@ This project follows a modular architecture with clear separation of concerns. T
 - Implements the main game loop using `requestAnimationFrame`
 - Manages frame timing with delta time calculations (capped at 33ms)
 - Orchestrates all game systems in the correct order:
-  - Updates particles and ambient effects
+  - Updates intro animation, particles, and ambient effects
   - Updates timers (mouth animation, hit shake)
   - Steps snake movement when playing
   - Handles death sequence timing
@@ -50,67 +50,81 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **2. `config.js` - Game Configuration & Constants**
+#### **2. `config.js` - Core Configuration & Constants**
 **Responsibilities:**
-- Defines all game constants and configuration values
+- Defines core, static game constants and configuration values
 - Canvas dimensions (1024x768) and device pixel ratio
 - Grid system (32x32 cells, 32x24 rows/columns)
 - Direction enum (Up, Down, Left, Right)
-- Visual settings (colors, radii, animations)
-- Feature flags (spline smoothing, mouth animation duration)
+- Core visual settings (colors, radii, animations)
 
 **Exports:**
 - Canvas dimensions: `CSS_WIDTH`, `CSS_HEIGHT`, `DPR`
 - Grid: `CELL_SIZE`, `COLUMNS`, `ROWS`
 - Direction enum
 - Visual constants: `COLOR_A`, `COLOR_B`, `BODY_RADIUS`, `HEAD_RADIUS`
-- Feature toggles: `USE_SPLINE_SMOOTHING`, `MOUTH_ANIM_DURATION`
 
 **Dependencies:** None (pure configuration)
 
 ---
 
-#### **3. `state.js` - Global Game State Manager**
+#### **3. `gameConfig.js` - Game Design & Tuning Configuration**
+**Responsibilities:**
+- Externalizes all tunable game design values for easy adjustment by designers.
+- Contains settings for economy, gameplay difficulty, visual effects, and UI animations.
+- Includes settings for the intro animation (duration, scale, length, offset).
+
+**Exports:**
+- `INTRO_ANIMATION`, `ECONOMY`, `GAMEPLAY`, `VISUAL`, `UI_ANIMATIONS`, `PERSISTENCE`, `DEV`
+- Helper functions like `getSkinPrice` and `calculateDeathReward`.
+
+**Dependencies:** None (pure configuration)
+
+---
+
+#### **4. `state.js` - Global Game State Manager**
 **Responsibilities:**
 - Centralized state management for the entire application
-- Manages game state machine (init, playing, paused, dying, gameover)
+- Manages game state machine (init, lobby, intro, playing, paused, dying, gameover)
 - Tracks score, high score, and currency (persisted to localStorage)
 - Maintains snake position, direction, and food location
 - Stores visual state (particles, timers for animations)
-- Handles skin customization
+- Holds the state for the intro animation, including snake positions and progress.
 
 **State Properties:**
 - Game flow: `gameState`, `speedMs`, timing variables
 - Scoring: `score`, `highScore`, `currency`
 - Entities: `snake[]`, `food`, `direction`, `nextDirection`
-- Visual effects: `particles[]`, `currentSkin`, animation timers
+- Visual effects: `particles[]`, `currentSkin`, animation timers, `introAnimation`
 - Performance: `lastTickAt`, `lastFrameAt`, `elapsedSec`
 
 **Dependencies:** `config.js`
 
 ---
 
-#### **4. `game.js` - Core Game Logic Controller**
+#### **5. `game.js` - Core Game Logic Controller**
 **Responsibilities:**
 - Manages game lifecycle (reset, start, pause, game over)
+- Handles the logic for the dual-snake intro animation.
 - Initializes snake starting position (center of grid, 3 segments)
 - Handles game state transitions
 - Calculates currency earned (score / 10)
 - Triggers game over modal with appropriate messages
 
 **Key Functions:**
+- `stepIntroAnimation(dt)` - Advances the intro animation frame.
+- `startGame()` - Starts a new game session, beginning with the intro.
 - `resetGame()` - Resets all game state to initial values
-- `startGame()` - Starts a new game session
 - `togglePause()` - Pauses/resumes gameplay
 - `finalizeGameOver()` - Handles end-game logic and UI display
 
-**Dependencies:** `state.js`, `config.js`, `food.js`
+**Dependencies:** `state.js`, `config.js`, `gameConfig.js`, `food.js`
 
 ---
 
-#### **5. `snake.js` - Snake Entity & Movement Logic**
+#### **6. `snake.js` - Snake Entity & Movement Logic**
 **Responsibilities:**
-- Handles snake movement and physics
+- Handles gameplay snake movement and physics
 - Collision detection (walls, self, food)
 - Growth mechanics when eating food
 - Particle system management
@@ -131,7 +145,7 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **6. `food.js` - Food Entity Management**
+#### **7. `food.js` - Food Entity Management**
 **Responsibilities:**
 - Spawns food at random valid positions
 - Ensures food doesn't spawn on snake body
@@ -151,7 +165,7 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **7. `death.js` - Death Sequence Handler**
+#### **8. `death.js` - Death Sequence Handler**
 **Responsibilities:**
 - Initiates death animation sequence
 - Manages currency rewards calculation
@@ -175,23 +189,22 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **8. `render.js` - Canvas Rendering Engine**
+#### **9. `render.js` - Canvas Rendering Engine**
 **Responsibilities:**
 - All canvas drawing operations
-- Implements advanced visual effects
+- Implements advanced visual effects for gameplay and intro.
+- Renders the dual snakes for the intro animation with scaling.
 - Snake rendering with smooth spline interpolation
 - Gradient effects, glows, and neon styling
 - Multi-layered rendering (glow → base → shine)
 
 **Key Functions:**
 - `drawWorld()` - Main render function (exported)
-- `drawGrid()` - Renders subtle background grid
+- `drawIntroSnake()` - Renders the two snakes for the intro animation.
 - `drawSnake()` - Complex snake rendering with segments
-- `drawSnakeHead(head, nx, ny)` - Detailed head with eyes, pupils, mouth, tongue
+- `drawSnakeHead(head, nx, ny, scale)` - Detailed head with eyes, pupils, mouth, tongue
 - `drawFood()` - Glowing food with radial gradients
 - `drawParticles()` - Renders all particles with glow effects
-- `drawVignette()` - Adds dark vignette around edges
-- `beginSmoothPath(points, tension)` - Catmull-Rom spline smoothing
 
 **Rendering Features:**
 - **Spline Smoothing**: Bezier curves for smooth snake body
@@ -199,13 +212,12 @@ This project follows a modular architecture with clear separation of concerns. T
 - **Mouth Animation**: Opens/closes with tongue flicking when eating
 - **Multi-layer Body**: Glow layer + gradient base + white shine highlight
 - **Particle Effects**: Additive blending for light bloom
-- **Directional Head**: Head orientation follows movement
 
 **Dependencies:** `state.js`, `canvas.js`, `config.js`
 
 ---
 
-#### **9. `input.js` - Input Handler**
+#### **10. `input.js` - Input Handler**
 **Responsibilities:**
 - Keyboard event management
 - Key mapping for multiple control schemes
@@ -225,7 +237,7 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
-#### **10. `ui.js` - User Interface Manager**
+#### **11. `ui.js` - User Interface Manager**
 **Responsibilities:**
 - Manages overlay system (lobby, game over, how-to-play)
 - Updates HUD elements (score, high score)
@@ -239,18 +251,24 @@ This project follows a modular architecture with clear separation of concerns. T
 - `updateStats()` - Updates all score displays
 - `hideOverlay()` - Hides overlay and focuses canvas
 
-**UI Elements:**
-- Lobby screen with Play/Customize/Settings buttons
-- Stats display (high score, currency)
-- Game over modal with currency earned
-- Controls reference
-- How to Play information screen
-
 **Dependencies:** `state.js`, `canvas.js`
 
 ---
 
-#### **11. `canvas.js` - Canvas Initialization**
+#### **12. `transition.js` - Play Button Transition Animation**
+**Responsibilities:**
+- Displays an animated snake crawling across the screen as a wipe transition.
+- Triggered when the player clicks the "Play" button in the lobby.
+- Creates a seamless visual transition from the menu to the game.
+
+**Key Functions:**
+- `startTransition()` - Creates and animates the DOM-based snake segments.
+
+**Dependencies:** `gameConfig.js`
+
+---
+
+#### **13. `canvas.js` - Canvas Initialization**
 **Responsibilities:**
 - Canvas element acquisition and setup
 - High DPI (Retina) display support
@@ -261,16 +279,11 @@ This project follows a modular architecture with clear separation of concerns. T
 - `canvas` - The canvas DOM element
 - `ctx` - The 2D rendering context
 
-**Setup:**
-- Applies device pixel ratio scaling for sharp rendering
-- Sets canvas as focusable (tabindex="0")
-- Auto-focuses canvas for immediate input
-
 **Dependencies:** `config.js`
 
 ---
 
-#### **12. `utils.js` - Utility Functions**
+#### **14. `utils.js` - Utility Functions**
 **Responsibilities:**
 - Common helper functions
 - Math utilities
@@ -279,9 +292,6 @@ This project follows a modular architecture with clear separation of concerns. T
 **Exported Functions:**
 - `clamp(value, min, max)` - Constrains value to range
 - `randomInt(min, max)` - Random integer in range (inclusive)
-- `hypot(x, y)` - Pythagorean distance calculation
-- `applyAlphaToColor(color, alpha)` - Color transparency helper
-- `hexToRgb(hex)` - Hex to RGB conversion (internal)
 
 **Dependencies:** None
 
@@ -296,7 +306,7 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
         ↓                              ↓
     render.js → canvas.js          death.js
         ↓
-    ui.js (HUD Updates)
+    ui.js (HUD Updates) → transition.js
 ```
 
 ---
@@ -304,6 +314,7 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
 ## 🎨 Technical Highlights
 
 ### **Visual Effects System**
+- **Dynamic Intro**: Dual-snake intro animation to build excitement.
 - **Particle Engine**: Physics-based particles with gravity and lifetime
 - **Spline Smoothing**: Catmull-Rom curves for organic snake movement
 - **Composite Blending**: Uses 'lighter' blend mode for neon glow effects
@@ -380,7 +391,8 @@ snake-game-demo/
 ├── README.md           # This file
 └── src/
     ├── main.js         # Game loop
-    ├── config.js       # Constants
+    ├── config.js       # Core constants
+    ├── gameConfig.js   # Game design tuning
     ├── state.js        # State management
     ├── game.js         # Game logic
     ├── snake.js        # Snake entity
@@ -389,6 +401,7 @@ snake-game-demo/
     ├── render.js       # Rendering engine
     ├── input.js        # Input handling
     ├── ui.js           # UI management
+    ├── transition.js   # UI transition effects
     ├── canvas.js       # Canvas setup
     └── utils.js        # Utilities
 ```

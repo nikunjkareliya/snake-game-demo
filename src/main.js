@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { showLobby, hideOverlay } from './ui.js';
 import { initInput } from './input.js';
-import { startGame, togglePause, finalizeGameOver } from './game.js';
+import { startGame, togglePause, finalizeGameOver, stepIntroAnimation } from './game.js';
 import { render } from './render.js';
 import { spawnFoodAmbient } from './food.js';
 import { stepSnake, updateParticles } from './snake.js';
@@ -18,11 +18,12 @@ function tick(now) {
   state.lastFrameAt = now;
   state.elapsedSec += dt;
 
-// Always update particles and ambient effects
+// Update particles (eat particles only, no idle food particles)
   updateParticles(dt);
-  if (state.gameState !== 'init') {
-    spawnFoodAmbient(dt);
-  }
+  // Disabled idle food ambient particles - only show effect when snake eats food
+  // if (state.gameState !== 'init') {
+  //   spawnFoodAmbient(dt);
+  // }
 
 // update eat pulse lifetimes
   if (state.mouthOpenTimer > 0) state.mouthOpenTimer = Math.max(0, state.mouthOpenTimer - dt);
@@ -40,10 +41,19 @@ function tick(now) {
     }
   }
 
-  if (state.gameState === 'playing') {
-    if (now - state.lastTickAt >= state.speedMs) {
+  if (state.gameState === 'intro') {
+    stepIntroAnimation(dt);
+  } else if (state.gameState === 'playing') {
+    // Update interpolation progress
+    const timeSinceTick = now - state.lastTickAt;
+    state.moveProgress = Math.min(1, timeSinceTick / state.speedMs);
+
+    if (timeSinceTick >= state.speedMs) {
       state.lastTickAt = now;
+      // Store previous positions before updating
+      state.prevSnake = state.snake.map(seg => ({ ...seg }));
       stepSnake();
+      state.moveProgress = 0;
     }
   } else if (state.gameState === 'dying') {
     state.deathTimer -= dt;

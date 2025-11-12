@@ -1,8 +1,11 @@
 import { state } from './state.js';
 import { Direction, COLUMNS, ROWS, CELL_SIZE, PARTICLE_COUNT_EAT, PARTICLE_SPEED_EAT_MIN, PARTICLE_SPEED_EAT_MAX, MOTION_TRAIL_INTERVAL, MOTION_TRAIL_PARTICLE_LIFE, MOTION_TRAIL_PARTICLE_SIZE, GROW_ANIMATION_DURATION, PARTICLE_COUNT_DEATH, PARTICLE_SPEED_DEATH_MIN, PARTICLE_SPEED_DEATH_MAX } from './config.js';
+import { ECONOMY } from './gameConfig.js';
 import { startDeathSequence } from './death.js';
 import { spawnFood } from './food.js';
 import { createBurst, addParticle } from './particles.js';
+import { updateStats } from './ui.js';
+import { setStoredValue } from './utils.js';
 
 export function stepSnake() {
   const head = state.snake[0];
@@ -32,6 +35,12 @@ export function stepSnake() {
   // Check food collision
   if (next.x === state.food.x && next.y === state.food.y) {
     state.score += 10;
+    state.foodCollected += 1;
+    // Award currency for eating food
+    state.currency += ECONOMY.coinPerFood;
+    setStoredValue('neonSnakeCurrency', state.currency);
+    // Update HUD to show new currency
+    updateStats();
     spawnFood();
     createEatEffect(next);
     // Start grow animation
@@ -85,8 +94,19 @@ export function updateParticles(dt) {
 function spawnMotionTrail() {
   if (state.snake.length === 0) return;
   const head = state.snake[0];
-  const centerX = head.x * CELL_SIZE + CELL_SIZE / 2;
-  const centerY = head.y * CELL_SIZE + CELL_SIZE / 2;
+  
+  // Use interpolated position for smoother trail placement
+  let centerX = head.x * CELL_SIZE + CELL_SIZE / 2;
+  let centerY = head.y * CELL_SIZE + CELL_SIZE / 2;
+  
+  if (state.prevSnake && state.prevSnake[0] && state.moveProgress < 1) {
+    const prevHead = state.prevSnake[0];
+    const prevX = prevHead.x * CELL_SIZE + CELL_SIZE / 2;
+    const prevY = prevHead.y * CELL_SIZE + CELL_SIZE / 2;
+    const alpha = state.moveProgress;
+    centerX = prevX + (centerX - prevX) * alpha;
+    centerY = prevY + (centerY - prevY) * alpha;
+  }
   
   addParticle({
     x: centerX + (Math.random() - 0.5) * CELL_SIZE * 0.5,

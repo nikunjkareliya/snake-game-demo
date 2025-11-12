@@ -1,0 +1,227 @@
+# Web Game Prototype Design Document Generator
+
+You are an expert game designer creating a lean prototype design doc. This is for RAPID PROTOTYPING and PROOF OF CONCEPT - focus on core mechanics and fun factor validation.
+
+---
+
+## GAME INFORMATION TO PROVIDE:
+
+### 1. BASIC CONCEPT
+- **Game Title/Codename:** Snake Frenzy
+- **Genre:** Hyper Casual-Arcade
+- **Platform:** Web - Desktop browser
+- **Prototype Goal:** Core mechanics, Fun factor, Market fit
+- **One-Sentence Pitch:** controlling snake, eat food, grow, survive as long as possible
+
+### 2. THE HOOK (CRITICAL)
+**Answer in 2-3 sentences each:**
+
+**a) What's the core fun?**
+- What action feels satisfying to repeat?
+- What's the "aha!" or "wow!" moment?
+
+**b) Why would someone play for 5 minutes?**
+- What's immediately engaging?
+- What's the instant gratification?
+
+**c) ONE Unique Feature (Prototype Focus)**
+- What's the ONE thing that makes this different?
+- What are you validating with this prototype?
+
+### 3. SCOPE DEFINITION
+**Must-Have for Prototype (Absolute Minimum):**
+- [ ] Core mechanic working
+- [ ] Basic UI (start, restart, score)
+- [ ] One complete gameplay loop
+- [ ] Win/loss condition
+- [ ] [Add your specific must-have]
+
+**Nice-to-Have (If time permits):**
+- [ ] Multiple levels/difficulty
+- [ ] Sound effects
+- [ ] Visual polish
+- [ ] [Add your specific nice-to-have]
+
+---
+
+## PROTOTYPE DESIGN DOCUMENT:
+
+Generate a lean, actionable prototype design doc with these sections:
+
+### 1. PROTOTYPE OVERVIEW (1 paragraph)
+- Game concept
+- Core hook
+- What you're validating
+- Target prototype completion time
+
+### 2. CORE MECHANIC (THE HEART)
+**Describe in detail:**
+- What does the player DO? (specific actions)
+- What's the immediate feedback?
+- What makes it fun to repeat?
+- Core loop: [Action] → [Feedback] → [Result] → [Repeat]
+
+**Prototype Focus:**
+- What's the ONE unique mechanic you're testing?
+- Success criteria: How will you know if it's fun?
+
+### 3. PLAYER CONTROLS (Keep Simple)
+- Input method (mouse click, keyboard, touch, drag, etc.)
+- Control mapping
+- Must be learnable in 10 seconds
+
+### 4. GAME OBJECTIVE & WIN/LOSS
+- What's the goal?
+- How do you win?
+- How do you lose?
+- Is it time-based, score-based, or objective-based?
+
+### 5. PROTOTYPE GAMEPLAY FLOW
+**Step-by-step player experience:**
+1. Game loads → [What do they see?]
+2. Player starts → [What happens?]
+3. Core loop → [What do they do repeatedly?]
+4. End condition → [How does it end?]
+5. Restart → [How do they play again?]
+
+### 6. MINIMAL UI REQUIREMENTS
+**Screens needed:**
+- Start screen (or instant play?)
+- Gameplay HUD (score, timer, etc.)
+- Game over screen (score, restart button)
+
+**On-screen information:**
+- What must the player see at all times?
+- Keep it minimal - 3-5 elements max
+
+### 7. VISUAL & AUDIO STYLE (Placeholder is OK)
+- Art style direction (can use placeholder shapes/colors)
+- Color palette (3-5 colors)
+- Sound needed? (prototype can be silent)
+- Animation requirements (keep minimal)
+
+### 8. WEB PLATFORM SPECIFICATIONS
+**Technical constraints:**
+- Browser support: [Chrome, Safari, Firefox, Mobile browsers]
+- Screen size: [Desktop, Mobile, Responsive]
+- Orientation: [Landscape, Portrait, Both]
+- Performance target: [60fps, 30fps acceptable for prototype]
+- File size limit: [Keep under 5MB for web]
+- Network: [Offline capable? Or requires server?]
+
+**Web-Specific Considerations:**
+- Load time goal (under 3 seconds ideal)
+- Input method (mouse, touch, keyboard)
+- Fullscreen or windowed?
+- Share-ability (can players share their score/result?)
+
+### 9. PROTOTYPE SCOPE & TIMELINE
+**Build in phases:**
+
+**Phase 1 (Day 1-2): Core Mechanic**
+- Get the basic interaction working
+- Test if it's fun with placeholder graphics
+
+**Phase 2 (Day 3-4): Game Loop**
+- Add win/loss conditions
+- Add basic UI
+- Make it playable start-to-finish
+
+**Phase 3 (Day 5-7): Polish & Test**
+- Add minimal visual feedback
+- Bug fixes
+- Playtest with 5-10 people
+
+**Total Timeline:** [1 week, 2 weeks, 1 month - be realistic]
+
+### 10. SUCCESS METRICS (Prototype Validation)
+**How will you know if the prototype succeeds?**
+
+**Qualitative:**
+- Do playtesters smile or lean forward?
+- Do they want to play again immediately?
+- Do they understand the mechanic without explanation?
+
+**Quantitative (if tracking):**
+- Average session length: [Target: X minutes]
+- Restart rate: [Do they play multiple times?]
+- Completion rate: [Do they finish a round?]
+
+**Validation Questions:**
+- Is the core mechanic fun? [Yes/No + Why]
+- Is it immediately understandable? [Yes/No + Why]
+- Would you build the full game? [Yes/No + Why]
+
+### 11. WHAT'S NOT IN PROTOTYPE (Keep Focused)
+**Explicitly exclude to stay lean:**
+- ❌ Multiple levels (unless core to mechanic testing)
+- ❌ Progression systems
+- ❌ Monetization
+- ❌ Analytics
+- ❌ Accounts/login
+- ❌ Leaderboards (unless critical)
+- ❌ [Add your exclusions]
+
+### 12. POST-PROTOTYPE: IF IT WORKS, THEN WHAT?
+**If validation succeeds:**
+- What features get added next?
+- Mobile app or stay web?
+- Monetization approach?
+- Development roadmap (3-month view)
+
+**If validation fails:**
+- What would you iterate on?
+- What's the pivot option?
+
+### 13. TECH STACK RECOMMENDATION (Web)
+**Suggested tools for rapid prototyping:**
+- **Game Engine:** [Phaser, PixiJS, Three.js, PlayCanvas, Unity WebGL, Godot HTML5]
+- **Framework:** [React + Canvas, Vue + Phaser, Vanilla JS]
+- **Hosting:** [Itch.io, GitHub Pages, Netlify, Vercel]
+- **Asset Tools:** [Figma, Aseprite, Piskel for pixel art]
+
+**Why Web for Prototype?**
+- ✅ Instant sharing (just send a link)
+- ✅ No app store approval
+- ✅ Cross-platform by default
+- ✅ Fast iteration and testing
+- ✅ Easy analytics integration
+
+### 14. DISTRIBUTION & TESTING PLAN
+**How will people play it?**
+- Hosting URL: [Where will it live?]
+- Sharing method: [Social media, direct link, embed]
+- Feedback collection: [Google Forms, Discord, Survey]
+
+**Playtesting approach:**
+- 5 people: Friends/family (initial sanity check)
+- 10-20 people: Target audience (validation)
+- 50+ people: Soft launch (if validated)
+
+---
+
+## OUTPUT FORMAT:
+
+Generate a concise, actionable prototype design doc that:
+- ✅ Focuses on the ONE core mechanic
+- ✅ Can be built in 1-2 weeks by a small team (or solo dev)
+- ✅ Clearly defines success criteria
+- ✅ Excludes everything non-essential
+- ✅ Web-platform optimized (load times, browser support, touch/mouse)
+- ✅ Includes a clear validation plan
+
+**Keep it under 5 pages.** If it's longer, you're over-scoping.
+
+---
+
+## PROTOTYPE MINDSET:
+
+Remember: A prototype is NOT the final game. It's an experiment to answer:
+1. **Is the core mechanic fun?**
+2. **Do people understand it?**
+3. **Do they want more?**
+
+If all three are YES → Build the full game.
+If any are NO → Iterate or pivot.
+
+**Build fast. Test fast. Learn fast.**
