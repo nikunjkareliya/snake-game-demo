@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { CELL_SIZE, PARTICLE_COUNT_DEATH, PARTICLE_SPEED_DEATH_MIN, PARTICLE_SPEED_DEATH_MAX } from './config.js';
 import { calculateDeathReward } from './gameConfig.js';
 import { createBurst } from './particles.js';
+import { getSkinParticlePalette } from './skinPalette.js';
 import { setStoredValue } from './utils.js';
 
 /**
@@ -14,6 +15,7 @@ export function createSnakeDeathEffect() {
   // update loop (so we get a two-stage break -> explode effect).
   const grid = 3; // fragments per axis inside a cell (3x3 grid)
   const fragCell = CELL_SIZE / grid;
+  const palette = getSkinParticlePalette(state.currentSkin, state.elapsedSec);
 
   for (const seg of state.snake) {
     const baseX = seg.x * CELL_SIZE;
@@ -30,7 +32,7 @@ export function createSnakeDeathEffect() {
         const size = Math.max(2, Math.round(fragCell * (0.35 + Math.random() * 0.6)));
         // make fragments live longer so they linger on-screen
         const life = 1.2 + Math.random() * 1.2; // seconds before fully dissolved
-        const color = Math.random() < 0.5 ? state.currentSkin.head : state.currentSkin.tail;
+  const color = palette[Math.floor(Math.random() * palette.length)];
         // random rotation and angular velocity for spinning effect
         const angle = Math.random() * Math.PI * 2;
         const angularVelocity = (Math.random() - 0.5) * 6; // radians per second

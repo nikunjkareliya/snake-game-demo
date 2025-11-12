@@ -129,6 +129,12 @@ export const UI_ANIMATIONS = {
     // Stat boxes
     statsFadeDelay: 0.5,             // Delay before stats appear
     statsFadeDuration: 0.7,          // Duration of fade-in
+    // Title noise / blink (occasional subtle glitch on letters)
+    titleNoiseEnabled: true,         // Enable subtle noise blink on title letters
+    titleNoiseMinIntervalSec: 2,     // Minimum seconds between flicker events
+    titleNoiseMaxIntervalSec: 6,     // Maximum seconds between flicker events
+    titleNoiseDurationMs: 200,       // Total duration of the flicker sequence in milliseconds
+    titleNoisePulses: 20,             // Number of quick pulses per flicker event (4-5 recommended)
 };
 
 // ============================================================================
@@ -161,6 +167,17 @@ export const DEV = {
 
     // Performance monitoring
     showFPS: false,
+};
+
+// ============================================================================
+// TESTING / QA FLAGS
+// ============================================================================
+
+export const TESTING = {
+    // When true, all skins will be treated as owned for quick QA / manual testing.
+    // Use this flag during development or automated visual tests. Defaults to false
+    // to prevent accidental unlocking in production builds.
+    unlockAllSkins: true,
 };
 
 // ============================================================================

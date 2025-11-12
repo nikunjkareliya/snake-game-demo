@@ -133,9 +133,10 @@ function drawSnakeHead(head, nx, ny, scale = 1) {
       glowColor = headColor;
     }
   } else if (skin.type === 'pattern') {
-    headColor = skin.colors.primary;
-    tailColor = skin.colors.secondary || skin.colors.primary;
-    glowColor = skin.colors.accent || headColor;
+    const colors = skin.colors || {};
+    headColor = colors.primary || colors.nebula1 || colors.background || colors.lines || COLOR_B;
+    tailColor = colors.secondary || colors.nebula2 || colors.background || colors.glow || headColor || COLOR_A;
+    glowColor = colors.accent || colors.stars || colors.glow || tailColor;
   } else if (skin.type === 'special') {
     if (skin.id === 'crystal') {
       headColor = skin.colors.highlight;

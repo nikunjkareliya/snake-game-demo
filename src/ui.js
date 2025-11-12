@@ -4,7 +4,7 @@ import { SKINS, getSkinById, DEFAULT_SKIN_ID } from './config.js';
 import { setStoredJSON, setStoredValue, formatNumber } from './utils.js';
 import { canvas } from './canvas.js';
 import { UI_FOCUS_DELAY, DEBUG } from './config.js';
-import { UI_ANIMATIONS, GAMEPLAY } from './gameConfig.js';
+import { UI_ANIMATIONS, GAMEPLAY, VISUAL } from './gameConfig.js';
 
 export const overlay = document.getElementById('overlay');
 export const scoreEl = document.getElementById('score');
@@ -16,6 +16,7 @@ export const foodCollectedEl = document.getElementById('foodCollected');
 // (these are displayed in the persistent stage HUD). Keep variables removed to avoid unused warnings.
 let currentStartGame, currentHideOverlay;
 let lastCurrency = 0;
+let _titleNoiseTimer = null;
 
 /**
  * Show a generic overlay with a title, subtitle and a primary button.
@@ -45,6 +46,8 @@ export function showOverlay(title, subtitle, buttonText, onButtonClick) {
             overlayBtn.addEventListener('click', onButtonClick);
         }
         setTimeout(() => overlay.focus(), UI_FOCUS_DELAY);
+        // Start title noise for generic overlays as well
+        startTitleNoiseIfEnabled();
 }
 
 /**
@@ -66,6 +69,8 @@ export function showLobby(startGame, hideOverlay) {
     updateStats();
 
     attachLobbyListeners(startGame, hideOverlay);
+    // Start title noise when lobby opens
+    startTitleNoiseIfEnabled();
 }
 
 function buildLobbyHTML() {
@@ -235,6 +240,8 @@ export function hideOverlay() {
     overlay.classList.remove('visible');
     // Restore HUD visibility
     document.getElementById('stage-wrap')?.classList.remove('overlay-open');
+    // Stop title noise if running
+    stopTitleNoise();
     setTimeout(() => canvas.focus(), UI_FOCUS_DELAY);
 }
 
@@ -383,6 +390,8 @@ function updateSkinCard(skinId, startGame, hideOverlayCb) {
         card.removeAttribute('data-equipped');
     }
 
+    enableLockedCardShake(card);
+
     // Update currency display
     const currencyEl = document.getElementById('lobbyCurrency');
     if (currencyEl) currencyEl.textContent = formatNumber(state.currency);
@@ -414,6 +423,8 @@ function rebuildCustomizeUI(startGame, hideOverlayCb) {
         const id = card.getAttribute('data-skin-id');
         const buyBtn = card.querySelector('.buyChip');
         const equipBtn = card.querySelector('.equipBtn');
+
+        enableLockedCardShake(card);
 
         if (buyBtn) buyBtn.addEventListener('click', () => tryBuySkin(id, startGame, hideOverlayCb));
         if (equipBtn) equipBtn.addEventListener('click', () => equipSkin(id, startGame, hideOverlayCb));
@@ -528,8 +539,7 @@ function tryBuySkin(id, startGame, hideOverlayCb, options = {}) {
         const needed = skin.price - state.currency;
 
         if (skinCard) {
-            skinCard.classList.add('shake');
-            setTimeout(() => skinCard.classList.remove('shake'), 400);
+            triggerLockedCardShake(skinCard);
         }
 
         if (ariaLive) {
@@ -770,4 +780,123 @@ function trapFocus(e) {
                 first.focus();
                 e.preventDefault();
         }
+}
+
+function startTitleNoiseIfEnabled() {
+    // Respect overall visual toggles and game config
+    if (!VISUAL?.enableBlinking || !UI_ANIMATIONS?.titleNoiseEnabled) return;
+    // Respect user/system reduced motion
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    stopTitleNoise();
+
+    const runNoiseCycle = async () => {
+        const min = Math.max(2, UI_ANIMATIONS.titleNoiseMinIntervalSec || 6);
+        const max = Math.max(min + 1, UI_ANIMATIONS.titleNoiseMaxIntervalSec || 18);
+        const waitSec = Math.random() * (max - min) + min;
+        await new Promise(r => _titleNoiseTimer = setTimeout(r, waitSec * 1000));
+
+        // Find current title chars in overlay (non-spacer)
+        const chars = Array.from(overlay.querySelectorAll('.title-text .title-char:not(.spacer)'));
+        if (chars.length === 0) return runNoiseCycle();
+
+        const idx = Math.floor(Math.random() * chars.length);
+        const el = chars[idx];
+        if (!el) return runNoiseCycle();
+
+    const duration = UI_ANIMATIONS.titleNoiseDurationMs || 300;
+    el.classList.add('flicker');
+    // Remove class after animation completes to avoid snapping
+    const onAnimEnd = (e) => {
+        if (e.target === el) {
+            el.classList.remove('flicker');
+            el.removeEventListener('animationend', onAnimEnd);
+        }
+    };
+    el.addEventListener('animationend', onAnimEnd);
+    // Safety fallback
+    setTimeout(() => {
+        el.classList.remove('flicker');
+        el.removeEventListener('animationend', onAnimEnd);
+    }, duration + 80);
+
+        // Continue cycle while overlay is still visible
+        if (overlay.classList.contains('visible')) {
+            runNoiseCycle();
+        }
+    };
+
+    runNoiseCycle();
+}
+
+function stopTitleNoise() {
+    if (_titleNoiseTimer) {
+        clearTimeout(_titleNoiseTimer);
+        _titleNoiseTimer = null;
+    }
+    // Remove any leftover class
+    overlay.querySelectorAll('.title-char.flicker').forEach(el => el.classList.remove('flicker'));
+}
+
+const LOCKED_SHAKE_DURATION_MS = 500;
+
+function triggerLockedCardShake(card) {
+    if (!card || !card.hasAttribute('data-locked')) return;
+
+    // Apply consistent glow feedback
+    card.classList.add('shake');
+    if (card.__shakeGlowTimeout) {
+        clearTimeout(card.__shakeGlowTimeout);
+    }
+    card.__shakeGlowTimeout = setTimeout(() => {
+        card.classList.remove('shake');
+        card.__shakeGlowTimeout = null;
+    }, LOCKED_SHAKE_DURATION_MS);
+
+    // Cancel any in-progress shake animation so the new one restarts cleanly
+    if (card.__shakeAnimation) {
+        card.__shakeAnimation.cancel();
+    }
+
+    const shakeKeyframes = [
+        { transform: 'translateX(0px)', offset: 0 },
+        { transform: 'translateX(-8px)', offset: 0.1 },
+        { transform: 'translateX(8px)', offset: 0.2 },
+        { transform: 'translateX(-6px)', offset: 0.35 },
+        { transform: 'translateX(6px)', offset: 0.5 },
+        { transform: 'translateX(-4px)', offset: 0.7 },
+        { transform: 'translateX(4px)', offset: 0.85 },
+        { transform: 'translateX(0px)', offset: 1 }
+    ];
+
+    const animation = card.animate(shakeKeyframes, {
+        duration: LOCKED_SHAKE_DURATION_MS,
+        easing: 'ease-in-out',
+        iterations: 1,
+        composite: 'add'
+    });
+
+    card.__shakeAnimation = animation;
+    const clearAnimationRef = () => {
+        if (card.__shakeAnimation === animation) {
+            card.__shakeAnimation = null;
+        }
+    };
+    animation.addEventListener('finish', clearAnimationRef, { once: true });
+    animation.addEventListener('cancel', clearAnimationRef, { once: true });
+}
+
+function enableLockedCardShake(card) {
+    if (!card) return;
+    if (card.__lockedShakeHandler) return;
+
+    const handler = (event) => {
+        if (event.button !== undefined && event.button !== 0) return;
+        if (!card.hasAttribute('data-locked')) return;
+        triggerLockedCardShake(card);
+    };
+
+    card.addEventListener('pointerdown', handler);
+    card.__lockedShakeHandler = handler;
 }

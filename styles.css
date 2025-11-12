@@ -419,6 +419,56 @@ body {
   animation-name: charEnter;
 }
 
+/* Subtle noise/blink effect applied to single letters */
+.title-char.noise {
+  /* quick bright pulse */
+  animation: noisePulse var(--title-noise-duration, 140ms) ease-out both;
+  /* optional mild displacement via CSS filter (cheap) */
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.25));
+}
+
+@keyframes noisePulse {
+  0% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 2px rgba(255,255,255,0.08)); }
+  40% { transform: translateY(-2px) scale(1.06); opacity: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.22)); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 2px rgba(255,255,255,0.08)); }
+}
+
+/* If a stronger 'displacement' noise is desired we could use an SVG filter; keep it optional
+   and respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .title-char.noise { animation-duration: 80ms !important; filter: none !important; }
+}
+
+/* Energetic flicker: multiple quick pulses within a short duration */
+.title-char.flicker {
+  animation: titleFlicker var(--title-flicker-duration, 300ms) linear both;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+/* Default pulses: 4 quick flashes mapped into percentages inside the keyframes.
+   We'll craft the keyframes to create rapid visible pulses. */
+@keyframes titleFlicker {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 1 */
+  9%   { opacity: 0.18; transform: translateY(-1px) scale(1.02); }
+  18%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 2 */
+  27%  { opacity: 0.16; transform: translateY(-1px) scale(1.03); }
+  36%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 3 */
+  45%  { opacity: 0.22; transform: translateY(-1px) scale(1.01); }
+  54%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 4 */
+  63%  { opacity: 0.14; transform: translateY(-1px) scale(1.03); }
+  72%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Gentle tail to avoid snap */
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-char.flicker { animation: none !important; filter: none !important; }
+}
+
 @keyframes slideInUp {
   from {
     opacity: 0;
@@ -1534,7 +1584,6 @@ input[type=range]:focus::-moz-range-thumb {
 }
 
 .shake {
-  animation: shake 0.5s ease-in-out;
   /* Add a red glow to make it more obvious */
   box-shadow: 0 0 20px rgba(255, 68, 68, 0.6) !important;
 }
