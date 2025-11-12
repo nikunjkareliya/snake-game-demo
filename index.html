@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Neon Snake</title>
+    <title>Snake Frenzy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -12,41 +12,30 @@
   </head>
   <body>
     <div id="app">
+      <!-- Accessibility: Screen reader announcements -->
+      <div id="ariaLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
       <main id="stage-wrap">
         <div id="grid-overlay"></div>
         <canvas id="gameCanvas" width="1024" height="768" tabindex="0"></canvas>
 
         <div id="stage-hud">
-          <div class="corner left glass">Score: <span id="score">0</span></div>
-          <div class="stage-title neon">NEON SNAKE</div>
-          <div class="corner right glass">Best: <span id="highScore">0</span></div>
-        </div>
-
-        <div id="overlay" class="overlay visible">
-          <div class="overlay-inner">
-            <h1 class="title neon">NEON SNAKE</h1>
-            
-            <div class="lobby-menu">
-                <button id="playBtn" class="btn neon">Play</button>
-                <button id="customizeBtn" class="btn">Customize</button>
-                <button id="settingsBtn" class="btn">Settings</button>
+          <div class="corner left glass">
+            <div class="hud-item">
+              <span class="coin-icon"></span>
+              <span id="hudCurrency" class="hud-value">0</span>
             </div>
-
-            <div class="lobby-stats">
-                <div class="stat-box">
-                    <div class="stat-label">Highest Score</div>
-                    <div id="lobbyHighScore" class="stat-value">0</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Currency</div>
-                    <div id="lobbyCurrency" class="stat-value">0</div>
-                </div>
+          </div>
+          <!-- Stage title removed from lobby UI per design request -->
+          <div class="corner right glass">
+            <div class="hud-item">
+              <span class="food-sphere-icon"></span>
+              <span id="foodCollected" class="hud-value">0</span>
             </div>
-
-            <button id="howToPlayBtn" class="btn btn-small">How to Play</button>
           </div>
         </div>
+
+        <div id="overlay" class="overlay"></div>
       </main>
 
 

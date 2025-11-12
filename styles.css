@@ -9,6 +9,25 @@
   --neon-yellow: #ffe800;
   --neon-orange: #ff7a00;
   --text: #e6f1ff;
+
+  /* UI Animation Timings (from gameConfig.js UI_ANIMATIONS) */
+  --title-gradient-speed: 5s;
+  --title-wave-amplitude: 6px;
+  --title-wave-scale: 1.03;
+  --title-wave-duration: 7s;
+  --title-entrance-duration: 0.3s;
+  --title-bounce-height: 5px;
+  --title-bounce-scale: 1.05;
+  --glow-pulse-min: 0.15;
+  --glow-pulse-max: 0.35;
+  --glow-pulse-duration: 4s;
+  --particle-float-duration: 8s;
+  --menu-slide-delay: 0.2s;
+  --menu-slide-duration: 0.7s;
+  --hero-button-pulse-speed: 2.5s;
+  --hero-button-pulse-scale: 1.02;
+  --stats-fade-delay: 0.5s;
+  --stats-fade-duration: 0.7s;
 }
 
 * {
@@ -108,37 +127,135 @@ body {
   height: 768px;
 }
 
+#gameCanvas:focus,
+#gameCanvas:focus-visible {
+  outline: 3px solid var(--neon-cyan);
+  outline-offset: 3px;
+}
+
 #stage-hud {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  height: 44px;
-  display: grid;
-  grid-template-columns: 200px 1fr 200px;
+  height: 56px;
+  display: flex;
   align-items: center;
-  padding: 8px 10px;
+  justify-content: space-between;
+  padding: 10px 18px;
   pointer-events: none;
+  z-index: 100; /* Keep HUD above overlay but below modals */
 }
 
 #stage-hud .corner {
   font-size: 14px;
-  padding: 6px 10px;
-  justify-self: start;
   pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: rgba(255,255,255,0.05);
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(8px) saturate(140%);
 }
 
-#stage-hud .corner.right {
-  justify-self: end;
+#stage-hud .corner.right { flex-direction: row; }
+
+/* When overlay (lobby) is open we hide the right corner HUD (food counter)
+   to avoid visual conflict with the settings button placed in the overlay. */
+#stage-wrap.overlay-open #stage-hud .corner.right {
+  display: none;
 }
 
-.stage-title {
-  justify-self: center;
-  font-family: 'Audiowide', cursive;
-  letter-spacing: 2px;
-  font-size: 18px;
-  text-shadow: 0 0 8px rgba(255, 0, 255, 0.8), 0 0 20px rgba(255, 0, 255, 0.4);
+.hud-item { display:flex; align-items:center; gap:8px; font-size:15px; }
+
+.hud-label {
+  opacity: 0.8;
+  font-size: 12px;
 }
+
+.hud-value {
+  font-weight: 600;
+  color: var(--neon-cyan);
+}
+
+/* Coin visual rendered via CSS, no emoji text node */
+.coin-icon {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  display: inline-block;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff9c4, #ffd54f 40%, #ffb300 70%, #ff8f00 100%);
+  box-shadow: 0 0 8px rgba(255, 200, 0, 0.7), 0 0 18px rgba(255, 160, 0, 0.4);
+}
+.coin-icon:before, .coin-icon:after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 65% 25%, rgba(255,255,255,0.9), rgba(255,255,255,0) 60%);
+  mix-blend-mode: screen;
+  pointer-events:none;
+}
+.coin-icon:after {
+  inset: 0;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: none;
+  box-shadow: inset 0 0 4px rgba(255,255,255,0.25);
+}
+
+/* Neon sphere food icon (matches in-game food visual) */
+.food-sphere-icon {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  display: inline-block;
+  border-radius: 50%;
+  vertical-align: middle;
+  /* Main gradient sphere (pink to magenta to dark) */
+  background: radial-gradient(
+    circle at 35% 35%,
+    #ffccff 0%,
+    #ff99ff 20%,
+    #ff0099 50%,
+    #cc0066 85%,
+    #660033 100%
+  );
+  /* Layered bloom glow effect */
+  box-shadow:
+    0 0 4px rgba(255, 100, 150, 0.8),
+    0 0 8px rgba(255, 50, 150, 0.6),
+    0 0 16px rgba(255, 0, 100, 0.4),
+    0 0 24px rgba(255, 0, 150, 0.2);
+}
+
+/* Bright highlight shine for 3D effect */
+.food-sphere-icon:before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(255,255,255,0) 70%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.food-icon { font-size:18px; filter: drop-shadow(0 0 4px rgba(255,255,255,0.3)); }
+
+.coin-pop .coin-icon {
+  animation: coinPop 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes coinPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4) rotate(15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.stage-title { font-family:'Audiowide',cursive; letter-spacing:2px; font-size:20px; text-shadow:0 0 8px rgba(255,0,255,.8),0 0 20px rgba(255,0,255,.4); }
+.stage-title.hidden { display:none; }
 
 #overlay {
   position: absolute;
@@ -147,10 +264,12 @@ body {
   flex-direction: column; /* Arrange items vertically */
   justify-content: center; /* Center vertically */
   align-items: center; /* Center horizontally */
-  background: var(--bg-deep);
+  background: rgba(6, 8, 17, 0.7);
   opacity: 0;
   pointer-events: none;
   transition: opacity 260ms ease;
+  backdrop-filter: blur(8px);
+  z-index: 50; /* Below HUD (z-index: 100) */
 }
 
 #overlay.visible {
@@ -174,10 +293,504 @@ body {
 
 .title {
   font-family: 'Audiowide', cursive;
-  margin: 0 0 20px;
+  margin: 0 0 30px;
   font-size: 48px;
   letter-spacing: 2px;
+  /* SVG title sizing */
+  width: 90%;
+  max-width: 800px;
+  height: auto;
+  display: block;
+  /* Position relative for pseudo-element glow layer */
+  position: relative;
+  z-index: 1;
 }
+
+.title-text {
+  filter: drop-shadow(0 0 4px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 8px rgba(255, 0, 255, 0.5)) drop-shadow(0 0 16px rgba(255, 0, 255, 0.2));
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes titleEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Soft glow pulse applied via pseudo-element so we animate opacity only (GPU friendly)
+   Pulses with moderate amplitude for presence without distraction. */
+@keyframes glowPulse {
+  0%, 100% { opacity: var(--glow-pulse-min); }
+  50% { opacity: var(--glow-pulse-max); }
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: -6px;
+  bottom: -6px;
+  border-radius: 6px;
+  z-index: 0;
+  pointer-events: none;
+  /* gradient glow behind the text */
+  background: linear-gradient(90deg, rgba(255,0,255,0.18), rgba(0,234,255,0.12));
+  filter: blur(10px);
+  opacity: 0.06;
+  will-change: opacity;
+  animation: glowPulse var(--glow-pulse-duration) ease-in-out infinite;
+}
+
+/* Per-letter stagger reveal: 300ms per-letter, 50ms stagger
+   Gradient flows continuously across all letters from the single linearGradient */
+.title-text .title-char,
+.title-text .title-char.spacer {
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: transform, opacity;
+  /* Entrance animation with configurable duration */
+  animation: charEnter var(--title-entrance-duration) cubic-bezier(0.22, 0.9, 0.35, 1) both;
+  /* 50ms stagger per character */
+  animation-delay: calc(var(--i, 0) * 0.05s);
+}
+
+/* Add wave animation to tspans after entrance */
+.title-text .title-char {
+  animation-name: charEnter, charWave;
+  animation-duration: var(--title-entrance-duration), var(--title-wave-duration);
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.35, 1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-delay: calc(var(--i, 0) * 0.05s), calc(var(--i, 0) * 0.08s);
+}
+
+/* spacer should not animate wave */
+.title-text .title-char.spacer { animation-name: charEnter; }
+
+@keyframes charEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  60% {
+    transform: translateY(calc(-1 * var(--title-bounce-height))) scale(var(--title-bounce-scale));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Continuous floating wave: smooth gentle motion with subtle scale breathing */
+@keyframes charWave {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(calc(-1 * var(--title-wave-amplitude))) scale(var(--title-wave-scale));
+  }
+}
+
+.title .title-char {
+  animation-name: charEnter, charWave;
+  animation-duration: var(--title-entrance-duration), var(--title-wave-duration);
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.35, 1), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-delay: calc(var(--i, 0) * 0.05s), calc(var(--i, 0) * 0.08s);
+}
+
+/* spacer should not animate wave */
+.title .title-char.spacer {
+  animation-name: charEnter;
+}
+
+/* Subtle noise/blink effect applied to single letters */
+.title-char.noise {
+  /* quick bright pulse */
+  animation: noisePulse var(--title-noise-duration, 140ms) ease-out both;
+  /* optional mild displacement via CSS filter (cheap) */
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.25));
+}
+
+@keyframes noisePulse {
+  0% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 2px rgba(255,255,255,0.08)); }
+  40% { transform: translateY(-2px) scale(1.06); opacity: 1; filter: drop-shadow(0 0 10px rgba(255,255,255,0.22)); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 2px rgba(255,255,255,0.08)); }
+}
+
+/* If a stronger 'displacement' noise is desired we could use an SVG filter; keep it optional
+   and respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .title-char.noise { animation-duration: 80ms !important; filter: none !important; }
+}
+
+/* Energetic flicker: multiple quick pulses within a short duration */
+.title-char.flicker {
+  animation: titleFlicker var(--title-flicker-duration, 300ms) linear both;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+/* Default pulses: 4 quick flashes mapped into percentages inside the keyframes.
+   We'll craft the keyframes to create rapid visible pulses. */
+@keyframes titleFlicker {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 1 */
+  9%   { opacity: 0.18; transform: translateY(-1px) scale(1.02); }
+  18%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 2 */
+  27%  { opacity: 0.16; transform: translateY(-1px) scale(1.03); }
+  36%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 3 */
+  45%  { opacity: 0.22; transform: translateY(-1px) scale(1.01); }
+  54%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Pulse 4 */
+  63%  { opacity: 0.14; transform: translateY(-1px) scale(1.03); }
+  72%  { opacity: 1; transform: translateY(0) scale(1); }
+  /* Gentle tail to avoid snap */
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-char.flicker { animation: none !important; filter: none !important; }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes breatheGlow {
+  0%, 100% {
+    background: radial-gradient(1200px 800px at 30% 20%, rgba(0, 234, 255, 0.03) 0%, rgba(255, 0, 255, 0.02) 40%, transparent 70%);
+  }
+  50% {
+    background: radial-gradient(1200px 800px at 30% 20%, rgba(0, 234, 255, 0.08) 0%, rgba(255, 0, 255, 0.05) 40%, transparent 70%);
+  }
+}
+
+/* Floating particles for animated background */
+.lobby-bg-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0, 234, 255, 0.5);
+  pointer-events: none;
+  animation: float linear infinite;
+}
+
+.lobby-bg-particle:nth-child(1) {
+  left: 20%;
+  bottom: -10px;
+  animation-duration: 6s;
+  animation-delay: 0s;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(2) {
+  left: 40%;
+  bottom: -20px;
+  animation-duration: 8s;
+  animation-delay: 1s;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(3) {
+  left: 60%;
+  bottom: -15px;
+  animation-duration: 7s;
+  animation-delay: 0.5s;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(4) {
+  left: 80%;
+  bottom: -25px;
+  animation-duration: 9s;
+  animation-delay: 1.5s;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(5) {
+  left: 25%;
+  bottom: -30px;
+  animation-duration: 9s;
+  animation-delay: 2s;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(6) {
+  left: 35%;
+  bottom: -10px;
+  animation-duration: 7.5s;
+  animation-delay: 1.2s;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(7) {
+  left: 70%;
+  bottom: -20px;
+  animation-duration: 8.5s;
+  animation-delay: 0.8s;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+}
+
+.lobby-bg-particle:nth-child(8) {
+  left: 90%;
+  bottom: -15px;
+  animation-duration: 10s;
+  animation-delay: 1.8s;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+}
+
+/* Settings Modal */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 8, 17, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal {
+  width: 420px;
+  max-width: 92vw;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px) saturate(140%);
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--text);
+  animation: modalPop 240ms cubic-bezier(.25,.8,.25,1);
+}
+@keyframes modalPop {
+  0% { transform: scale(.88) translateY(14px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-header { display:flex; justify-content: space-between; align-items:center; }
+.modal-body { display:flex; flex-direction:column; gap:14px; }
+.modal-body .row { display:flex; align-items:center; gap:10px; font-size:14px; }
+.modal-body .row.column { flex-direction:column; align-items:stretch; }
+.modal-body input[type=range] { width:100%; }
+.modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:4px; }
+.modal .hint { font-size:12px; opacity:0.7; margin-top:4px; }
+
+@media (max-width:600px) {
+  .modal { width: 98vw; padding: 16px 16px 18px; }
+}
+
+/* --- Settings Modal Refinements --- */
+
+/* Consistent dialog titles */
+.modal-header h2 {
+  font-family: 'Audiowide', cursive;
+  font-size: 32px;
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+/* Improved close button */
+.btn-close {
+  padding: 4px 10px !important;
+  font-size: 20px !important;
+  line-height: 1;
+  min-width: auto;
+}
+
+/* Centered footer buttons */
+.modal-footer.centered {
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Danger zone for critical actions */
+.danger-zone {
+  background: rgba(255, 0, 0, 0.05);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.btn-danger {
+  background: rgba(255, 50, 50, 0.15);
+  border-color: rgba(255, 50, 50, 0.4);
+  color: #ff8888;
+}
+.btn-danger:hover {
+  background: rgba(255, 50, 50, 0.3);
+  border-color: rgba(255, 50, 50, 0.7);
+  color: #ffaaaa;
+  box-shadow: 0 0 15px rgba(255, 50, 50, 0.4);
+}
+
+/* Custom Checkbox */
+.modal-body label.row input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.modal-body label.row {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modal-body label.row span {
+  user-select: none;
+}
+.modal-body label.row:before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+.modal-body label.row:has(input:checked):before {
+  background-color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+}
+/* Checkmark */
+.modal-body label.row:after {
+  content: '✓';
+  position: absolute;
+  left: 29px;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--bg-deep);
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+.modal-body label.row:has(input:checked):after {
+  transform: scale(1);
+}
+
+
+/* Custom Range Slider */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type=range]:focus {
+  outline: none;
+}
+
+/* Track */
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Thumb */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -7px; /* (track-height - thumb-height) / 2 - border */
+  height: 20px;
+  width: 20px;
+  background: var(--bg);
+  border-radius: 50%;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+  transition: transform 0.2s ease;
+}
+input[type=range]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  background: var(--bg);
+  border-radius: 50%;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+  transition: transform 0.2s ease;
+}
+
+input[type=range]:hover::-webkit-slider-thumb,
+input[type=range]:focus::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+input[type=range]:hover::-moz-range-thumb,
+input[type=range]:focus::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
+/* --- End Settings Modal Refinements --- */
 
 .subtitle {
   margin: 0 0 18px;
@@ -185,62 +798,506 @@ body {
 }
 
 .lobby-menu {
-    display: grid;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     margin: 30px 0;
+    align-items: center;
+    animation: slideInUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
 }
 
-.lobby-stats {
+.lobby-menu .btn {
+    animation: fadeInScale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.lobby-menu > :first-child {
+    animation-delay: 0.3s;
+}
+
+.lobby-menu > :nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+/* Hero Play Button - Increased size for better hierarchy */
+.btn-hero {
+    font-size: 26px !important;
+    padding: 20px 56px !important;
+    background: linear-gradient(135deg, rgba(0, 234, 255, 0.1), rgba(255, 0, 255, 0.1)) !important;
+    border: 2px solid rgba(0, 234, 255, 0.3) !important;
+    animation: pulseHero var(--hero-button-pulse-speed) ease-in-out infinite;
+    transition: all 0.3s ease;
+    min-width: 320px;
+    border-radius: 12px;
+}
+
+@keyframes pulseHero {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 234, 255, 0.3), 0 0 40px rgba(255, 0, 255, 0.15);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(0, 234, 255, 0.45), 0 0 50px rgba(255, 0, 255, 0.2);
+        transform: scale(var(--hero-button-pulse-scale));
+    }
+}
+
+.btn-hero:hover {
+    background: linear-gradient(135deg, rgba(0, 234, 255, 0.2), rgba(255, 0, 255, 0.15)) !important;
+    box-shadow: 0 0 40px rgba(0, 234, 255, 0.8), 0 0 80px rgba(255, 0, 255, 0.4) !important;
+    transform: scale(1.05) !important;
+}
+
+.btn-hero:focus,
+.btn-hero:focus-visible {
+    box-shadow: 0 0 40px rgba(0, 234, 255, 0.8), 0 0 80px rgba(255, 0, 255, 0.4) !important;
+    transform: scale(1.05) !important;
+}
+
+/* Button separator for visual hierarchy */
+.button-separator {
+    width: 60%;
+    max-width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    margin: 8px auto;
+}
+
+/* Secondary Actions Group - Increased spacing */
+.secondary-actions {
     display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 30px;
+    width: 100%;
+}
+
+.secondary-actions .btn {
+    flex: 1;
+    min-width: 140px;
+    max-width: 160px;
+    border-radius: 12px;
+}
+
+/* Button icon styling */
+.btn-icon {
+    margin-right: 6px;
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+/* Hide icons specifically for lobby Customize and How to Play buttons
+   so the buttons show only text in the lobby overlay. This keeps
+   .btn-icon usable elsewhere (skin cards, price chips, etc.). */
+#customizeBtn .btn-icon,
+#howToPlayBtn .btn-icon {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Lobby stats repositioned to top corners (mirrors in-game HUD) */
+.lobby-stats {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 20px;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .stat-box {
-    padding: 10px 20px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  pointer-events: auto;
+  animation: fadeInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+.stat-box.stat-left {
+  flex-direction: row;
+}
+
+.stat-box.stat-right {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Settings icon button in top-right corner */
+.settings-icon-btn {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border-radius: 12px;
+  backdrop-filter: blur(10px) saturate(140%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+  z-index: 11;
+  animation: fadeInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+.settings-icon-btn:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  border-color: rgba(0, 234, 255, 0.4);
+  box-shadow: 0 0 20px rgba(0, 234, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform: scale(1.06);
+}
+
+.settings-icon-btn:focus-visible {
+  outline: 3px solid var(--neon-cyan);
+  outline-offset: 2px;
+  box-shadow: 0 0 20px rgba(0, 234, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .stat-label {
-    font-size: 12px;
-    opacity: 0.7;
-    margin-bottom: 5px;
+  font-size: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .stat-value {
-    font-size: 24px;
-    font-weight: bold;
+  font-size: 20px;
+  font-weight: bold;
 }
+
+/* --- Customization Dialog --- */
+.customize-dialog {
+  width: 100%;
+  max-width: 580px; /* Accommodates 3 cards + padding */
+  max-height: 680px; /* Ensure it fits vertically within the stage-wrap */
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: modalPop 240ms cubic-bezier(.25,.8,.25,1);
+  font-family: 'Orbitron', sans-serif; /* Consistent font */
+}
+
+.customize-dialog .customize-heading {
+  font-family: 'Audiowide', cursive;
+  font-size: 32px;
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.customize-dialog .customize-header {
+    border-bottom: none;
+    padding: 0;
+    margin-bottom: 0;
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+/* --- End Customization Dialog --- */
 
 /* Skins grid */
 .skin-grid {
   display: grid;
-  grid-template-columns: repeat(3, 220px);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
   justify-content: center;
+  padding: 0 16px;
+  overflow-y: auto; /* Allow the grid itself to scroll */
+  flex-grow: 1; /* Allow grid to take up available space */
+  
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 234, 255, 0.4) rgba(10, 10, 25, 0.3);
+}
+
+/* WebKit scrollbar (Chrome, Safari, Edge) */
+.skin-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.skin-grid::-webkit-scrollbar-track {
+  background: rgba(10, 10, 25, 0.3);
+  border-radius: 4px;
+}
+
+.skin-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 234, 255, 0.4), rgba(255, 0, 255, 0.3));
+  border-radius: 4px;
+  border: 1px solid rgba(0, 234, 255, 0.2);
+  transition: background 0.2s ease;
+}
+
+.skin-grid::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0, 234, 255, 0.7), rgba(255, 0, 255, 0.5));
+  box-shadow: 0 0 12px rgba(0, 234, 255, 0.5);
+}
+
+/* Responsive grid */
+@media (max-width: 900px) {
+  .skin-grid {
+    grid-template-columns: repeat(2, 150px);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .skin-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-width: 160px;
+    margin: 0 auto;
+  }
 }
 
 .skin-card {
-  padding: 12px;
+  padding: 8px;
   border-radius: 12px;
   text-align: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  border: 2px solid transparent;
+  animation: cardSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  /* Staggered delay set via inline style attribute in renderSkinCard */
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Rarity tier borders */
+.skin-card.rarity-free {
+  border-color: rgba(150, 150, 150, 0.4);
+}
+
+.skin-card.rarity-common {
+  border-color: rgba(100, 150, 255, 0.3);
+}
+
+.skin-card.rarity-rare {
+  border-color: rgba(200, 100, 255, 0.4);
+}
+
+.skin-card.rarity-epic {
+  border-color: rgba(255, 200, 0, 0.5);
+}
+
+/* Locked state styling */
+.skin-card[data-locked="true"] {
+  opacity: 0.65;
+}
+
+.skin-card[data-locked="true"] .skin-preview {
+  filter: brightness(0.85);
+}
+
+/* Equipped state: glowing border */
+.skin-card[data-equipped="true"] {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 234, 255, 0.5), inset 0 0 10px rgba(0, 234, 255, 0.1);
+}
+
+/* Hover effect: Scale + glow */
+.skin-card:hover {
+  transform: scale(1.05);
+  border-color: currentColor;
+}
+
+.skin-card.rarity-free:hover {
+  box-shadow: 0 0 20px rgba(150, 150, 150, 0.5);
+}
+
+.skin-card.rarity-common:hover {
+  box-shadow: 0 0 25px rgba(100, 150, 255, 0.6);
+  border-color: rgba(100, 150, 255, 0.8);
+}
+
+.skin-card.rarity-rare:hover {
+  box-shadow: 0 0 25px rgba(200, 100, 255, 0.6);
+  border-color: rgba(200, 100, 255, 0.8);
+}
+
+.skin-card.rarity-epic:hover {
+  box-shadow: 0 0 30px rgba(255, 200, 0, 0.7);
+  border-color: rgba(255, 200, 0, 0.9);
+}
+
+/* Equipped + hover: Super bright */
+.skin-card[data-equipped="true"]:hover {
+  box-shadow: 0 0 40px rgba(0, 234, 255, 0.8), inset 0 0 15px rgba(0, 234, 255, 0.2);
+  border-color: var(--neon-cyan);
+}
+
+.skin-card:focus-within {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 234, 255, 0.6);
+}
+
+/* Status badges positioning and styling */
+.skin-status-badges {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+}
+
+.status-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+
+.status-badge.equipped-badge {
+  background: rgba(255, 200, 0, 0.4);
+  border-color: rgba(255, 200, 0, 0.8);
+  box-shadow: 0 0 12px rgba(255, 200, 0, 0.6);
+}
+
+.status-badge.owned-badge {
+  background: rgba(0, 255, 100, 0.3);
+  border-color: rgba(0, 255, 100, 0.7);
+  box-shadow: 0 0 10px rgba(0, 255, 100, 0.5);
+}
+
+.status-badge.locked-badge {
+  background: rgba(255, 80, 80, 0.2);
+  border-color: rgba(255, 80, 80, 0.6);
+  box-shadow: 0 0 10px rgba(255, 80, 80, 0.4);
+}
+
+/* Price badge styling */
+/* Compact coin price chip (replaces Buy buttons & price badge) */
+.price-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 80px;
+  border-radius: 10px;
+  background: rgba(0, 234, 255, 0.08);
+  border: 1px solid rgba(0, 234, 255, 0.35);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-sizing: border-box;
+}
+.price-chip:hover,
+.price-chip:focus-visible {
+  outline: none;
+  background: rgba(0, 234, 255, 0.18);
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(0, 234, 255, 0.4);
+}
+.price-chip:active { transform: scale(0.96); }
+.price-chip[disabled] { opacity: .55; cursor: default; transform: none; }
+.price-chip .coin-icon { width:16px; height:16px; box-shadow: 0 0 6px rgba(255, 200, 0, 0.6); }
+.price-chip .price-value { font-family: 'Orbitron', sans-serif; }
+.skin-actions { display:flex; justify-content:center; min-height: 36px; align-items: center; }
+
+/* Button state styles for Select/Selected - consistent sizing */
+.btn-select {
+  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 80px;
+  background: rgba(0, 234, 255, 0.1);
+  border: 1px solid rgba(0, 234, 255, 0.4);
+  border-radius: 10px;
+  color: var(--neon-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  box-sizing: border-box;
+}
+.btn-select:hover,
+.btn-select:focus-visible {
+  background: rgba(0, 234, 255, 0.2);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 234, 255, 0.5);
+  transform: scale(1.05);
+}
+.btn-selected {
+  padding: 8px 14px;
+  min-height: 36px;
+  min-width: 80px;
+  background: rgba(255, 200, 0, 0.15);
+  border: 1px solid rgba(255, 200, 0, 0.5);
+  border-radius: 10px;
+  color: rgba(255, 200, 0, 0.9);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: default;
+  opacity: 0.8;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.btn-selected:disabled {
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .skin-preview {
   width: 100%;
-  height: 54px;
+  height: 55px;
   border-radius: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+  transition: filter 0.3s ease;
+}
+
+.skin-card:hover .skin-preview {
+  filter: brightness(1.1);
 }
 
 .skin-name {
-  font-size: 14px;
-  margin: 6px 0 10px;
+  font-size: 13px;
+  margin: 4px 0 8px;
   opacity: 0.9;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 500;
 }
 
 .skin-actions .btn[disabled] {
@@ -272,34 +1329,221 @@ body {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   font-size: 16px;
-  transition: background-color 0.2s, box-shadow 0.2s;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease, opacity 0.12s ease;
+  will-change: transform, box-shadow;
 }
 
-.btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+/* Base state: no glow unless neon */
+.btn:not(.neon) {
+  box-shadow: none;
 }
 
-.btn.neon {
+/* Regular button hover/focus: subtle glow */
+.btn:not(.neon):hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateZ(0) scale(1.04);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.45), 0 0 18px rgba(255,255,255,0.08);
   color: var(--neon-cyan);
   border-color: var(--neon-cyan);
-  text-shadow:
-    0 0 6px rgba(0, 234, 255, 0.9),
-    0 0 16px rgba(0, 234, 255, 0.7),
-    0 0 32px rgba(0, 234, 255, 0.35);
-    box-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+}
+
+.btn:not(.neon):focus,
+.btn:not(.neon):focus-visible {
+  outline: 3px solid var(--neon-cyan);
+  outline-offset: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateZ(0) scale(1.04);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.45), 0 0 18px rgba(255,255,255,0.08);
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+}
+
+/* Neon button: only glow on hover/focus (not by default) */
+.btn.neon {
+  /* Play button: neutral text color by default (override global .neon pink)
+     Keep neutral appearance and avoid any glow unless hovered; even on
+     hover we will avoid heavy glow for Play specifically per request. */
+  color: var(--text) !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Neon button hover/focus: enhanced glow */
+.btn.neon:hover {
+  transform: translateZ(0) scale(1.06);
+  /* Change text/border to cyan on hover, but remove heavy glow for Play */
+  box-shadow: none;
+  background: rgba(0, 234, 255, 0.04);
+  color: var(--neon-cyan) !important;
+  border-color: var(--neon-cyan);
+  text-shadow: none !important;
+}
+
+.btn.neon:focus,
+.btn.neon:focus-visible {
+  outline: 3px solid var(--neon-cyan);
+  outline-offset: 3px;
+  transform: translateZ(0) scale(1.06);
+  box-shadow: 0 0 20px rgba(0, 234, 255, 0.6);
+  background: rgba(0, 234, 255, 0.04);
+  color: var(--neon-cyan) !important;
+  border-color: var(--neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 234, 255, 0.8) !important;
+}
+
+/* Keep disabled buttons visually distinct and non-interactive */
+.btn[disabled],
+.btn.disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
 }
 
 .btn.btn-small {
     padding: 8px 12px;
     font-size: 12px;
+    animation: fadeInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
 }
+
+/* --- How to Play Overlay Styles --- */
+.how-to-play-dialog {
+  width: 100%;
+  max-width: 600px;
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: modalPop 240ms cubic-bezier(.25,.8,.25,1);
+}
+
+.how-to-play-dialog h2 {
+  font-family: 'Audiowide', cursive;
+  font-size: 32px;
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.how-to-play-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.how-to-play-section h3 {
+  font-size: 20px;
+  margin: 0 0 15px;
+  color: var(--text);
+  opacity: 0.9;
+  text-align: center;
+}
+
+.controls-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.key-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.wasd-grid {
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(2, 50px);
+  grid-template-areas:
+    ". w ."
+    "a s d";
+}
+
+.arrow-grid {
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(2, 50px);
+  grid-template-areas:
+    ". up ."
+    "left down right";
+}
+
+.key-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #222, #111);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 5px rgba(0,0,0,0.5), inset 0 0 2px rgba(255,255,255,0.1);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.key-icon.grid-w { grid-area: w; }
+.key-icon.grid-a { grid-area: a; }
+.key-icon.grid-s { grid-area: s; }
+.key-icon.grid-d { grid-area: d; }
+.key-icon.grid-up { grid-area: up; }
+.key-icon.grid-left { grid-area: left; }
+.key-icon.grid-down { grid-area: down; }
+.key-icon.grid-right { grid-area: right; }
+
+.key-icon.space {
+  width: 220px;
+}
+
+.how-to-play-dialog .btn {
+  align-self: center;
+  min-width: 120px;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 3px 5px rgba(0,0,0,0.5), 0 0 5px rgba(0, 234, 255, 0.3), 0 0 10px rgba(255, 0, 255, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 3px 5px rgba(0,0,0,0.5), 0 0 15px rgba(0, 234, 255, 0.6), 0 0 25px rgba(255, 0, 255, 0.4);
+    transform: scale(1.05);
+  }
+}
+/* --- End How to Play --- */
 
 .neon {
   color: var(--neon-magenta);
+  /* Reduced glow intensity by ~50% for better readability */
   text-shadow:
-    0 0 6px rgba(255, 0, 255, 0.9),
-    0 0 16px rgba(255, 0, 255, 0.7),
-    0 0 32px rgba(255, 0, 255, 0.35);
+    0 0 4px rgba(255, 0, 255, 0.8),
+    0 0 8px rgba(255, 0, 255, 0.5),
+    0 0 16px rgba(255, 0, 255, 0.2);
+}
+
+/* Override for title to avoid double glow */
+.title.neon {
+  text-shadow: none;
+  color: unset;
+}
+
+.tagline {
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--neon-cyan);
+  margin: 0 0 50px;
+  opacity: 0.85;
+  text-transform: uppercase;
+  font-weight: 500;
+  /* Appear slightly after title finishes (0.4s + 0.1s delay) */
+  animation: titleEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
+  text-shadow: 0 0 4px rgba(0, 234, 255, 0.6), 0 0 8px rgba(0, 234, 255, 0.3);
 }
 
 #help {
@@ -329,5 +1573,279 @@ body {
 
   .skin-grid {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Shake animation for insufficient funds */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+.shake {
+  /* Add a red glow to make it more obvious */
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.6) !important;
+}
+
+/* Accessibility: Respect user motion preferences */
+/* ============================================================================
+   GAME OVER SCREEN STYLING
+   ============================================================================ */
+
+/* Game over background particles */
+.gameover-bg-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(0, 234, 255, 0.4);
+  pointer-events: none;
+  animation: float linear infinite;
+}
+
+.gameover-bg-particle:nth-child(1) { left: 15%; bottom: -10px; animation-duration: 7s; }
+.gameover-bg-particle:nth-child(2) { left: 35%; bottom: -15px; animation-duration: 9s; }
+.gameover-bg-particle:nth-child(3) { left: 65%; bottom: -20px; animation-duration: 8s; }
+.gameover-bg-particle:nth-child(4) { left: 85%; bottom: -10px; animation-duration: 10s; }
+
+/* Game over container with glass effect */
+.gameover-container {
+  max-width: 500px;
+  width: 90%;
+  padding: 40px 30px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  animation: gameoverSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Game over title */
+.gameover-title {
+  font-family: 'Audiowide', cursive;
+  font-size: 42px;
+  margin: 0;
+  letter-spacing: 2px;
+  text-align: center;
+  animation: titleBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.gameover-title.highlight {
+  color: var(--neon-orange);
+  text-shadow: 0 0 10px rgba(255, 122, 0, 0.8), 0 0 20px rgba(255, 122, 0, 0.4);
+  animation: pulseTitle 1.5s ease-in-out infinite;
+}
+
+/* Stats grid layout - Compact */
+.gameover-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+/* Individual stat card - Compact size */
+.stat-card {
+  padding: 14px 12px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: statCardSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 234, 255, 0.15);
+}
+
+/* Stat icon styling - Smaller */
+.stat-icon {
+  font-size: 24px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon.food-sphere-icon,
+.stat-icon.coin-icon {
+  font-size: 18px;
+  width: 28px;
+}
+
+/* Stat value and label - Smaller */
+.stat-value {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 10px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Game over buttons group */
+.gameover-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 22px; /* increased vertical spacing for better separation */
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Hero button for Play Again - Slightly larger */
+.gameover-buttons .btn-hero {
+  font-size: 20px;
+  padding: 16px 44px;
+  min-width: 280px;
+  align-self: center;
+  animation: buttonSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+/* Secondary button for Back to Lobby - Similar proportions */
+.gameover-buttons .btn.secondary {
+  font-size: 14px;
+  padding: 11px 28px;
+  min-width: 160px;
+  align-self: center;
+  animation: buttonSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+/* ============================================================================
+   GAME OVER ANIMATIONS
+   ============================================================================ */
+
+@keyframes gameoverSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes titleBounce {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulseTitle {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255, 122, 0, 0.8), 0 0 20px rgba(255, 122, 0, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 122, 0, 1), 0 0 40px rgba(255, 122, 0, 0.6);
+  }
+}
+
+@keyframes statCardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes buttonSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Remove heavy glows for reduced-motion users */
+  .neon {
+    text-shadow: none;
+    color: var(--neon-magenta);
+  }
+
+  /* Simplify button glows */
+  .btn.neon:focus,
+  .btn.neon:focus-visible {
+    box-shadow: 0 0 10px rgba(0, 234, 255, 0.4) !important;
+    text-shadow: none !important;
+  }
+
+  /* Remove pulse animation from Play button */
+  .btn-hero {
+    animation: none !important;
+  }
+
+  .btn-hero:hover {
+    box-shadow: none !important;
+  }
+
+  /* Reduce overlay breathing glow */
+  #overlay {
+    animation: none !important;
+  }
+
+  /* Static particles - no float animation */
+  .lobby-bg-particle {
+    animation: none !important;
+  }
+
+  /* When motion is reduced, ensure title letters are visible (don't remain at opacity:0)
+     and keep a subtle static glow behind the title */
+  .title-text .title-char,
+  .title-text .title-char.spacer {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .title::after {
+    animation: none !important;
+    opacity: 0.08 !important;
+  }
+
+  .tagline {
+    animation: none !important;
+    opacity: 0.85 !important;
+    transform: none !important;
   }
 }

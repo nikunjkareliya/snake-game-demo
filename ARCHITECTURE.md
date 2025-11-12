@@ -1,13 +1,13 @@
 # Snake Game — Architecture Diagram
 
-This document describes the high-level architecture of the Neon Snake project (vanilla JS + Canvas).
+This document describes the high-level architecture of the Snake Frenzy project (vanilla JS + Canvas).
 It includes a Mermaid diagram and explanatory notes describing module responsibilities, data flow, and interaction patterns.
 
 ## Mermaid Diagram
 
 ```mermaid
 flowchart TD
-  subgraph App[Neon Snake]
+  subgraph App[Snake Frenzy]
     direction TB
     Main["src/main.js\n(game loop)"]
     State["src/state.js\n(Single Source of Truth)"]

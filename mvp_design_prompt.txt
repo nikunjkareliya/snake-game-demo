@@ -1,0 +1,234 @@
+# Mobile Game MVP Design Document Generator Prompt
+
+You are an expert mobile game producer and game designer. Create a comprehensive MVP (Minimum Viable Product) design document for a mobile game based on the information provided below.
+
+---
+
+## GAME INFORMATION TO PROVIDE:
+
+### 1. GAME CONCEPT & IDENTITY
+- **Game Title:** [Your game name]
+- **Genre:** [Puzzle, Casual, Hypercasual, Arcade, Strategy, RPG, etc.]
+- **Platform:** [iOS, Android, or Both]
+- **Target Audience:** [Age range, gender, player type - casual/midcore/hardcore]
+- **Core Concept:** [2-3 sentence description of the game]
+
+### 2. UNIQUE SELLING PROPOSITION (USP)
+Answer these critical questions:
+
+**a) Why would players download YOUR game?**
+- What's the hook in the first 5 seconds?
+- What problem does it solve or what desire does it fulfill?
+- What emotional response are you targeting? (relaxation, excitement, accomplishment, competition)
+
+**b) What makes it FUN and ENGAGING?**
+- What's the "one more turn/round" factor?
+- What's satisfying about the core gameplay?
+- What creates the dopamine hit?
+
+**c) 3-4 CORE UNIQUE FEATURES (Must-Have for MVP)**
+List features that make your game stand out from competitors:
+1. [Feature 1 - Explain how it's unique and why players will love it]
+2. [Feature 2 - Explain how it's unique and why players will love it]
+3. [Feature 3 - Explain how it's unique and why players will love it]
+4. [Feature 4 - Optional but recommended]
+
+**d) 3-4 NICE-TO-HAVE FEATURES (Post-MVP Queue)**
+Features that could enhance the game but aren't essential for launch:
+1. [Feature 1 - Scope/timeline dependency]
+2. [Feature 2 - Scope/timeline dependency]
+3. [Feature 3 - Scope/timeline dependency]
+4. [Feature 4 - Scope/timeline dependency]
+
+---
+
+## DESIGN DOCUMENT STRUCTURE:
+
+Based on the information above, generate a complete design document with the following sections:
+
+### 1. EXECUTIVE SUMMARY
+- Game title, genre, platform
+- High-concept pitch (elevator pitch)
+- Target audience
+- Unique selling proposition
+- Core differentiators from competitors
+
+### 2. GAME CONCEPT & USP
+- **Core Concept:** Detailed description
+- **Why Players Will Download:** Marketing hook and appeal
+- **Fun Factor:** What makes it engaging and addictive
+- **Competitive Advantage:** How it stands out in the market
+- **Core Unique Features (MVP):** Detailed breakdown of 3-4 must-have features
+- **Future Features (Post-MVP):** Nice-to-have features queue
+
+### 3. OBJECTIVES & GOALS
+- Player's primary objective
+- Short-term goals (per session)
+- Long-term goals (progression)
+- Win/loss conditions
+
+### 4. CORE GAMEPLAY MECHANICS & LOOP
+- Core mechanics (what players do)
+- Core loop diagram (visual/text representation)
+  - Action → Feedback → Reward → Repeat
+- Moment-to-moment gameplay
+- Meta-game loop (if applicable)
+
+### 5. PLAYER CONTROLS & INTERACTION
+- Input methods (tap, swipe, drag, tilt, etc.)
+- Control scheme diagram
+- Accessibility considerations
+
+### 6. TUTORIAL & FTUE (First-Time User Experience)
+- Onboarding flow (step-by-step)
+- Tutorial goals and key learnings
+- Soft tutorial vs. hard tutorial approach
+- First 3 minutes experience breakdown
+
+### 7. PROGRESSION SYSTEMS & META FEATURES
+- Player advancement structure
+- XP/leveling system (if applicable)
+- Skill progression or mastery systems
+- Meta layer features:
+  - Daily challenges
+  - Achievements/missions
+  - Leaderboards (if applicable)
+  - Social features (if applicable)
+
+### 8. REWARDS & UNLOCKABLES
+- Reward types and frequency
+- Unlockable content:
+  - Characters
+  - Skins/cosmetics
+  - Power-ups/boosters
+  - Upgrades
+  - New levels/content
+- Reward schedule and pacing
+
+### 9. ECONOMY DESIGN
+- **Primary Currency:** [Name, how earned, what it buys]
+- **Secondary Currency:** [Name, how earned, what it buys] (if applicable)
+- **Sinks and Sources:** Balance diagram
+- Resource flow and management
+
+### 10. BALANCING & DIFFICULTY
+- Difficulty curve design
+- Challenge progression
+- Resource balance (currencies, energy, etc.)
+- Player power scaling
+- Testing benchmarks for balance
+
+### 11. SESSION DESIGN & PACING
+- Target session length (average)
+- Level/round duration
+- Session cadence (how many rounds per session)
+- Energy systems or session limiters (if used)
+- Pacing beats (tension and release)
+
+### 12. RETENTION MECHANICS
+- Daily login rewards
+- Time-gated content
+- Comeback mechanics (lapsed player incentives)
+- Push notification strategy
+- Engagement loops beyond core gameplay
+
+### 13. MONETIZATION STRATEGY
+- Primary monetization model:
+  - F2P with ads
+  - F2P with IAP
+  - Premium (paid download)
+  - Hybrid
+- Ad placement strategy (if applicable):
+  - Interstitial, rewarded video, banner
+  - Ad frequency and timing
+- IAP offerings (if applicable):
+  - Currency packs
+  - Remove ads
+  - Premium content/characters
+  - Battle pass/subscription (if applicable)
+- Price points and value proposition
+
+### 14. UI/UX DESIGN
+- UI flow and screen hierarchy
+- Key screens (menu, gameplay, shop, etc.)
+- Visual style and theme
+- Information architecture
+- Interaction patterns
+- Accessibility features
+
+### 15. TARGET AUDIENCE & PLATFORM SPECIFICATIONS
+- **Target Audience:**
+  - Demographics (age, location, interests)
+  - Player motivations (Bartle types, etc.)
+  - Expected play session patterns
+- **Platform Requirements:**
+  - iOS/Android versions
+  - Device specifications (minimum/recommended)
+  - Screen orientations (portrait/landscape)
+  - Network requirements (online/offline)
+
+### 16. TECHNICAL REQUIREMENTS
+- Build size target
+- Performance benchmarks:
+  - FPS target
+  - Load time limits
+  - Memory usage
+- Network architecture (if online features)
+- Backend requirements (if any)
+
+### 17. CORE METRICS & KPIs
+- **Retention Targets:**
+  - D1 (Day 1 retention)
+  - D7 (Day 7 retention)
+  - D30 (Day 30 retention)
+- **Monetization Targets:**
+  - ARPU (Average Revenue Per User)
+  - ARPPU (Average Revenue Per Paying User)
+  - Conversion rate
+- **Engagement Metrics:**
+  - Session length
+  - Sessions per day
+  - Progression milestones
+
+### 18. COMPETITIVE ANALYSIS
+- Top 3-5 competitor games
+- What they do well
+- What they do poorly
+- How your game differentiates
+- Market opportunity
+
+### 19. DEVELOPMENT SCOPE & TIMELINE
+- MVP feature list (must-haves)
+- Development phases
+- Estimated timeline
+- Team requirements
+- Dependencies and risks
+
+### 20. POST-LAUNCH ROADMAP (OPTIONAL FEATURES)
+- Feature queue (nice-to-haves)
+- Content update strategy
+- Live ops plans
+- Community building
+
+---
+
+## OUTPUT FORMAT:
+
+Generate the complete design document in clear, professional markdown format with:
+- Clear section headers
+- Bullet points for lists
+- Tables where appropriate
+- Diagrams described in text (can be visualized later)
+- Actionable and specific information
+- No generic placeholders
+
+Make it production-ready and suitable for sharing with development, art, and business teams.
+
+---
+
+## INSTRUCTIONS FOR USE:
+
+1. Fill in the "GAME INFORMATION TO PROVIDE" section with your specific game details
+2. Submit to an AI assistant (like Claude) to generate the complete design document
+3. Review and refine the output with your team
+4. Use as the foundation for development planning and execution

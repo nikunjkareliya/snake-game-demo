@@ -2,6 +2,18 @@ export const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 export const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 export const hypot = (x, y) => Math.sqrt(x * x + y * y);
 
+/**
+ * Format large numbers with K suffix (e.g., 1200 -> 1.2K)
+ * @param {number} num
+ * @returns {string}
+ */
+export function formatNumber(num) {
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return String(num);
+}
+
 export function applyAlphaToColor(color, alpha) {
     if (color.startsWith('rgb(')) {
       // convert rgb(r,g,b) to rgba
