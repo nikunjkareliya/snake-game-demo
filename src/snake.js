@@ -6,6 +6,8 @@ import { spawnFood } from './food.js';
 import { createBurst, addParticle } from './particles.js';
 import { updateStats } from './ui.js';
 import { setStoredValue } from './utils.js';
+import { updateDifficultySnapshot } from './difficulty.js';
+import { onFoodEaten, getCurrentFlowMultiplier } from './flow.js';
 
 export function stepSnake() {
   const head = state.snake[0];
@@ -34,11 +36,26 @@ export function stepSnake() {
 
   // Check food collision
   if (next.x === state.food.x && next.y === state.food.y) {
-    state.score += 10;
-    state.foodCollected += 1;
+    // Update progression tracking
+    state.foodCollectedTotal++;
+    state.foodCollected = state.foodCollectedTotal;  // Keep foodCollected in sync
+
+    // Update difficulty tier and speed (food-based progression)
+    updateDifficultySnapshot();
+
+    // Update flow system (chain eating)
+    onFoodEaten();
+
+    // Calculate score with flow multiplier
+    const baseScore = 10;
+    const flowMultiplier = getCurrentFlowMultiplier();
+    const scoreGained = Math.floor(baseScore * flowMultiplier);
+    state.score += scoreGained;
+
     // Award currency for eating food
     state.currency += ECONOMY.coinPerFood;
     setStoredValue('neonSnakeCurrency', state.currency);
+
     // Update HUD to show new currency
     updateStats();
     spawnFood();

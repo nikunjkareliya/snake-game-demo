@@ -80,4 +80,23 @@ export const state = {
         return BLINK_INTERVAL_MIN + Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN);
     })(),
     lastSnakePositions: [],
+
+    // === DIFFICULTY PROGRESSION ===
+    difficultyTier: 0,           // Current difficulty tier (0-10)
+    foodCollectedTotal: 0,       // Total food eaten this run (drives tier progression)
+
+    // === FLOW SYSTEM (Chain Eating Multiplier) ===
+    flowTier: 0,                 // Current flow level (0-4)
+    flowStreak: 0,               // Consecutive food eaten within window
+    flowTimer: 0,                // Seconds remaining in flow window
+    flowActive: false,           // Is flow window currently active?
+
+    // === DIFFICULTY SNAPSHOT ===
+    // Updated when tier changes, used by HUD and other systems
+    difficulty: {
+        tier: 0,                 // Current tier
+        speedMs: 120,            // Current speed (ms per move)
+        flowWindow: 6.0,         // Current flow window duration
+        nextTierAt: 10,          // Food needed for next tier
+    },
 };

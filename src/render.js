@@ -28,6 +28,8 @@ import {
   FACET_ALTERNATE_COLOR,
   SPARKLE_SHADOW_BLUR
 } from './config.js';
+import { renderDebugHUD } from './debugHUD.js';
+import { renderFlowBar } from './flowUI.js';
 
 function drawGrid() {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -1103,6 +1105,7 @@ function drawParticles() {
 }
 
 function drawFood() {
+  if (!state.food) return;
   const cx = state.food.x * CELL_SIZE + CELL_SIZE / 2;
   const cy = state.food.y * CELL_SIZE + CELL_SIZE / 2;
   const r = CELL_SIZE * 0.35;
@@ -1233,7 +1236,13 @@ function drawWorld() {
         drawSnake();
         drawVignette();
         drawPauseIndicator();
+
+        // Render flow UI progress bar
+        renderFlowBar();
     }
+
+    // Render debug HUD (tier badge, etc.)
+    renderDebugHUD();
 }
 
 export const render = drawWorld;

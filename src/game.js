@@ -3,6 +3,8 @@ import { COLUMNS, ROWS, Direction, CELL_SIZE } from './config.js';
 import { INTRO_ANIMATION } from './gameConfig.js';
 import { spawnFood } from './food.js';
 import { canvas } from './canvas.js';
+import { resetDifficulty } from './difficulty.js';
+import { resetFlow } from './flow.js';
 
 export function stepIntroAnimation(dt) {
     if (!state.introAnimation) return;
@@ -73,13 +75,17 @@ export function resetGame() {
   state.mouthOpenTimer = 0;
   state.hitShakeTimer = 0;
   state.growTimer = 0;
-  
+
+  // Reset progression systems
+  resetDifficulty();
+  resetFlow();
+
   resetSnake();
-  
+
   // Initialize previous positions for smooth interpolation
   state.prevSnake = state.snake.map(seg => ({ ...seg }));
   state.moveProgress = 0;
-  
+
   spawnFood();
 }
 

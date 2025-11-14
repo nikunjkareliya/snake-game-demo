@@ -167,6 +167,9 @@ export const DEV = {
 
     // Performance monitoring
     showFPS: false,
+
+    // Difficulty HUD
+    showDifficultyHUD: true,  // Show difficulty metrics in bottom-left
 };
 
 // ============================================================================
@@ -178,6 +181,126 @@ export const TESTING = {
     // Use this flag during development or automated visual tests. Defaults to false
     // to prevent accidental unlocking in production builds.
     unlockAllSkins: true,
+};
+
+// ============================================================================
+// DIFFICULTY & PROGRESSION SETTINGS
+// ============================================================================
+
+export const DIFFICULTY = {
+    // === TIER PROGRESSION (Food-Based) ===
+    // Each value is the ADDITIONAL food needed to reach next tier
+    // Example: [10, 20, 30] means: Tier 0→1 at 10 food, Tier 1→2 at 30 total (10+20), Tier 2→3 at 60 total (10+20+30)
+    foodPerTier: [
+        10,  // Tier 0→1: 10 food
+        15,  // Tier 1→2: 25 food total
+        20,  // Tier 2→3: 45 food total
+        25,  // Tier 3→4: 70 food total
+        30,  // Tier 4→5: 100 food total
+        35,  // Tier 5→6: 135 food total
+        40,  // Tier 6→7: 175 food total
+        45,  // Tier 7→8: 220 food total
+        50,  // Tier 8→9: 270 food total
+        60,  // Tier 9→10: 330 food total
+    ],
+    maxTier: 10,
+
+    // === SPEED SCALING (Tier-Based) ===
+    // Snake movement interval (milliseconds) per tier
+    // Lower = faster snake = harder to control
+    speedByTier: [
+        120,  // Tier 0: Beginner speed
+        110,  // Tier 1
+        100,  // Tier 2
+        90,   // Tier 3
+        82,   // Tier 4
+        75,   // Tier 5
+        70,   // Tier 6
+        67,   // Tier 7
+        65,   // Tier 8
+        63,   // Tier 9
+        60,   // Tier 10: Maximum challenge
+    ],
+    speedMin: 50,  // Absolute minimum (safety cap)
+};
+
+// ============================================================================
+// FLOW SYSTEM (Chain Eating Multiplier)
+// ============================================================================
+
+export const FLOW = {
+    // === FLOW WINDOW (Time to Chain Eats) ===
+    windowBaseSec: 6.0,           // Base time window at Tier 0
+    windowDecayPerTier: 0.3,      // Window shrinks per difficulty tier
+    windowMin: 3.0,               // Minimum window (never below this)
+
+    // === FLOW TIERS (Multiplier Levels) ===
+    maxFlowTier: 4,               // Maximum flow level (0-4)
+
+    // === SCORE MULTIPLIERS ===
+    // Score multiplier per flow tier
+    scoreMultipliers: [
+        1.0,   // Flow 0: No chain bonus (missed window)
+        1.2,   // Flow 1: +20% bonus
+        1.5,   // Flow 2: +50% bonus
+        2.0,   // Flow 3: +100% bonus (2x score!)
+        3.0,   // Flow 4: +200% bonus (3x score!)
+    ],
+
+    // === FLOW PROGRESSION ===
+    foodToIncreaseFlow: 3,        // Consecutive food needed to increase flow tier
+
+    // === VISUAL FEEDBACK ===
+    // Colors for flow tiers (used for snake glow/particles)
+    flowColors: [
+        '#888888',  // Flow 0: Gray (no flow)
+        '#00ff00',  // Flow 1: Green
+        '#00eaff',  // Flow 2: Cyan
+        '#ff00ff',  // Flow 3: Magenta
+        '#ffaa00',  // Flow 4: Orange/Gold
+    ],
+
+    // Glow intensity per flow tier (0.0 - 1.0)
+    flowGlowIntensity: [0, 0.3, 0.5, 0.8, 1.0],
+};
+
+// ============================================================================
+// FLOW UI (Visual Progress Bar)
+// ============================================================================
+
+export const FLOW_UI = {
+    // === DISPLAY SETTINGS ===
+    enabled: true,                // Show flow progress bar during gameplay
+
+    // === POSITION ===
+    position: 'top-center',       // 'top-center' | 'top-right' | 'top-left'
+    offsetX: 0,                   // Horizontal offset in pixels
+    offsetY: 20,                  // Vertical offset from edge in pixels
+
+    // === HORIZONTAL BAR DIMENSIONS ===
+    barWidth: 220,                // Width of the progress bar
+    barHeight: 14,                // Height of the progress bar
+    barCornerRadius: 7,           // Rounded corner radius
+
+    // === LABEL SETTINGS ===
+    fontSize: 13,                 // Font size for labels
+    fontFamily: 'Orbitron, monospace',
+    labelSpacing: 10,             // Space between bar and labels
+
+    // === ANIMATION ===
+    glowBlur: 15,                 // Glow effect blur radius
+    warningPulseSpeed: 3,         // Pulse speed when timer < 2s (Hz)
+
+    // === TIER DOTS ===
+    showTierDots: true,           // Show tier indicator dots
+    dotRadius: 3,                 // Radius of tier dots
+    dotSpacing: 10,               // Spacing between dots
+    dotOffsetY: 8,                // Vertical offset below bar
+
+    // === COLORS (Overrides - falls back to FLOW.flowColors) ===
+    barBackground: 'rgba(40, 40, 40, 0.9)',   // Background bar color
+    textColor: '#ffffff',                      // Default text color
+    warningColor: '#ffaa00',                   // Color when timer < 2s
 };
 
 // ============================================================================
