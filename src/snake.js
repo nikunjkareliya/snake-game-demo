@@ -10,6 +10,9 @@ import { updateDifficultySnapshot } from './difficulty.js';
 import { onFoodEaten, getCurrentFlowMultiplier } from './flow.js';
 
 export function stepSnake() {
+  // Apply direction change immediately (before position calculation)
+  state.direction = state.nextDirection;
+
   const head = state.snake[0];
   const next = { ...head };
 
@@ -31,7 +34,6 @@ export function stepSnake() {
   }
 
   // Move snake
-  state.direction = state.nextDirection;
   state.snake.unshift(next);
 
   // Check food collision
