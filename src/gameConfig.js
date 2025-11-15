@@ -351,12 +351,18 @@ export const HAZARDS = {
     collisionShakeDuration: 0.3,   // Screen shake duration (seconds)
     collisionShakeIntensity: 6,    // Shake intensity (pixels)
 
-    // === PATROL ORB CONFIG (Future) ===
+    // === PATROL ORB CONFIG ===
     patrolOrb: {
-        speed: 2,                 // Cells per second
-        color: '#ff3333',
-        glowColor: '#ff8888',
-        radius: 12,               // Pixels
+        speed: 2.0,               // Base speed (cells per second)
+        speedTierScaling: 0.2,    // Speed increase per tier
+        maxSpeed: 4.0,            // Maximum speed cap
+        color: '#ff3333',         // Red
+        glowColor: '#ff8888',     // Light red glow
+        radius: 12,               // Visual radius (pixels)
+        trailLength: 5,           // Number of trail positions to show
+        trailFadeTime: 0.3,       // Trail particle lifetime (seconds)
+        patrolMinLength: 4,       // Minimum patrol path length (cells)
+        patrolMaxLength: 8,       // Maximum patrol path length (cells)
     },
 };
 
@@ -379,6 +385,22 @@ export const TIER_SCRIPT = {
         6,  // Tier 8 (110-135 food): Add +1 hazard
         7,  // Tier 9 (135-165 food): Add +1 hazard
         8,  // Tier 10 (165+ food): Maximum challenge (capped by maxConcurrentStatic)
+    ],
+
+    // === DYNAMIC HAZARD TARGETS PER TIER ===
+    // Each value is the target number of patrol orbs for that tier
+    dynamicHazardsByTier: [
+        0,  // Tier 0-5: No dynamic hazards yet
+        0,
+        1,
+        1,
+        2,        
+        2,
+        1,  // Tier 6 (67-87 food): First patrol orb unlocked!
+        1,  // Tier 7 (87-110 food): Maintain
+        2,  // Tier 8 (110-135 food): Add second orb
+        2,  // Tier 9 (135-165 food): Maintain
+        3,  // Tier 10 (165+ food): Maximum challenge (3 patrol orbs + 8 static)
     ],
 
     // === AUTO-SPAWN SETTINGS ===
