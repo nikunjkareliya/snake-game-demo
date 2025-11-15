@@ -6,8 +6,9 @@
  */
 
 import { state } from './state.js';
-import { COLUMNS, ROWS } from './config.js';
+import { COLUMNS, ROWS, CELL_SIZE } from './config.js';
 import { HAZARDS, TIER_SCRIPT } from './gameConfig.js';
+import { createBurst } from './particles.js';
 
 /**
  * Spawn a static hazard at a safe position
@@ -78,6 +79,22 @@ export function spawnStaticHazard() {
 
     state.hazards.push(hazard);
 
+    // Create spawn particle burst
+    const cx = pos.x * CELL_SIZE + CELL_SIZE / 2;
+    const cy = pos.y * CELL_SIZE + CELL_SIZE / 2;
+    createBurst(
+        cx, cy,
+        HAZARDS.spawnParticleCount,
+        HAZARDS.spawnParticleSpeedMin,
+        HAZARDS.spawnParticleSpeedMax,
+        {
+            life: HAZARDS.spawnParticleLife,
+            color: HAZARDS.static.glowColor,
+            shape: HAZARDS.spawnParticleShape,
+            size: 3
+        }
+    );
+
     // Enhanced logging with count
     if (TIER_SCRIPT.logSpawnEvents) {
         const newCount = getHazardCounts().total;
@@ -98,6 +115,22 @@ export function updateHazards(dt) {
         if (hazard.state === 'telegraph' && hazard.age >= hazard.telegraphDuration) {
             hazard.state = 'active';
             console.log(`[Hazards] ${hazard.id} is now ACTIVE (lethal)`);
+
+            // Create activation particle burst
+            const cx = hazard.x * CELL_SIZE + CELL_SIZE / 2;
+            const cy = hazard.y * CELL_SIZE + CELL_SIZE / 2;
+            createBurst(
+                cx, cy,
+                HAZARDS.activateParticleCount,
+                HAZARDS.activateParticleSpeedMin,
+                HAZARDS.activateParticleSpeedMax,
+                {
+                    life: HAZARDS.activateParticleLife,
+                    color: HAZARDS.static.color,
+                    shape: HAZARDS.activateParticleShape,
+                    size: 4
+                }
+            );
         }
     }
 }

@@ -8,6 +8,7 @@
 import { DIFFICULTY, FLOW, TIER_SCRIPT } from './gameConfig.js';
 import { state } from './state.js';
 import { spawnStaticHazard, removeHazard, getHazardCounts } from './hazards.js';
+import { showNotification } from './notifications.js';
 
 /**
  * Calculate difficulty tier based on total food collected
@@ -125,6 +126,15 @@ function handleTierChangeHazards(prevTier, newTier) {
 
     if (TIER_SCRIPT.logTierChanges) {
         console.log(`[Tier Script] Tier ${prevTier}→${newTier}: Hazard target ${prevTarget}→${newTarget} (current: ${currentCount})`);
+    }
+
+    // Show hazard unlock notification on first introduction (Tier 1→2)
+    if (prevTarget === 0 && newTarget > 0) {
+        showNotification('HAZARDS UNLOCKED!', {
+            style: 'warning',
+            duration: 3000
+        });
+        console.log('[Notifications] Hazards first unlocked at tier ' + newTier);
     }
 
     // Tier UP - add hazards

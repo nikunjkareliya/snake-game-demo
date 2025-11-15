@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { Direction, COLUMNS, ROWS, CELL_SIZE, PARTICLE_COUNT_EAT, PARTICLE_SPEED_EAT_MIN, PARTICLE_SPEED_EAT_MAX, MOTION_TRAIL_INTERVAL, MOTION_TRAIL_PARTICLE_LIFE, MOTION_TRAIL_PARTICLE_SIZE, GROW_ANIMATION_DURATION, PARTICLE_COUNT_DEATH, PARTICLE_SPEED_DEATH_MIN, PARTICLE_SPEED_DEATH_MAX } from './config.js';
-import { ECONOMY } from './gameConfig.js';
+import { ECONOMY, HAZARDS } from './gameConfig.js';
 import { startDeathSequence } from './death.js';
 import { spawnFood } from './food.js';
 import { createBurst, addParticle } from './particles.js';
@@ -37,6 +37,8 @@ export function stepSnake() {
   // Check hazard collision
   if (checkHazardCollision(next)) {
     console.log('[Snake] Collided with hazard!');
+    // Add screen shake on hazard collision
+    state.hitShakeTimer = HAZARDS.collisionShakeDuration;
     startDeathSequence();
     return;
   }

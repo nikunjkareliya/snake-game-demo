@@ -331,6 +331,26 @@ export const HAZARDS = {
         size: 0.8,                // Relative to CELL_SIZE (0.8 = 80%)
     },
 
+    // === PARTICLE EFFECTS ===
+    spawnParticleCount: 12,        // Particles when hazard spawns
+    spawnParticleSpeedMin: 80,     // Min speed (pixels/sec)
+    spawnParticleSpeedMax: 150,    // Max speed (pixels/sec)
+    spawnParticleLife: 0.6,        // Lifetime (seconds)
+    spawnParticleShape: 'square',  // 'circle' or 'square'
+
+    activateParticleCount: 16,     // Particles when telegraph → active
+    activateParticleSpeedMin: 100,
+    activateParticleSpeedMax: 200,
+    activateParticleLife: 0.5,
+    activateParticleShape: 'circle',
+
+    collisionParticleCount: 20,    // Particles on player collision
+    collisionParticleSpeedMin: 120,
+    collisionParticleSpeedMax: 250,
+    collisionParticleLife: 0.8,
+    collisionShakeDuration: 0.3,   // Screen shake duration (seconds)
+    collisionShakeIntensity: 6,    // Shake intensity (pixels)
+
     // === PATROL ORB CONFIG (Future) ===
     patrolOrb: {
         speed: 2,                 // Cells per second
