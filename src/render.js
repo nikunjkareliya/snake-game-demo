@@ -30,6 +30,7 @@ import {
 } from './config.js';
 import { renderDebugHUD } from './debugHUD.js';
 import { renderFlowBar } from './flowUI.js';
+import { drawHazards } from './hazardRender.js';
 
 function drawGrid() {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -1232,6 +1233,7 @@ function drawWorld() {
     } else {
         drawGrid();
         drawParticles();
+        drawHazards();  // Render hazards after particles, before food
         drawFood();
         drawSnake();
         drawVignette();

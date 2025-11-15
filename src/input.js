@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { Direction } from './config.js';
+import { spawnStaticHazard } from './hazards.js';
 
 const keyMap = new Map([
   ['ArrowUp', Direction.Up],
@@ -39,6 +40,13 @@ export function initInput(onStartGame, onTogglePause) {
 
     if (e.code === 'KeyR') {
       onStartGame();
+      e.preventDefault();
+      return;
+    }
+
+    // Testing hotkey: H to spawn hazard (only during gameplay)
+    if (e.code === 'KeyH' && state.gameState === 'playing') {
+      spawnStaticHazard();
       e.preventDefault();
       return;
     }

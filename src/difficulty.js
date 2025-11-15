@@ -5,8 +5,9 @@
  * All progression is driven by food collected, not time.
  */
 
-import { DIFFICULTY, FLOW } from './gameConfig.js';
+import { DIFFICULTY, FLOW, TIER_SCRIPT } from './gameConfig.js';
 import { state } from './state.js';
+import { spawnStaticHazard, removeHazard, getHazardCounts } from './hazards.js';
 
 /**
  * Calculate difficulty tier based on total food collected
@@ -104,6 +105,52 @@ export function updateDifficultySnapshot() {
     // Log tier changes
     if (tier !== prevTier) {
         console.log(`[Difficulty] Tier increased: ${prevTier} → ${tier} (Speed: ${speedMs}ms, Next tier at: ${nextTierAt} food)`);
+
+        // Handle tier-based hazard spawning
+        handleTierChangeHazards(prevTier, tier);
+    }
+}
+
+/**
+ * Handle hazard spawning/despawning on tier change
+ * @param {number} prevTier - Previous tier
+ * @param {number} newTier - New tier
+ */
+function handleTierChangeHazards(prevTier, newTier) {
+    if (!TIER_SCRIPT.enableAutoSpawn) return;
+
+    const prevTarget = TIER_SCRIPT.staticHazardsByTier[prevTier] ?? 0;
+    const newTarget = TIER_SCRIPT.staticHazardsByTier[newTier] ?? 0;
+    const currentCount = getHazardCounts().total;
+
+    if (TIER_SCRIPT.logTierChanges) {
+        console.log(`[Tier Script] Tier ${prevTier}→${newTier}: Hazard target ${prevTarget}→${newTarget} (current: ${currentCount})`);
+    }
+
+    // Tier UP - add hazards
+    if (newTarget > currentCount) {
+        const toSpawn = newTarget - currentCount;
+        for (let i = 0; i < toSpawn; i++) {
+            spawnStaticHazard();
+        }
+    }
+
+    // Tier DOWN - remove hazards (rare edge case)
+    else if (newTarget < currentCount) {
+        const toRemove = currentCount - newTarget;
+        removeOldestHazards(toRemove);
+    }
+}
+
+/**
+ * Remove the oldest hazards (by age)
+ * @param {number} count - Number of hazards to remove
+ */
+function removeOldestHazards(count) {
+    // Sort hazards by age (oldest first)
+    const sorted = [...state.hazards].sort((a, b) => b.age - a.age);
+    for (let i = 0; i < count && i < sorted.length; i++) {
+        removeHazard(sorted[i].id);
     }
 }
 

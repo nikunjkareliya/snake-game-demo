@@ -8,6 +8,7 @@ import { updateStats } from './ui.js';
 import { setStoredValue } from './utils.js';
 import { updateDifficultySnapshot } from './difficulty.js';
 import { onFoodEaten, getCurrentFlowMultiplier } from './flow.js';
+import { checkHazardCollision } from './hazards.js';
 
 export function stepSnake() {
   // Apply direction change immediately (before position calculation)
@@ -29,6 +30,13 @@ export function stepSnake() {
 
   // Check self collision
   if (state.snake.some(seg => seg.x === next.x && seg.y === next.y)) {
+    startDeathSequence();
+    return;
+  }
+
+  // Check hazard collision
+  if (checkHazardCollision(next)) {
+    console.log('[Snake] Collided with hazard!');
     startDeathSequence();
     return;
   }

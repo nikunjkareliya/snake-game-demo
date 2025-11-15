@@ -1,5 +1,36 @@
 # Endless Survival Design Plan — Snake Frenzy
 
+---
+
+## ⚠️ IMPLEMENTATION STATUS
+
+**Current Progress: ~35-40% Complete**
+
+This document represents the full design roadmap for the Endless Survival mode. Many features described here are **planned but not yet implemented**.
+
+### ✅ Currently Implemented Features
+- **Flow System**: Chain-eating multiplier with 5 tiers (1.0x → 3.0x)
+- **Difficulty Progression**: Food-based tier system (0-10 tiers) with speed scaling
+- **Coin Economy**: Earn coins during gameplay (+1/food) and on death (score × 0.1)
+- **Skin System**: Multiple purchasable skins with unique visual effects
+- **Core Gameplay**: Snake movement, food spawning, collision detection, death handling
+- **Visual Effects**: Particle system, smooth spline rendering, glow effects
+- **UI/UX Enhancements**: Flow progress bar, HUD system, coin flying animation, high score badge
+
+### ❌ Not Yet Implemented
+- **ALL Boosters** (0/8 types): Time Crystal, Score Node, Trail Stabilizer, Phase Prism, Phase Distorter, Portal Catalyst, Flow Anchor, Hazard Neutralizer
+- **ALL Hazards** (0/11 types): Static hazards, patrol orbs, spiral drones, laser sweeps, portals, crumble cells, shifter zones, ghost snake
+- **Tier Script System**: Orchestrated unlock progression per tier
+- **Phase Rotation**: Cyclical difficulty phases (Surge/Bloom/Compression)
+- **Telegraph System**: Visual/audio warnings for hazards
+- **Adaptive Assist**: Death protection and frustration valves
+- **Time Multiplier**: Score scaling based on survival duration
+- **Advanced Scoring**: Route combos, hazard survival bonuses, booster bonuses
+
+This design document serves as the **north star** for future development. Refer to [README.md](README.md) for accurate documentation of currently implemented features.
+
+---
+
 ## Core Premise
 Make `difficultyTier` the authoritative pacing dial. Every tier (≈ 60s or milestone-based) adds either:
 1. A quantitative ramp (speed, spawn delay, hazard count)
@@ -504,7 +535,17 @@ SPEED_RELIEF: {
 
 ## 15. Next Immediate Deliverables
 
-### Priority Order
+### Current Implementation Progress
+
+#### ✅ Completed Foundation Systems
+- [x] **Difficulty Progression System**: Food-based tier system (0-10 tiers)
+- [x] **Flow System**: Chain-eating multiplier with timer management
+- [x] **Coin Economy**: Currency earning and persistence
+- [x] **HUD System**: Context-aware display with score/food/coins tracking
+- [x] **Visual Feedback**: Flow progress bar, particle effects, coin flying animation
+- [x] **Skin System**: Multiple purchasable skins with visual variety
+
+#### 🚧 Next Priority Items (Not Yet Started)
 1. **Tier Script Data Structure:** JSON-like object mapping tiers to unlock/change events
 2. **Hazard Manager Module:** Core spawn/despawn/collision system
 3. **Booster Manager Module:** Weighted spawn + effect resolution
@@ -514,12 +555,12 @@ SPEED_RELIEF: {
    - Time Crystal Booster (Tier 4)
    - Patrol Orb (Tier 6)
 
-### Validation Criteria
-- Tier transitions logged and visible in HUD
-- Hazards spawn with proper telegraph
-- Boosters appear at configured odds
-- No unfair death scenarios
-- Performance stays >30 FPS with full hazard load
+### Validation Criteria (For Future Implementations)
+- Tier transitions logged and visible in HUD ✅ (Currently working)
+- Hazards spawn with proper telegraph ❌ (Not implemented)
+- Boosters appear at configured odds ❌ (Not implemented)
+- No unfair death scenarios ✅ (Current collision system prevents this)
+- Performance stays >30 FPS with full hazard load ⏳ (To be tested)
 
 ---
 

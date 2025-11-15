@@ -7,6 +7,7 @@ import { spawnFoodAmbient } from './food.js';
 import { stepSnake, updateParticles } from './snake.js';
 import { BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX, BLINK_DURATION } from './config.js';
 import { updateFlowTimer } from './flow.js';
+import { updateHazards } from './hazards.js';
 
 /**
  * Game loop
@@ -45,6 +46,9 @@ function tick(now) {
   if (state.gameState === 'intro') {
     stepIntroAnimation(dt);
   } else if (state.gameState === 'playing') {
+    // Update hazards (telegraph → active transitions)
+    updateHazards(dt);
+
     // Update flow timer (chain eating system)
     updateFlowTimer(dt);
 

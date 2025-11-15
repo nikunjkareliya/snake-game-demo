@@ -6,6 +6,7 @@ import { canvas } from './canvas.js';
 import { resetDifficulty } from './difficulty.js';
 import { resetFlow } from './flow.js';
 import { updateStats } from './ui.js';
+import { resetHazards } from './hazards.js';
 
 export function stepIntroAnimation(dt) {
     if (!state.introAnimation) return;
@@ -80,6 +81,7 @@ export function resetGame() {
   // Reset progression systems
   resetDifficulty();
   resetFlow();
+  resetHazards();
 
   resetSnake();
 

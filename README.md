@@ -86,11 +86,25 @@ The horizontal Flow bar (top center) shows:
 - Best score is saved to `localStorage`
 - Dynamic Intro Animation: Features two large, fast-moving snakes traversing the screen diagonally in opposite, offset paths before gameplay begins.
 
+### 📋 Development Roadmap Note
+
+This project has an extensive design document ([ENDLESS_SURVIVAL_DESIGN.md](ENDLESS_SURVIVAL_DESIGN.md)) outlining planned features for an Endless Survival mode. **Many features in that document are planned but not yet implemented**, including:
+
+- **Boosters** (Time Crystal, Score Node, Stabilizer, etc.) - 0/8 implemented
+- **Hazards** (Static hazards, patrol orbs, laser sweeps, portals, etc.) - 0/11 implemented
+- **Phase Rotation System** - Not implemented
+- **Tier Script System** - Not implemented
+- **Telegraph System** - Not implemented
+- **Adaptive Assist** - Not implemented
+- **Time Multiplier** - Not implemented
+
+Current implementation progress is approximately **35-40% complete**. The design document serves as a roadmap for future development. This README documents the **currently implemented features only**.
+
 ---
 
 ## 🏗️ Architecture & Module Analysis
 
-This project follows a modular architecture with clear separation of concerns. The codebase is organized into 20 distinct modules, each responsible for specific functionality. The architecture includes core gameplay systems, advanced progression mechanics, and visual feedback systems.
+This project follows a modular architecture with clear separation of concerns. The codebase is organized into 21 distinct modules, each responsible for specific functionality. The architecture includes core gameplay systems, advanced progression mechanics, visual feedback systems, and UI animations.
 
 ### 📁 Module Overview
 
@@ -523,6 +537,41 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
+#### **21. `coinAnimation.js` - Coin Flying Animation System**
+**Responsibilities:**
+- Creates animated coin particles that fly from source element to HUD
+- Triggers on game over when death bonus coins are awarded
+- Manages particle spawn timing, curved trajectories, and cleanup
+- Provides visual feedback for coin rewards
+
+**Key Functions:**
+- `triggerCoinFlyAnimation(coinAmount, sourceElement)` - Spawns 5-8 coin particles with staggered timing
+- `createCoinParticle(sourceRect, targetRect, index, total)` - Creates single coin with curved path animation
+- `triggerHUDUpdate()` - Refreshes HUD counter with pop animation when coins arrive
+
+**Animation Features:**
+- **Dynamic Particle Count**: Spawns 5-8 coins based on reward amount (more coins = bigger visual impact)
+- **Curved Trajectories**: Uses CSS custom properties (`--end-x`, `--end-y`, `--curve`) for arc motion
+- **Staggered Spawn**: 80ms delay between each coin for smooth visual flow
+- **Upward Arc**: Randomized upward curve (-100px to -150px) for natural parabolic motion
+- **Rotation**: Each coin rotates 720° during flight for dynamic effect
+- **HUD Sync**: Triggers coin counter update only when final coin arrives
+
+**Visual Design:**
+- Radial gradient with gold tones (#fff9c4 → #ffd54f → #ffb300 → #ff8f00)
+- Glowing shadow effects for neon aesthetic
+- Scale animation (1.0 → 1.2 → 0.8 → 0) for depth
+
+**Integration:**
+- Called by `ui.js` on `showGameOver` event
+- Targets "Coins Earned" stat card (3rd card in game over screen)
+- Animates to `.corner.left .coin-icon` HUD element
+- 600ms delay after stat cards appear for proper timing
+
+**Dependencies:** `ui.js` (dynamic import)
+
+---
+
 ## 🔄 Data Flow
 
 ```
@@ -533,8 +582,9 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
     render.js → canvas.js        particles.js
         ↓         ↓ ↓ ↓               ↓
     ui.js ← flowUI.js         death.js
-    debugHUD.js ↑                ↓
-         ↑       |        skinPalette.js
+      ↓  ↑  debugHUD.js ↑          ↓
+coinAnimation.js  |        skinPalette.js
+         ↑       |
     transition.js|
                difficulty.js ← flow.js
 ```
@@ -551,10 +601,16 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
 - **debugHUD.js** - Shows detailed metrics (tier, speed, flow, multiplier)
 - Both read from difficulty.js and flow.js for real-time data
 
+**UI Animations:**
+- **coinAnimation.js** - Creates flying coin particles from game over screen to HUD
+- **transition.js** - Handles play button snake crawl transition animation
+- Both provide visual polish and feedback for player actions
+
 **Gameplay Integration:**
 - **snake.js** calls `onFoodEaten()` (flow.js) and `updateDifficultySnapshot()` (difficulty.js) on food collision
 - **main.js** calls `updateFlowTimer()` (flow.js) each frame to count down timer
 - **game.js** calls `resetDifficulty()` and `resetFlow()` on game start/end
+- **ui.js** calls `triggerCoinFlyAnimation()` (coinAnimation.js) on game over event
 
 **Shared Utilities:**
 - **particles.js** is used by snake.js, food.js, and death.js for all particle effects
@@ -585,6 +641,23 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
 - **Spline Smoothing**: Catmull-Rom curves for organic snake movement
 - **Composite Blending**: Uses 'lighter' blend mode for neon glow effects
 - **Multi-pass Rendering**: Glow → Base → Highlight for depth
+
+### **UI/UX Enhancements**
+- **Coin Flying Animation**: Dynamic particle system showing coins flying from game over stat card to HUD
+  - 5-8 coins spawn with staggered timing (80ms delay)
+  - Curved trajectories using CSS custom properties
+  - Rotation animation (720°) with scale effects
+  - Triggers HUD update with pop animation on arrival
+- **High Score Badge**: Hexagon-shaped badge on lobby screen showing personal best
+  - Positioned at right-center for visual balance
+  - Custom clip-path polygon for distinctive shape
+  - Glass morphism styling with gradient and glow effects
+- **Context-Aware HUD**: Different HUD visibility based on game state
+  - Lobby: Shows coins + high score badge only
+  - Gameplay: Shows coins (left) + score + food (right, separate containers)
+  - Each HUD element in separate glass container for clean visual hierarchy
+- **Settings Modal**: Accessible only in lobby (gear icon top-right)
+  - Removed from gameplay HUD to reduce clutter during play
 
 ### **State Management**
 - Centralized state object shared across all modules
@@ -673,6 +746,7 @@ snake-game-demo/
     ├── input.js        # Input handling
     ├── ui.js           # UI management
     ├── transition.js   # UI transition effects
+    ├── coinAnimation.js # Coin flying animation
     ├── canvas.js       # Canvas setup
     ├── utils.js        # Utilities
     ├── difficulty.js   # Difficulty & progression system

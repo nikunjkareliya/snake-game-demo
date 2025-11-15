@@ -91,6 +91,9 @@ export const state = {
     flowTimer: 0,                // Seconds remaining in flow window
     flowActive: false,           // Is flow window currently active?
 
+    // === HAZARD SYSTEM ===
+    hazards: [],                 // Active hazards [{id, type, x, y, state, age, ...}]
+
     // === DIFFICULTY SNAPSHOT ===
     // Updated when tier changes, used by HUD and other systems
     difficulty: {

@@ -304,6 +304,70 @@ export const FLOW_UI = {
 };
 
 // ============================================================================
+// HAZARD SYSTEM
+// ============================================================================
+
+export const HAZARDS = {
+    // === SPAWN RULES ===
+    spawnSafeRadius: 3,           // Min distance from snake head (Manhattan distance)
+    dynamicSpawnSafeRadius: 5,    // Min distance from head for dynamic hazards
+    minDistanceFromFood: 2,       // Avoid spawning too close to food
+
+    // === TELEGRAPH SYSTEM ===
+    telegraphDurationSec: 1.5,    // Warning time before hazard becomes lethal
+    telegraphOpacityMin: 0.2,     // Starting opacity during telegraph
+    telegraphPulseSpeed: 3,       // Pulse frequency (Hz) during telegraph
+
+    // === HAZARD LIMITS ===
+    maxConcurrentStatic: 8,       // Maximum static hazards allowed
+    maxConcurrentDynamic: 4,      // Maximum dynamic hazards allowed
+
+    // === STATIC HAZARD VISUAL CONFIG ===
+    static: {
+        color: '#ff0033',         // Red
+        glowColor: '#ff6666',     // Light red glow
+        glowIntensity: 25,        // Shadow blur radius (pixels)
+        pulseSpeed: 2,            // Pulse animation speed during active state
+        size: 0.8,                // Relative to CELL_SIZE (0.8 = 80%)
+    },
+
+    // === PATROL ORB CONFIG (Future) ===
+    patrolOrb: {
+        speed: 2,                 // Cells per second
+        color: '#ff3333',
+        glowColor: '#ff8888',
+        radius: 12,               // Pixels
+    },
+};
+
+// ============================================================================
+// TIER SCRIPT - AUTO-SPAWNING PROGRESSION
+// ============================================================================
+
+export const TIER_SCRIPT = {
+    // === STATIC HAZARD TARGETS PER TIER ===
+    // Each value is the target number of static hazards for that tier
+    staticHazardsByTier: [
+        0,  // Tier 0 (0-5 food): Learning phase, no hazards
+        0,  // Tier 1 (5-12 food): Still easy
+        2,  // Tier 2 (12-22 food): Build confidence
+        2,  // Tier 3 (22-34 food): First hazards introduced!
+        2,  // Tier 4 (34-49 food): Maintain pressure
+        3,  // Tier 5 (49-67 food): Add +1 hazard
+        4,  // Tier 6 (67-87 food): Add +1 hazard
+        5,  // Tier 7 (87-110 food): Add +1 hazard
+        6,  // Tier 8 (110-135 food): Add +1 hazard
+        7,  // Tier 9 (135-165 food): Add +1 hazard
+        8,  // Tier 10 (165+ food): Maximum challenge (capped by maxConcurrentStatic)
+    ],
+
+    // === AUTO-SPAWN SETTINGS ===
+    enableAutoSpawn: true,        // Enable automatic tier-based spawning
+    logTierChanges: true,         // Log tier transitions and hazard adjustments
+    logSpawnEvents: true,         // Log individual spawn/despawn events
+};
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
