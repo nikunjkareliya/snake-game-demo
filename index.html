@@ -19,18 +19,30 @@
         <div id="grid-overlay"></div>
         <canvas id="gameCanvas" width="1024" height="768" tabindex="0"></canvas>
 
-        <div id="stage-hud">
+        <div id="stage-hud">          
           <div class="corner left glass">
-            <div class="hud-item">
+            <div class="hud-item">              
               <span class="coin-icon"></span>
               <span id="hudCurrency" class="hud-value">0</span>
             </div>
           </div>
-          <!-- Stage title removed from lobby UI per design request -->
-          <div class="corner right glass">
-            <div class="hud-item">
-              <span class="food-sphere-icon"></span>
-              <span id="foodCollected" class="hud-value">0</span>
+
+          <!-- RIGHT CORNER: Score + Food (separate containers) -->
+          <div class="hud-right-group">
+            <!-- Score HUD (separate container, hidden in lobby) -->
+            <div id="scoreHudContainer" class="corner glass">
+              <div class="hud-item">
+                <span class="hud-label">SCORE:</span>
+                <span id="hudScore" class="hud-value">0</span>
+              </div>
+            </div>
+
+            <!-- Food HUD (separate container, hidden in lobby) -->
+            <div id="foodHudContainer" class="corner glass">
+              <div class="hud-item">
+                <span class="food-sphere-icon"></span>
+                <span id="foodCollected" class="hud-value">0</span>
+              </div>
             </div>
           </div>
         </div>

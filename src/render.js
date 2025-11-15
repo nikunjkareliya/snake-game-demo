@@ -1237,11 +1237,11 @@ function drawWorld() {
         drawVignette();
         drawPauseIndicator();
 
-        // Render flow UI progress bar
+        // Render flow UI progress bar (top-center)
         renderFlowBar();
     }
 
-    // Render debug HUD (tier badge, etc.)
+    // Render debug HUD (bottom-left, if enabled)
     renderDebugHUD();
 }
 

@@ -160,11 +160,18 @@ body {
   backdrop-filter: blur(8px) saturate(140%);
 }
 
-#stage-hud .corner.right { flex-direction: row; }
+/* Right-side HUD group: horizontal layout with gaps */
+.hud-right-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
 
-/* When overlay (lobby) is open we hide the right corner HUD (food counter)
-   to avoid visual conflict with the settings button placed in the overlay. */
-#stage-wrap.overlay-open #stage-hud .corner.right {
+/* Context-Aware HUD Visibility Rules */
+
+/* During lobby (overlay open): Hide score and food from right side */
+#stage-wrap.overlay-open #scoreHudContainer,
+#stage-wrap.overlay-open #foodHudContainer {
   display: none;
 }
 
@@ -178,6 +185,18 @@ body {
 .hud-value {
   font-weight: 600;
   color: var(--neon-cyan);
+}
+
+/* Trophy icon for score */
+.trophy-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500, #FF8C00);
+  box-shadow:
+    0 0 8px rgba(255, 215, 0, 0.7),
+    0 0 18px rgba(255, 165, 0, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Coin visual rendered via CSS, no emoji text node */
@@ -289,6 +308,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  position: relative; /* Positioning context for high score badge */
 }
 
 .title {
@@ -804,6 +824,78 @@ input[type=range]:focus::-moz-range-thumb {
     margin: 30px 0;
     align-items: center;
     animation: slideInUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+
+/* High Score Badge (positioned right-center in lobby) */
+.high-score-badge {
+    position: absolute;
+    right: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+
+    /* Hexagon badge shape */
+    clip-path: polygon(
+        15% 0%,
+        85% 0%,
+        100% 50%,
+        85% 100%,
+        15% 100%,
+        0% 50%
+    );
+
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 165, 0, 0.08));
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    box-shadow:
+        0 0 20px rgba(255, 215, 0, 0.3),
+        inset 0 0 15px rgba(255, 215, 0, 0.08);
+    backdrop-filter: blur(10px) saturate(140%);
+
+    z-index: 5;
+    animation: badgeSlideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+/* Badge content wrapper (stacked vertically) */
+.badge-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Badge label styling */
+.high-score-badge .badge-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    color: rgba(255, 215, 0, 0.9);
+    line-height: 1;
+}
+
+/* Badge value styling */
+.high-score-badge .badge-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+    line-height: 1;
+}
+
+/* Slide-in animation from right */
+@keyframes badgeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
 }
 
 .lobby-menu .btn {
@@ -1788,6 +1880,46 @@ input[type=range]:focus::-moz-range-thumb {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ============================================================================
+   COIN FLYING ANIMATION (Game Over → HUD)
+   ============================================================================ */
+
+.flying-coin {
+    position: fixed;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff9c4, #ffd54f 40%, #ffb300 70%, #ff8f00 100%);
+    box-shadow:
+        0 0 10px rgba(255, 200, 0, 0.8),
+        0 0 20px rgba(255, 160, 0, 0.5);
+    pointer-events: none;
+    z-index: 10000;
+    animation: coinFly 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes coinFly {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(
+            calc(var(--end-x) * 0.5),
+            calc(var(--end-y) * 0.5 + var(--curve))
+        ) scale(1.2) rotate(360deg);
+        opacity: 1;
+    }
+    90% {
+        transform: translate(var(--end-x), var(--end-y)) scale(0.8) rotate(720deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--end-x), var(--end-y)) scale(0) rotate(720deg);
+        opacity: 0;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

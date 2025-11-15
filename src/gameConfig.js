@@ -190,18 +190,18 @@ export const TESTING = {
 export const DIFFICULTY = {
     // === TIER PROGRESSION (Food-Based) ===
     // Each value is the ADDITIONAL food needed to reach next tier
-    // Example: [10, 20, 30] means: Tier 0→1 at 10 food, Tier 1→2 at 30 total (10+20), Tier 2→3 at 60 total (10+20+30)
+    // Example: [5, 7, 10] means: Tier 0→1 at 5 food, Tier 1→2 at 12 total (5+7), Tier 2→3 at 22 total (5+7+10)
     foodPerTier: [
-        10,  // Tier 0→1: 10 food
-        15,  // Tier 1→2: 25 food total
-        20,  // Tier 2→3: 45 food total
-        25,  // Tier 3→4: 70 food total
-        30,  // Tier 4→5: 100 food total
-        35,  // Tier 5→6: 135 food total
-        40,  // Tier 6→7: 175 food total
-        45,  // Tier 7→8: 220 food total
-        50,  // Tier 8→9: 270 food total
-        60,  // Tier 9→10: 330 food total
+        5,   // Tier 0→1: 5 food (fast progression)
+        7,   // Tier 1→2: 12 food total
+        10,  // Tier 2→3: 22 food total
+        12,  // Tier 3→4: 34 food total
+        15,  // Tier 4→5: 49 food total
+        18,  // Tier 5→6: 67 food total
+        20,  // Tier 6→7: 87 food total
+        23,  // Tier 7→8: 110 food total
+        25,  // Tier 8→9: 135 food total
+        30,  // Tier 9→10: 165 food total
     ],
     maxTier: 10,
 
