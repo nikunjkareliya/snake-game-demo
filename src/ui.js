@@ -5,6 +5,7 @@ import { setStoredJSON, setStoredValue, formatNumber } from './utils.js';
 import { canvas } from './canvas.js';
 import { UI_FOCUS_DELAY, DEBUG } from './config.js';
 import { UI_ANIMATIONS, GAMEPLAY, VISUAL } from './gameConfig.js';
+import { triggerCoinFlyAnimation } from './coinAnimation.js';
 
 export const overlay = document.getElementById('overlay');
 export const scoreEl = document.getElementById('score');
@@ -68,6 +69,12 @@ export function showLobby(startGame, hideOverlay) {
     // Update stats display (HUD values handled by persistent stage HUD)
     updateStats();
 
+    // Update high score badge in lobby
+    const lobbyHighScore = document.getElementById('lobbyHighScore');
+    if (lobbyHighScore) {
+        lobbyHighScore.textContent = formatNumber(state.highScore);
+    }
+
     attachLobbyListeners(startGame, hideOverlay);
     // Start title noise when lobby opens
     startTitleNoiseIfEnabled();
@@ -112,6 +119,14 @@ function buildLobbyHTML() {
                 </text>
             </svg>
             <p class="tagline">Collect. Grow. Survive.</p>
+
+            <!-- High Score Badge (positioned right-center) -->
+            <div class="high-score-badge glass">
+                <div class="badge-content">
+                    <span class="badge-label">HIGHEST SCORE</span>
+                    <span id="lobbyHighScore" class="badge-value">0</span>
+                </div>
+            </div>
 
             <div class="lobby-menu">
                 <button id="playBtn" class="btn btn-hero neon">Play</button>
@@ -204,13 +219,12 @@ function attachLobbyListeners(startGame, hideOverlay) {
 
 /**
  * Update HUD and lobby stats from `state`.
+ * Left corner: Always shows COINS
+ * Right corner: SCORE + FOOD (visible only during gameplay)
  * @returns {void}
  */
 export function updateStats() {
-    // Lobby overlay no longer shows high score or coins above the title;
-    // persistent stage HUD handles currency/food counters.
-    
-    // Update HUD currency with animation on change
+    // Update coins (left corner, always visible)
     if (hudCurrencyEl) {
         const formatted = formatNumber(state.currency);
         if (state.currency !== lastCurrency) {
@@ -225,8 +239,14 @@ export function updateStats() {
             hudCurrencyEl.textContent = formatted;
         }
     }
-    
-    // Update food collected counter
+
+    // Update score (right corner, visible during gameplay only)
+    const hudScoreEl = document.getElementById('hudScore');
+    if (hudScoreEl) {
+        hudScoreEl.textContent = formatNumber(state.score);
+    }
+
+    // Update food collected counter (right corner, visible during gameplay only)
     if (foodCollectedEl) {
         foodCollectedEl.textContent = state.foodCollected || 0;
     }
@@ -324,6 +344,17 @@ document.addEventListener('showGameOver', (e) => {
 
     // Focus on Play Again button for accessibility
     setTimeout(() => playAgainBtn?.focus(), 100);
+
+    // Trigger coin flying animation after stat cards appear
+    if (e.detail.coinsEarned > 0) {
+        setTimeout(() => {
+            // Find the "Coins Earned" stat card (3rd card in grid)
+            const coinsEarnedCard = overlay.querySelector('.stat-card:nth-child(3)');
+            if (coinsEarnedCard) {
+                triggerCoinFlyAnimation(e.detail.coinsEarned, coinsEarnedCard);
+            }
+        }, 600); // Wait for stat cards to animate in (0.3s last card + 0.3s buffer)
+    }
 });
 
 /**

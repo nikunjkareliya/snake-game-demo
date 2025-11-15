@@ -16,6 +16,69 @@ Open `index.html` in any modern browser, or visit the live demo above.
 - **Space or P**: Pause/Resume
 - **R**: Restart
 
+## ⚡ Flow System (Chain Eating Multiplier)
+
+The **Flow System** is a chain-eating mechanic that rewards rapid food consumption with score multipliers.
+
+### How It Works
+
+**1. Flow Starts**
+- Eat your first food → Flow bar appears with a 6-second timer
+- Timer counts down as you move
+
+**2. Build Your Chain**
+- Eat food within the timer window → Timer resets, chain continues
+- Each food eaten without missing the window increases your streak
+
+**3. Reach Flow Tiers**
+- Every 3 consecutive food eaten → Flow tier increases
+- Higher tiers unlock better score multipliers
+
+| Flow Tier | Multiplier | Visual |
+|-----------|-----------|--------|
+| 0 | 1.0x | Gray (no bonus) |
+| 1 | 1.2x | Green (+20%) |
+| 2 | 1.5x | Cyan (+50%) |
+| 3 | 2.0x | Magenta (2x score!) |
+| 4 | 3.0x | Orange (3x score!) |
+
+**4. Chain Breaks**
+- Miss the timer window → Flow resets to tier 0
+- Timer turns orange when less than 2 seconds remain (danger warning)
+- Must eat food to restart your chain
+
+### Example Timeline
+
+```
+T=0.0s: Eat Food #1 → Flow starts, Timer=6.0s, Tier=0, Mult=1.0x
+T=2.5s: Eat Food #2 → Timer resets to 6.0s, Streak=2
+T=3.2s: Eat Food #3 → Timer resets, Streak=3 → TIER UP! (Mult=1.2x)
+T=5.8s: Eat Food #4 → Timer resets, Streak=1, Mult=1.2x
+T=6.1s: Miss food → Timer expires → Chain broken, Mult=1.0x
+```
+
+### Difficulty Scaling
+
+As you progress and increase your difficulty tier, the Flow window shrinks:
+- **Tier 0**: 6.0 seconds (plenty of time)
+- **Tier 5**: 4.5 seconds (tighter)
+- **Tier 10**: 3.0 seconds (very challenging!)
+
+This creates a skill-based progression where aggressive players earn higher multipliers.
+
+### Visual Feedback
+
+The horizontal Flow bar (top center) shows:
+```
+       T2  [████████████████░░░░░] 4.3s ×2.0
+              ● ● ○ ○
+```
+- **T2**: Current flow tier (0-4)
+- **Bar**: Fills left-to-right, drains as timer counts down
+- **4.3s**: Time remaining in the window
+- **×2.0**: Current score multiplier
+- **Dots**: Visual tier indicator (filled = reached, empty = not yet)
+
 ## 📊 Game Features
 
 - Score increases by 10 per food
@@ -27,7 +90,7 @@ Open `index.html` in any modern browser, or visit the live demo above.
 
 ## 🏗️ Architecture & Module Analysis
 
-This project follows a modular architecture with clear separation of concerns. The codebase is organized into 16 distinct modules, each responsible for specific functionality.
+This project follows a modular architecture with clear separation of concerns. The codebase is organized into 20 distinct modules, each responsible for specific functionality. The architecture includes core gameplay systems, advanced progression mechanics, and visual feedback systems.
 
 ### 📁 Module Overview
 
@@ -360,6 +423,106 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
+#### **17. `difficulty.js` - Difficulty & Progression System**
+**Responsibilities:**
+- Manages food-based tier progression (0-10 tiers)
+- Calculates snake speed based on current tier
+- Tracks total food eaten and progress to next tier
+- Provides difficulty metrics for HUD and game systems
+
+**Key Functions:**
+- `calculateTier(foodCount)` - Returns current tier based on cumulative food
+- `getSpeedForTier(tier)` - Returns movement speed (ms) for a tier
+- `updateDifficultySnapshot()` - Updates state.difficulty with current metrics
+- `calculateFlowWindow(tier)` - Calculates flow timer window based on difficulty
+- `resetDifficulty()` - Resets all progression to Tier 0
+
+**Progression Mechanics:**
+- Each tier requires progressively more food (10, 15, 20, 25... food per tier)
+- Speed increases from 120ms (Tier 0) to 60ms (Tier 10) - harder to control
+- Flow window shrinks by 0.3s per tier (6.0s → 3.0s minimum)
+- Designer-configurable via `DIFFICULTY` config in gameConfig.js
+
+**Dependencies:** `state.js`, `gameConfig.js`
+
+---
+
+#### **18. `flow.js` - Flow System (Chain Eating Multiplier)**
+**Responsibilities:**
+- Manages chain-eating state and tier progression
+- Handles flow timer countdown and expiration
+- Calculates score multipliers based on flow tier
+- Integrates with food collision and game loop
+
+**Key Functions:**
+- `onFoodEaten()` - Called when food is eaten; starts or continues flow
+- `updateFlowTimer(dt)` - Called each frame; counts down timer
+- `getCurrentFlowMultiplier()` - Returns score multiplier for current flow tier
+- `resetFlow()` - Resets flow state on game start/end
+
+**Flow Mechanics:**
+- **Start**: First food eaten → Flow bar appears, tier=0, window=6.0s
+- **Chain**: Eat food within window → Reset timer, increment streak
+- **Tier Up**: Every 3 consecutive food → Multiplier increases (1.0x → 1.2x → 1.5x → 2.0x → 3.0x)
+- **Expire**: Miss window → Reset to tier 0, must eat again to restart
+- **Scale**: Window shrinks with difficulty (starts at 6.0s, minimum 3.0s)
+
+**Designer-configurable via `FLOW` config in gameConfig.js**
+
+**Dependencies:** `state.js`, `gameConfig.js`, `difficulty.js`
+
+---
+
+#### **19. `flowUI.js` - Flow Progress Bar Visualization**
+**Responsibilities:**
+- Renders horizontal flow progress bar during gameplay
+- Shows real-time timer, tier, and multiplier
+- Provides visual feedback with colors and animations
+- Displays warning state when timer < 2s
+
+**Key Functions:**
+- `renderFlowBar()` - Main render function; draws entire flow UI
+- `drawProgressBar(centerX, centerY, progress, color, inDanger)` - Draws horizontal progress bar
+- `drawTierDots(centerX, centerY, currentTier, color)` - Draws tier indicator dots
+- `drawLabels(centerX, centerY, tier, timer, multiplier, color, inDanger)` - Draws text labels
+
+**Visual Design:**
+```
+       T2  [████████████████░░░░░] 4.3s ×2.0
+              ● ● ○ ○
+```
+- Horizontal bar fills left-to-right as timer counts down
+- Color-coded by flow tier (Gray → Green → Cyan → Magenta → Orange)
+- Warning pulse when timer < 2 seconds
+- Tier dots show current progression
+
+**Designer-configurable via `FLOW_UI` config in gameConfig.js**
+
+**Dependencies:** `state.js`, `canvas.js`, `gameConfig.js`, `config.js`
+
+---
+
+#### **20. `debugHUD.js` - Debug Statistics Display**
+**Responsibilities:**
+- Displays real-time game metrics for testing and debugging
+- Shows difficulty tier, speed, flow status, and multiplier
+- Provides development/QA visualization of progression systems
+
+**Key Functions:**
+- `renderDebugHUD()` - Renders 4-line stats display in bottom-left corner
+
+**Displays:**
+- Line 1: Difficulty tier and progress (e.g., "Tier 2/10 (25/45)")
+- Line 2: Current snake speed (e.g., "Speed: 100ms")
+- Line 3: Flow status with timer (e.g., "Flow T2 (4.3s / 6.0s)")
+- Line 4: Score multiplier (e.g., "Multiplier: 1.5x")
+
+**Toggle:** `DEV.showDifficultyHUD` in gameConfig.js (default: true)
+
+**Dependencies:** `state.js`, `canvas.js`, `gameConfig.js`, `config.js`, `difficulty.js`, `flow.js`
+
+---
+
 ## 🔄 Data Flow
 
 ```
@@ -368,23 +531,56 @@ User Input → input.js → state.js
 main.js (Game Loop) ← game.js ← snake.js → food.js
         ↓                         ↓   ↓        ↓
     render.js → canvas.js        particles.js
-        ↓                              ↓
-    ui.js (HUD Updates)            death.js
-        ↓                              ↓
-    transition.js                 skinPalette.js
+        ↓         ↓ ↓ ↓               ↓
+    ui.js ← flowUI.js         death.js
+    debugHUD.js ↑                ↓
+         ↑       |        skinPalette.js
+    transition.js|
+               difficulty.js ← flow.js
 ```
 
-**Module Dependencies:**
+**Module Dependencies & Integration:**
+
+**Progression Systems:**
+- **difficulty.js** - Calculates tier based on food eaten; drives speed scaling
+- **flow.js** - Manages chain-eating state; triggered by snake.js food collision
+- Combined they provide dynamic difficulty scaling with skill-based rewards
+
+**Visualization:**
+- **flowUI.js** - Renders horizontal progress bar showing flow status
+- **debugHUD.js** - Shows detailed metrics (tier, speed, flow, multiplier)
+- Both read from difficulty.js and flow.js for real-time data
+
+**Gameplay Integration:**
+- **snake.js** calls `onFoodEaten()` (flow.js) and `updateDifficultySnapshot()` (difficulty.js) on food collision
+- **main.js** calls `updateFlowTimer()` (flow.js) each frame to count down timer
+- **game.js** calls `resetDifficulty()` and `resetFlow()` on game start/end
+
+**Shared Utilities:**
 - **particles.js** is used by snake.js, food.js, and death.js for all particle effects
 - **skinPalette.js** provides color palettes to particles.js for skin-aware particle colors
 - **config.js** and **utils.js** are shared utility modules used across the codebase
+- **gameConfig.js** centralizes all designer-tunable parameters (DIFFICULTY, FLOW, FLOW_UI, etc.)
 
 ---
 
 ## 🎨 Technical Highlights
 
+### **Progression & Difficulty System**
+- **Food-Based Tiers**: Difficulty tier increases based on cumulative food eaten (not time)
+- **Dynamic Speed Scaling**: Snake speed automatically increases from 120ms → 60ms as tier increases
+- **Flow Window Scaling**: Chain-eating window shrinks with difficulty (6.0s → 3.0s) for skill-based scaling
+- **Designer-Friendly Config**: All values in gameConfig.js for easy tuning without code changes
+
+### **Flow System (Chain Eating Multiplier)**
+- **Real-time Score Multipliers**: 1.0x → 1.2x → 1.5x → 2.0x → 3.0x based on chain progress
+- **Streak-Based Progression**: Every 3 consecutive food eaten → tier up
+- **Timer Management**: Countdown window resets on each food; expires if missed
+- **Difficulty Integration**: Window shrinks with game progression for increased challenge
+
 ### **Visual Effects System**
-- **Dynamic Intro**: Dual-snake intro animation to build excitement.
+- **Dynamic Intro**: Dual-snake intro animation to build excitement
+- **Flow UI Progress Bar**: Horizontal bar showing timer, tier, multiplier, and tier dots
 - **Particle Engine**: Physics-based particles with gravity and lifetime
 - **Spline Smoothing**: Catmull-Rom curves for organic snake movement
 - **Composite Blending**: Uses 'lighter' blend mode for neon glow effects
@@ -394,18 +590,21 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
 - Centralized state object shared across all modules
 - Game state machine with clear transitions
 - LocalStorage persistence for high score and currency
+- Progression snapshot system for HUD updates
 
 ### **Performance Optimizations**
 - Delta time calculations for frame-independent movement
 - Capped delta time to prevent spiral of death
 - Efficient particle cleanup (splice from end)
 - DPR-aware canvas scaling
+- Conditional rendering (only render when flow is active)
 
 ### **Game Design Patterns**
 - **Module Pattern**: ES6 modules with clear exports
 - **State Machine**: Clean game state transitions
 - **Observer Pattern**: Event-based UI updates
 - **Separation of Concerns**: Distinct responsibilities per module
+- **Configuration-Driven Design**: Centralized gameConfig.js for designer control
 
 ---
 
@@ -475,5 +674,9 @@ snake-game-demo/
     ├── ui.js           # UI management
     ├── transition.js   # UI transition effects
     ├── canvas.js       # Canvas setup
-    └── utils.js        # Utilities
+    ├── utils.js        # Utilities
+    ├── difficulty.js   # Difficulty & progression system
+    ├── flow.js         # Flow system (chain eating)
+    ├── flowUI.js       # Flow progress bar visualization
+    └── debugHUD.js     # Debug statistics display
 ```

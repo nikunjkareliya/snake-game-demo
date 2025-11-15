@@ -3,6 +3,9 @@ import { COLUMNS, ROWS, Direction, CELL_SIZE } from './config.js';
 import { INTRO_ANIMATION } from './gameConfig.js';
 import { spawnFood } from './food.js';
 import { canvas } from './canvas.js';
+import { resetDifficulty } from './difficulty.js';
+import { resetFlow } from './flow.js';
+import { updateStats } from './ui.js';
 
 export function stepIntroAnimation(dt) {
     if (!state.introAnimation) return;
@@ -73,26 +76,33 @@ export function resetGame() {
   state.mouthOpenTimer = 0;
   state.hitShakeTimer = 0;
   state.growTimer = 0;
-  
+
+  // Reset progression systems
+  resetDifficulty();
+  resetFlow();
+
   resetSnake();
-  
+
   // Initialize previous positions for smooth interpolation
   state.prevSnake = state.snake.map(seg => ({ ...seg }));
   state.moveProgress = 0;
-  
+
   spawnFood();
 }
 
 export function startGame() {
   if (state.gameState === 'playing' || state.gameState === 'intro') return;
-  
+
   // Reset core stats
   state.score = 0;
   state.foodCollected = 0;
   state.particles = [];
   state.fragments = [];
   state.snake = []; // Clear main snake
-  
+
+  // Update HUD immediately to show score=0, food=0 from game start
+  updateStats();
+
   // --- Setup Intro Animation ---
   state.gameState = 'intro';
   const introSnakeLength = INTRO_ANIMATION.LENGTH;
