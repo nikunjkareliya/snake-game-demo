@@ -88,17 +88,34 @@ The horizontal Flow bar (top center) shows:
 
 ### 📋 Development Roadmap Note
 
-This project has an extensive design document ([ENDLESS_SURVIVAL_DESIGN.md](ENDLESS_SURVIVAL_DESIGN.md)) outlining planned features for an Endless Survival mode. **Many features in that document are planned but not yet implemented**, including:
+This project has an extensive design document ([ENDLESS_SURVIVAL_DESIGN.md](ENDLESS_SURVIVAL_DESIGN.md)) outlining planned features for an Endless Survival mode.
 
-- **Boosters** (Time Crystal, Score Node, Stabilizer, etc.) - 0/8 implemented
-- **Hazards** (Static hazards, patrol orbs, laser sweeps, portals, etc.) - 0/11 implemented
-- **Phase Rotation System** - Not implemented
-- **Tier Script System** - Not implemented
-- **Telegraph System** - Not implemented
-- **Adaptive Assist** - Not implemented
-- **Time Multiplier** - Not implemented
+**Current Implementation Progress: ~45-50% Complete** ⬆️ (Updated with recent survival mode features)
 
-Current implementation progress is approximately **35-40% complete**. The design document serves as a roadmap for future development. This README documents the **currently implemented features only**.
+#### ✅ Recently Implemented (Survival Mode Launch! 🎉)
+- **Boosters** (2/8 types implemented):
+  - ✅ **Coin Shower**: Basket spawns as 2×2 collectible, explodes into 12 flying coins with physics-based settlement to grid cells (5 coins each, 5s lifetime)
+  - ✅ **Shrink Ray**: Potion bottle pickup (2×2), instantly removes 50% of snake's tail segments with magenta particle burst and notification
+- **Hazards** (2/11 types implemented):
+  - ✅ **Static Hazards**: Grid-based lethal cells with 1.5s telegraph (fade-in animation + pulsing glow), red square (80% cell) with white border
+  - ✅ **Patrol Orbs (Dynamic)**: Moving hazards (2-4 cells/sec, path reversal), **48px diameter with evil visual design**:
+    - **Evil Animated Gradient**: Swirling radial gradient (1.5 rad/sec rotation), pulsing glow (10-30px shadow blur), bright center → dark edges, 4 evil vein streaks
+    - **Blinking Evil Eyes**: Match snake eye style with dark red sclera (#330000), glowing orange pupils (#ff6600), blink every 2.5-6s (0.12s duration)
+    - **Motion Trail**: 5 fading position dots showing path history
+- **Tier Script System**: Automatic hazard spawning based on tier (0-10 tiers) with progressive difficulty scaling
+- **Telegraph System**: Complete 1.5-second visual warning system before hazards become lethal (state machine: telegraph → active)
+
+#### ❌ Still Planned
+- **Boosters** (6/8 remaining): Flow Extender, Overdrive Surge, Shield Barrier, Score Magnet, Stasis Burst, Hazard Vortex, Flow Anchor, Phase Dash, Combo Crown, Chrono Dial
+- **Hazards** (9/11 remaining): Hazard clusters, spiral drones, laser sweeps, portals, shifter zones, ghost snake, crumble cells, and more
+- **Phase Rotation**: Cyclical difficulty phases (Surge/Bloom/Compression)
+- **Adaptive Assist**: Death protection and frustration valves
+- **Time Multiplier**: Score scaling based on survival duration
+- **Advanced Scoring**: Route combos, hazard survival bonuses
+- **Booster Pity System**: Guaranteed spawn mechanics
+- **Weighted Rarity**: Common/Uncommon/Rare/Epic distribution
+
+The design document serves as a roadmap for future development. This README documents the **currently implemented features**.
 
 ---
 

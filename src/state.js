@@ -94,6 +94,26 @@ export const state = {
     // === HAZARD SYSTEM ===
     hazards: [],                 // Active hazards [{id, type, x, y, state, age, ...}]
 
+    // === BOOSTER SYSTEM ===
+    boosters: [],                // Active booster pickups on grid [{id, type, x, y, age, ...}]
+    activeBoosterEffects: [],    // Currently running effects [{type, duration, startTime, ...}]
+
+    // === COIN SHOWER EFFECT ===
+    coinShower: {
+        active: false,           // Is coin shower currently active?
+        timer: 0,                // Seconds remaining
+        spawnTimer: 0,           // Timer for spawning new coins
+        coins: [],               // Settled coins on grid [{x, y, age, life}, ...]
+        flyingCoins: [],         // Coins in flight from basket [{x, y, vx, vy, age, ...}]
+        basketX: 0,              // Explosion origin (pixel X)
+        basketY: 0,              // Explosion origin (pixel Y)
+    },
+
+    // === SHRINK RAY EFFECT ===
+    shrinkRay: {
+        particles: [],           // Shrink burst particles [{x, y, vx, vy, age, life, color, size}]
+    },
+
     // === DIFFICULTY SNAPSHOT ===
     // Updated when tier changes, used by HUD and other systems
     difficulty: {

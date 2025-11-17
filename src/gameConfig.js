@@ -34,14 +34,14 @@ export const ECONOMY = {
     // Set a skin price to 0 to make it free
     skinPrices: {
         neon: 0,           // Default/free skin
-        python: 30,        // Pattern skin
-        cosmic: 50,        // Pattern skin
-        circuit: 50,       // Pattern skin
         electric: 60,      // Animated skin
-        holographic: 80,   // Animated skin
-        inferno: 90,       // Animated skin
-        crystal: 100,      // Special skin
-        phantom: 120,      // Special skin
+        inferno: 120,       // Animated skin
+        holographic: 200,   // Animated skin
+        python: 300,        // Pattern skin
+        cosmic: 400,        // Pattern skin
+        circuit: 500,       // Pattern skin
+        crystal: 600,      // Special skin
+        phantom: 1000,      // Special skin
     },
 };
 
@@ -169,7 +169,7 @@ export const DEV = {
     showFPS: false,
 
     // Difficulty HUD
-    showDifficultyHUD: true,  // Show difficulty metrics in bottom-left
+    showDifficultyHUD: false,  // Show difficulty metrics in bottom-left
 };
 
 // ============================================================================
@@ -180,7 +180,7 @@ export const TESTING = {
     // When true, all skins will be treated as owned for quick QA / manual testing.
     // Use this flag during development or automated visual tests. Defaults to false
     // to prevent accidental unlocking in production builds.
-    unlockAllSkins: true,
+    unlockAllSkins: false,
 };
 
 // ============================================================================
@@ -358,11 +358,65 @@ export const HAZARDS = {
         maxSpeed: 4.0,            // Maximum speed cap
         color: '#ff3333',         // Red
         glowColor: '#ff8888',     // Light red glow
-        radius: 12,               // Visual radius (pixels)
+        radius: 24,               // Visual radius (pixels) - doubled from 12
         trailLength: 5,           // Number of trail positions to show
         trailFadeTime: 0.3,       // Trail particle lifetime (seconds)
         patrolMinLength: 4,       // Minimum patrol path length (cells)
         patrolMaxLength: 8,       // Maximum patrol path length (cells)
+        // === EVIL ANIMATION ===
+        pulseSpeed: 2.0,          // Speed of pulsing effect
+        gradientRotationSpeed: 1.5, // Swirl/rotation speed
+        glowPulseMin: 10,         // Minimum shadow blur
+        glowPulseMax: 30,         // Maximum shadow blur
+        eyeGlowColor: '#ff3300',  // Red eye glow
+        eyeIrisColor: '#ff6600',  // Orange iris
+        eyeScleraColor: '#fff4cc', // Sickly white
+    },
+};
+
+// ============================================================================
+// BOOSTER SYSTEM
+// ============================================================================
+
+export const BOOSTERS = {
+    // === SPAWN RULES ===
+    spawnSafeRadius: 2,           // Min distance from snake head
+    minDistanceFromFood: 2,       // Avoid spawning near food
+    minDistanceFromHazards: 2,    // Avoid spawning near hazards
+
+    // === LIFETIME ===
+    pickupLifetimeSec: 12,        // How long booster stays on grid before despawning
+    pickupWarningAtSec: 5,        // Start pulsing urgency warning
+
+    // === VISUAL CONFIG ===
+    pickupGlowRadius: 15,         // Glow effect radius
+    pickupPulseSpeed: 2,          // Pulse animation speed
+
+    // === COIN SHOWER CONFIG ===
+    coinShower: {
+        duration: 8,              // Effect lasts 8 seconds (after basket explosion)
+        coinCount: 12,            // Total coins from basket explosion
+        coinSpawnInterval: 0.6,   // Spawn 1 settled coin every 0.6s after collection
+        coinLifetime: 5,          // Each coin lasts 5 seconds before expiring
+        coinValue: 5,             // Currency per coin collected
+        coinSize: 8,              // Visual size of settled coins
+        coinGlow: 15,             // Glow effect radius
+
+        // Basket explosion physics
+        explosionSpeed: 250,      // Pixels per second (initial velocity)
+        explosionSpread: 360,     // Degrees of spread (full circle)
+        flightDuration: 0.8,      // Seconds coins fly before settling to grid
+        coinSettleRadius: 5,      // Max grid distance from basket for settling
+        coinBounceFactor: 0.85,   // Bounce reduction on settle
+    },
+
+    // === SHRINK RAY CONFIG ===
+    shrinkRay: {
+        segmentRemovalPercent: 0.5,   // Remove 50% of snake's tail
+        minSegments: 3,               // Always keep at least 3 segments
+        particleColor: '#ff00ff',     // Magenta burst particles
+        particleCount: 30,            // Burst particles on activation
+        particleLife: 0.6,            // Particle lifetime (seconds)
     },
 };
 
@@ -375,16 +429,16 @@ export const TIER_SCRIPT = {
     // Each value is the target number of static hazards for that tier
     staticHazardsByTier: [
         0,  // Tier 0 (0-5 food): Learning phase, no hazards
-        0,  // Tier 1 (5-12 food): Still easy
-        2,  // Tier 2 (12-22 food): Build confidence
-        2,  // Tier 3 (22-34 food): First hazards introduced!
-        2,  // Tier 4 (34-49 food): Maintain pressure
-        3,  // Tier 5 (49-67 food): Add +1 hazard
-        4,  // Tier 6 (67-87 food): Add +1 hazard
-        5,  // Tier 7 (87-110 food): Add +1 hazard
-        6,  // Tier 8 (110-135 food): Add +1 hazard
-        7,  // Tier 9 (135-165 food): Add +1 hazard
-        8,  // Tier 10 (165+ food): Maximum challenge (capped by maxConcurrentStatic)
+        3,  // Tier 1 (5-12 food): Still easy
+        4,  // Tier 2 (12-22 food): Build confidence
+        4,  // Tier 3 (22-34 food): First hazards introduced!
+        5,  // Tier 4 (34-49 food): Maintain pressure
+        5,  // Tier 5 (49-67 food): Add +1 hazard
+        6,  // Tier 6 (67-87 food): Add +1 hazard
+        7,  // Tier 7 (87-110 food): Add +1 hazard
+        8,  // Tier 8 (110-135 food): Add +1 hazard
+        9,  // Tier 9 (135-165 food): Add +1 hazard
+        10,  // Tier 10 (165+ food): Maximum challenge (capped by maxConcurrentStatic)
     ],
 
     // === DYNAMIC HAZARD TARGETS PER TIER ===

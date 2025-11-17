@@ -139,28 +139,150 @@ function drawPatrolOrb(hazard) {
         }
     }
 
-    // Draw main orb with glow layer
-    ctx.shadowBlur = 15;
+    // === EVIL ANIMATED GRADIENT ===
+    // Pulsing glow that breathes with evil energy
+    const glowPulse = Math.sin(state.elapsedSec * Math.PI * HAZARDS.patrolOrb.pulseSpeed) * 0.5 + 0.5;
+    const shadowBlur = HAZARDS.patrolOrb.glowPulseMin +
+                       (glowPulse * (HAZARDS.patrolOrb.glowPulseMax - HAZARDS.patrolOrb.glowPulseMin));
+    ctx.shadowBlur = shadowBlur;
     ctx.shadowColor = HAZARDS.patrolOrb.glowColor;
 
-    // Radial gradient for 3D sphere effect
-    const gradient = ctx.createRadialGradient(cx - 4, cy - 4, 0, cx, cy, radius);
-    gradient.addColorStop(0, HAZARDS.patrolOrb.glowColor);
-    gradient.addColorStop(0.6, HAZARDS.patrolOrb.color);
-    gradient.addColorStop(1, '#8b0000'); // Dark red at edges
+    // Animated evil gradient with swirling effect
+    const gradientAngle = state.elapsedSec * HAZARDS.patrolOrb.gradientRotationSpeed;
+    const glowOffsetX = Math.cos(gradientAngle) * 6;
+    const glowOffsetY = Math.sin(gradientAngle) * 6;
+
+    // Create radial gradient for 3D evil sphere
+    const gradient = ctx.createRadialGradient(
+      cx - 4 + glowOffsetX,
+      cy - 4 + glowOffsetY,
+      0,
+      cx,
+      cy,
+      radius
+    );
+
+    // Evil color stops that animate
+    const colorPhase = Math.sin(state.elapsedSec * 0.8) * 0.3 + 0.7;
+    const brightRed = `rgb(${Math.floor(255 * colorPhase)}, ${Math.floor(51 * colorPhase)}, ${Math.floor(51 * colorPhase)})`;
+    const darkRed = `rgb(${Math.floor(139 * colorPhase)}, 0, 0)`;
+    const evilBlack = `rgb(${Math.floor(30 * colorPhase)}, 0, 0)`;
+
+    gradient.addColorStop(0, brightRed);        // Bright center
+    gradient.addColorStop(0.5, HAZARDS.patrolOrb.color); // Mid red
+    gradient.addColorStop(0.8, darkRed);        // Dark edges
+    gradient.addColorStop(1, evilBlack);        // Black void
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw outer ring/border
+    // === EVIL VEINS/CRACKS (subtle dark streaks) ===
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * Math.PI / 2) + gradientAngle;
+      const x1 = cx + Math.cos(angle) * radius * 0.3;
+      const y1 = cy + Math.sin(angle) * radius * 0.3;
+      const x2 = cx + Math.cos(angle) * radius * 0.9;
+      const y2 = cy + Math.sin(angle) * radius * 0.9;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    // Draw outer ring/border (enhanced glow)
     ctx.strokeStyle = HAZARDS.patrolOrb.glowColor;
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = opacity * 0.7;
+    ctx.lineWidth = 2.5;
+    ctx.globalAlpha = opacity * 0.8;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.stroke();
+
+    // === EVIL BLINKING EYES (matching snake eye style) ===
+    // Calculate direction vectors (normalized)
+    let nx = 0, ny = 0; // Forward direction
+    let px = 0, py = 0; // Perpendicular (side) direction
+
+    if (hazard.velocity) {
+      const velocityMagnitude = Math.sqrt(hazard.velocity.x ** 2 + hazard.velocity.y ** 2);
+      if (velocityMagnitude > 0) {
+        nx = hazard.velocity.x / velocityMagnitude;
+        ny = hazard.velocity.y / velocityMagnitude;
+        // Perpendicular: px = -ny, py = nx
+        px = -ny;
+        py = nx;
+      }
+    }
+
+    // Eye size matches snake formula: baseEyeRadius = radius * 0.46 * 1.35
+    const baseEyeRadius = Math.max(2, Math.round(radius * 0.46 * 1.35));
+
+    // Eye positioning (using same offset logic as snake)
+    const eyeOffsetAlong = radius * 0.04;   // Small forward offset
+    const eyeOffsetSide = radius * 0.64;    // Side spacing
+
+    const leftEyeX = cx + nx * eyeOffsetAlong + px * eyeOffsetSide;
+    const leftEyeY = cy + ny * eyeOffsetAlong + py * eyeOffsetSide;
+    const rightEyeX = cx + nx * eyeOffsetAlong - px * eyeOffsetSide;
+    const rightEyeY = cy + ny * eyeOffsetAlong - py * eyeOffsetSide;
+
+    ctx.globalAlpha = opacity;
+
+    if (hazard.blinkTimer > 0) {
+      // === CLOSED EYES (matching snake style) ===
+      // Simple lines with round caps, perpendicular to movement
+      const lineLen = baseEyeRadius * 2.4;
+      ctx.strokeStyle = '#4a0000'; // Dark evil red
+      ctx.lineWidth = Math.max(2, baseEyeRadius * 0.6);
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(leftEyeX - px * lineLen / 2, leftEyeY - py * lineLen / 2);
+      ctx.lineTo(leftEyeX + px * lineLen / 2, leftEyeY + py * lineLen / 2);
+      ctx.moveTo(rightEyeX - px * lineLen / 2, rightEyeY - py * lineLen / 2);
+      ctx.lineTo(rightEyeX + px * lineLen / 2, rightEyeY + py * lineLen / 2);
+      ctx.stroke();
+    } else {
+      // === OPEN EVIL EYES (matching snake style) ===
+      // Sclera (eye whites) - evil dark red
+      ctx.fillStyle = '#330000'; // Dark evil red instead of white
+      ctx.beginPath();
+      ctx.arc(leftEyeX, leftEyeY, baseEyeRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(rightEyeX, rightEyeY, baseEyeRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupils - simple circles (evil orange instead of black)
+      ctx.fillStyle = '#ff6600'; // Glowing orange
+      const pupilRadius = baseEyeRadius * 0.5;
+      const pupilOffset = baseEyeRadius * 0.2;
+
+      ctx.beginPath();
+      ctx.arc(
+        leftEyeX + nx * pupilOffset,
+        leftEyeY + ny * pupilOffset,
+        pupilRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(
+        rightEyeX + nx * pupilOffset,
+        rightEyeY + ny * pupilOffset,
+        pupilRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
 
     ctx.restore();
 }

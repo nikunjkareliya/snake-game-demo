@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { Direction } from './config.js';
 import { spawnStaticHazard } from './hazards.js';
+import { spawnBoosterPickup } from './boosters.js';
 
 const keyMap = new Map([
   ['ArrowUp', Direction.Up],
@@ -49,6 +50,38 @@ export function initInput(onStartGame, onTogglePause) {
       spawnStaticHazard();
       e.preventDefault();
       return;
+    }
+
+    // Testing hotkeys: Number keys 1-6 to spawn booster pickups (only during gameplay)
+    // These are for rapid testing of booster mechanics
+    if (state.gameState === 'playing') {
+      switch(e.code) {
+        case 'Digit1': // Coin Shower booster pickup
+          spawnBoosterPickup('coinShower');
+          console.log('[Test] Spawned Coin Shower booster pickup');
+          e.preventDefault();
+          return;
+        case 'Digit2': // Shrink Ray booster pickup
+          spawnBoosterPickup('shrinkRay');
+          console.log('[Test] Spawned Shrink Ray potion bottle booster');
+          e.preventDefault();
+          return;
+        case 'Digit3': // Gravity Well booster pickup
+          spawnBoosterPickup('gravityWell');
+          console.log('[Test] Spawned Gravity Well booster pickup');
+          e.preventDefault();
+          return;
+        case 'Digit4': // Mystery Box booster pickup
+          spawnBoosterPickup('mysteryBox');
+          console.log('[Test] Spawned Mystery Box booster pickup');
+          e.preventDefault();
+          return;
+        case 'Digit5': // Mirror Dimension booster pickup
+          spawnBoosterPickup('mirrorDimension');
+          console.log('[Test] Spawned Mirror Dimension booster pickup');
+          e.preventDefault();
+          return;
+      }
     }
 
     const newDir = keyMap.get(e.code);

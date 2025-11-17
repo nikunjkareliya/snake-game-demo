@@ -196,7 +196,11 @@ export function spawnPatrolOrb() {
         patrolBounds: bounds,
         speedCellsPerSec: speed,
         lastMoveTime: 0,
-        trailPositions: []
+        trailPositions: [],
+
+        // === EVIL EYE BLINKING ===
+        blinkTimer: 0,  // Seconds remaining while eyes are closed
+        nextBlinkIn: 2.5 + Math.random() * 3.5  // Random between 2.5-6.0 seconds
     };
 
     state.hazards.push(hazard);
@@ -277,6 +281,20 @@ function updatePatrolOrbMovement(hazard, dt) {
     // Age trail positions
     for (const pos of hazard.trailPositions) {
         pos.age += dt;
+    }
+
+    // === UPDATE EVIL EYE BLINKING ===
+    if (hazard.blinkTimer > 0) {
+        hazard.blinkTimer = Math.max(0, hazard.blinkTimer - dt);
+    }
+
+    // Schedule next blink
+    hazard.nextBlinkIn = Math.max(0, hazard.nextBlinkIn - dt);
+    if (hazard.nextBlinkIn <= 0) {
+        // Trigger blink (0.12 second duration, same as snake)
+        hazard.blinkTimer = 0.12;
+        // Schedule next blink: random between 2.5-6.0 seconds
+        hazard.nextBlinkIn = 2.5 + Math.random() * 3.5;
     }
 
     // Update hazard position based on speed
