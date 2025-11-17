@@ -30,6 +30,8 @@ import {
 } from './config.js';
 import { renderDebugHUD } from './debugHUD.js';
 import { renderFlowBar } from './flowUI.js';
+import { drawHazards } from './hazardRender.js';
+import { drawCoinShower, drawBoosterPickups } from './boosterRender.js';
 
 function drawGrid() {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -1093,12 +1095,29 @@ function drawParticles() {
       ctx.fillStyle = p.color;
       ctx.globalAlpha = alpha;
       ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-      
+
       // Add glow
       ctx.globalAlpha = alpha * 0.5;
       ctx.fillRect(-p.size, -p.size, p.size * 2, p.size * 2);
       ctx.restore();
     }
+  }
+
+  // Render shrink ray particles (magenta burst)
+  for (const p of state.shrinkRay.particles) {
+    const alpha = Math.min(1, p.age / p.life);
+    const fadeAlpha = 1 - alpha; // Fade out as particle ages
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = fadeAlpha;
+    ctx.fill();
+
+    // Add glow
+    ctx.globalAlpha = fadeAlpha * 0.5;
+    ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   ctx.restore();
@@ -1232,6 +1251,9 @@ function drawWorld() {
     } else {
         drawGrid();
         drawParticles();
+        drawHazards();  // Render hazards after particles, before food
+        drawCoinShower();  // Render shower coins
+        drawBoosterPickups();  // Render booster pickups before food
         drawFood();
         drawSnake();
         drawVignette();

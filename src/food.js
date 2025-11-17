@@ -14,8 +14,18 @@ export function spawnFood() {
 
   for (let x = 0; x < COLUMNS; x++) {
     for (let y = 0; y < ROWS; y++) {
+      // Skip top 3 rows (HUD area)
+      if (y < 3) continue;
+
+      // Check not occupied by snake
       const occupied = state.snake.some(seg => seg.x === x && seg.y === y);
-      if (!occupied) emptyCells.push({ x, y });
+      if (occupied) continue;
+
+      // Check not occupied by hazards
+      const onHazard = state.hazards.some(h => h.x === x && h.y === y);
+      if (onHazard) continue;
+
+      emptyCells.push({ x, y });
     }
   }
 

@@ -86,11 +86,42 @@ The horizontal Flow bar (top center) shows:
 - Best score is saved to `localStorage`
 - Dynamic Intro Animation: Features two large, fast-moving snakes traversing the screen diagonally in opposite, offset paths before gameplay begins.
 
+### 📋 Development Roadmap Note
+
+This project has an extensive design document ([ENDLESS_SURVIVAL_DESIGN.md](ENDLESS_SURVIVAL_DESIGN.md)) outlining planned features for an Endless Survival mode.
+
+**Current Implementation Progress: ~45-50% Complete** ⬆️ (Updated with recent survival mode features)
+
+#### ✅ Recently Implemented (Survival Mode Launch! 🎉)
+- **Boosters** (2/8 types implemented):
+  - ✅ **Coin Shower**: Basket spawns as 2×2 collectible, explodes into 12 flying coins with physics-based settlement to grid cells (5 coins each, 5s lifetime)
+  - ✅ **Shrink Ray**: Potion bottle pickup (2×2), instantly removes 50% of snake's tail segments with magenta particle burst and notification
+- **Hazards** (2/11 types implemented):
+  - ✅ **Static Hazards**: Grid-based lethal cells with 1.5s telegraph (fade-in animation + pulsing glow), red square (80% cell) with white border
+  - ✅ **Patrol Orbs (Dynamic)**: Moving hazards (2-4 cells/sec, path reversal), **48px diameter with evil visual design**:
+    - **Evil Animated Gradient**: Swirling radial gradient (1.5 rad/sec rotation), pulsing glow (10-30px shadow blur), bright center → dark edges, 4 evil vein streaks
+    - **Blinking Evil Eyes**: Match snake eye style with dark red sclera (#330000), glowing orange pupils (#ff6600), blink every 2.5-6s (0.12s duration)
+    - **Motion Trail**: 5 fading position dots showing path history
+- **Tier Script System**: Automatic hazard spawning based on tier (0-10 tiers) with progressive difficulty scaling
+- **Telegraph System**: Complete 1.5-second visual warning system before hazards become lethal (state machine: telegraph → active)
+
+#### ❌ Still Planned
+- **Boosters** (6/8 remaining): Flow Extender, Overdrive Surge, Shield Barrier, Score Magnet, Stasis Burst, Hazard Vortex, Flow Anchor, Phase Dash, Combo Crown, Chrono Dial
+- **Hazards** (9/11 remaining): Hazard clusters, spiral drones, laser sweeps, portals, shifter zones, ghost snake, crumble cells, and more
+- **Phase Rotation**: Cyclical difficulty phases (Surge/Bloom/Compression)
+- **Adaptive Assist**: Death protection and frustration valves
+- **Time Multiplier**: Score scaling based on survival duration
+- **Advanced Scoring**: Route combos, hazard survival bonuses
+- **Booster Pity System**: Guaranteed spawn mechanics
+- **Weighted Rarity**: Common/Uncommon/Rare/Epic distribution
+
+The design document serves as a roadmap for future development. This README documents the **currently implemented features**.
+
 ---
 
 ## 🏗️ Architecture & Module Analysis
 
-This project follows a modular architecture with clear separation of concerns. The codebase is organized into 20 distinct modules, each responsible for specific functionality. The architecture includes core gameplay systems, advanced progression mechanics, and visual feedback systems.
+This project follows a modular architecture with clear separation of concerns. The codebase is organized into 21 distinct modules, each responsible for specific functionality. The architecture includes core gameplay systems, advanced progression mechanics, visual feedback systems, and UI animations.
 
 ### 📁 Module Overview
 
@@ -523,44 +554,287 @@ This project follows a modular architecture with clear separation of concerns. T
 
 ---
 
+#### **21. `coinAnimation.js` - Coin Flying Animation System**
+**Responsibilities:**
+- Creates animated coin particles that fly from source element to HUD
+- Triggers on game over when death bonus coins are awarded
+- Manages particle spawn timing, curved trajectories, and cleanup
+- Provides visual feedback for coin rewards
+
+**Key Functions:**
+- `triggerCoinFlyAnimation(coinAmount, sourceElement)` - Spawns 5-8 coin particles with staggered timing
+- `createCoinParticle(sourceRect, targetRect, index, total)` - Creates single coin with curved path animation
+- `triggerHUDUpdate()` - Refreshes HUD counter with pop animation when coins arrive
+
+**Animation Features:**
+- **Dynamic Particle Count**: Spawns 5-8 coins based on reward amount (more coins = bigger visual impact)
+- **Curved Trajectories**: Uses CSS custom properties (`--end-x`, `--end-y`, `--curve`) for arc motion
+- **Staggered Spawn**: 80ms delay between each coin for smooth visual flow
+- **Upward Arc**: Randomized upward curve (-100px to -150px) for natural parabolic motion
+- **Rotation**: Each coin rotates 720° during flight for dynamic effect
+- **HUD Sync**: Triggers coin counter update only when final coin arrives
+
+**Visual Design:**
+- Radial gradient with gold tones (#fff9c4 → #ffd54f → #ffb300 → #ff8f00)
+- Glowing shadow effects for neon aesthetic
+- Scale animation (1.0 → 1.2 → 0.8 → 0) for depth
+
+**Integration:**
+- Called by `ui.js` on `showGameOver` event
+- Targets "Coins Earned" stat card (3rd card in game over screen)
+- Animates to `.corner.left .coin-icon` HUD element
+- 600ms delay after stat cards appear for proper timing
+
+**Dependencies:** `ui.js` (dynamic import)
+
+---
+
+#### **22. `boosters.js` - Booster System Manager**
+**Responsibilities:**
+- Manages collectible power-up pickups that grant temporary gameplay effects
+- Handles booster spawning, lifetime management, and collision activation
+- Implements Coin Shower (basket explosion with physics-based coins)
+- Implements Shrink Ray (instant segment removal with particle burst)
+- Manages active booster effects and timers
+
+**Key Functions:**
+- `spawnBoosterPickup(type)` - Spawns booster pickup at safe grid location (supports 1×1 and 2×2 sizes)
+- `activateCoinShower()` - Triggers 8-second coin shower effect
+- `explodeBasket(gridX, gridY)` - Launches 12 coins in radial burst with physics
+- `collectShowerCoin(x, y)` - Awards currency when coin collected
+- `activateShrinkRay()` - Removes 50% of tail segments (minimum 3), creates particle burst
+- `updateCoinShower(dt)` - Updates flying coin physics and settlement to grid
+- `updateShrinkRay(dt)` - Ages particle burst effect
+- `updateBoosters(dt)` - Ages and removes expired pickups
+- `resetBoosters()` - Clears all effects on game reset
+
+**Booster Types Implemented:**
+- **Coin Shower**: 2×2 basket pickup, explodes into 12 flying coins with physics, settles to grid cells for collection (5 coins each, 5s lifetime, 8s total duration)
+- **Shrink Ray**: 2×2 potion bottle pickup, removes 50% of snake's tail (Math.floor(length × 0.5)), creates magenta particle burst (30 particles), shows notification "SHRUNK! -X SEGMENTS"
+
+**Safety & Spawning:**
+- Minimum 3 cells from snake head
+- Minimum 2 cells from food
+- Avoids HUD area (top 3 rows)
+- Validates 2×2 space for shrink ray (not at grid edges)
+- Lifetime: 12 seconds before despawn
+- Warning: Pulsing urgency at 5 seconds remaining
+
+**Integration:**
+- Called by `snake.js` on booster collision (lines 85-115)
+- Updated in `main.js` game loop
+- Configured via `BOOSTERS` in gameConfig.js
+- Renders via `boosterRender.js`
+
+**Dependencies:** `state.js`, `gameConfig.js`, `config.js`, `particles.js`, `notifications.js`
+
+---
+
+#### **23. `boosterRender.js` - Booster Visual Rendering**
+**Responsibilities:**
+- Renders all booster visual effects on canvas
+- Handles complex multi-part visuals (basket, potion bottle)
+- Draws flying coins with motion trails and settlement states
+- Creates glowing effects and animations
+
+**Key Functions:**
+- `drawBoosterPickups()` - Main dispatcher rendering all booster pickups on grid
+- `drawCoinShower()` - Renders all flying and settled coins for active shower
+- `drawCoinBasket(centerX, centerY, pulse, isWarning, color)` - Renders detailed 2×2 woven basket with nested coins
+- `drawPotionBottle(centerX, centerY, pulse, isWarning, color)` - Renders magic potion with liquid, bubbles, and sparkles
+- `drawCoin(x, y, size, alpha, withGlow)` - Standardized coin rendering with 3-layer effect
+
+**Visual Features:**
+- **Coin Basket** (35×30px at 1.0 pulse):
+  - Trapezoid woven basket with brown weave texture
+  - Golden handle arching overhead
+  - Rim highlight for depth
+  - 5 nested coins inside showing collection state
+  - Glowing aura (15px shadow blur)
+- **Potion Bottle** (44.8×41.6px at 1.0 pulse):
+  - Gradient magenta liquid fill (bright → dark)
+  - 8 orbiting sparkle particles (magical effect)
+  - 3 rising bubbles with upward animation
+  - Glass shine reflection (upper-left)
+  - Cork stopper top with dark brown color
+- **Flying Coins**: Scale animation, rotation effect, motion trails, fade-out on settle
+- **Settled Coins**: Pulsing glow (4 Hz), size variation, warning pulse when expiring (< 5s)
+- **Warning State**: Urgent pulsing ring around pickup when about to despawn
+
+**Dependencies:** `state.js`, `canvas.js`, `gameConfig.js`, `config.js`
+
+---
+
+#### **24. `hazards.js` - Hazard System Manager**
+**Responsibilities:**
+- Manages dangerous tiles/objects that eliminate snake on contact
+- Handles hazard spawning, lifecycle, state transitions, and collision detection
+- Implements static hazards (immobile lethal grid cells)
+- Implements patrol orbs (moving hazards with patrol paths)
+- Manages telegraph warning system (1.5s fade-in before lethal activation)
+
+**Key Functions:**
+- `spawnStaticHazard()` - Spawns static hazard at safe random position
+- `spawnPatrolOrb()` - Spawns moving patrol orb with random orientation and path
+- `updateHazards(dt)` - Ages hazards, transitions telegraph → active, updates movement and blinks
+- `updatePatrolOrbMovement(hazard, dt)` - Handles orb physics, boundary reversal, blink countdown
+- `checkHazardCollision(position)` - Checks if position collides with active hazard
+- `resetHazards()` - Clears all hazards on game reset
+
+**Hazard Types Implemented:**
+- **Static Hazards**:
+  - Immobile lethal cells (1×1 grid)
+  - 1.5s telegraph warning (state: 'telegraph')
+  - Grid-based collision detection
+  - Fade-in animation during telegraph (0.2 → 1.0 opacity)
+  - Pulsing glow (3 Hz) during telegraph
+- **Patrol Orbs**:
+  - Moving hazards patrolling along linear 4-8 cell paths
+  - Speed: 2.0 cells/sec base + 0.2/tier scaling (max 4.0 cells/sec at Tier 10)
+  - Horizontal or vertical patrol orientation (random)
+  - Boundary reversal (direction reversal at path ends)
+  - Circular collision detection (0.7 cell radius)
+  - Circular lifetime (non-lethal during telegraph, lethal when active)
+  - Blink system: 0.12s duration, random 2.5-6s intervals
+  - Motion trail: 5 fading position dots with shrinking size
+
+**Safety Systems:**
+- Minimum 3 cells from snake head (static), 5 cells (dynamic)
+- Minimum 2 cells from food
+- Never spawns in HUD area (top 3 rows)
+- Max concurrent limits: 8 static, 4 dynamic (auto-managed by tier script)
+- Spawn validation checks all relevant cells before placement
+
+**Tier-Based Progression:**
+- Tier 0-2: 0 hazards (learning phase)
+- Tier 3: First hazard unlock (notification: "HAZARDS UNLOCKED!")
+- Tier 4-10: Progressive hazard scaling (3-10 total hazards)
+- Tier 6: First dynamic hazard unlock (notification: "MOVING HAZARDS!")
+
+**Integration:**
+- Auto-spawned by `difficulty.js` tier progression system (via TIER_SCRIPT config)
+- Updated in `main.js` game loop
+- Collision checked in `snake.js` movement step
+- Configured via `HAZARDS` and `TIER_SCRIPT` in gameConfig.js
+- Renders via `hazardRender.js`
+
+**Dependencies:** `state.js`, `config.js`, `gameConfig.js`, `particles.js`
+
+---
+
+#### **25. `hazardRender.js` - Hazard Visual Rendering**
+**Responsibilities:**
+- Renders all hazard types with advanced visual effects
+- Implements telegraph warning animations and state-based visuals
+- Renders evil animated gradients and effects for patrol orbs
+- Draws blinking eyes matching snake eye aesthetic
+
+**Key Functions:**
+- `drawHazards()` - Main render dispatcher for all active hazards
+- `drawStaticHazard(hazard)` - Renders static hazard with glow and border
+- `drawPatrolOrb(hazard)` - Renders patrol orb with animated gradient, eyes, and trail
+
+**Visual Features:**
+- **Static Hazards**:
+  - Red square (80% cell size = 25.6px) with pulsing glow aura
+  - White border outline (2px)
+  - Telegraph fade-in animation (0.2 → 1.0 opacity)
+  - Active pulse effect (2 Hz sine wave)
+  - 15px shadow blur during active state
+- **Patrol Orbs (48px diameter doubled from design)**:
+  - **Evil Animated Gradient**:
+    - Swirling radial gradient (rotates 1.5 rad/sec based on time)
+    - Pulsing shadow blur (10-30px range, 2 Hz breathing)
+    - Bright red center → dark red edges → black void
+    - Dynamic color phase: RGB values animate sinusoidally
+    - 4 evil vein cracks radiating from center (dark streaks, rotating with gradient)
+  - **Blinking Evil Eyes** (Match snake eye proportions):
+    - Eye size: `radius × 0.46 × 1.35` (~16px for 24px radius)
+    - Sclera (eye whites): Dark evil red (#330000)
+    - Pupils: Glowing orange (#ff6600)
+    - Pupil size: 50% of eye radius
+    - Pupil offset: 20% toward movement direction
+    - Blink mechanism: Horizontal lines (0.12s duration) or open circles
+    - Blink frequency: Random 2.5-6s intervals
+    - Eyes positioned left/right with forward offset
+    - Eye spacing and positioning scales with orb radius
+  - **Motion Trail**:
+    - 5 fading position dots (shrinking size, fading opacity)
+    - Glow effect on trail positions
+  - **Outer Ring**: Enhanced glow border (2.5px width, light glow color)
+
+**Telegraph System:**
+- Fade-in animation during 1.5s warning phase
+- Pulsing effect (3 Hz) during telegraph only
+- Light color (reduced glow) during telegraph
+- Full color and glow when active (state: 'active')
+
+**Dependencies:** `state.js`, `canvas.js`, `config.js`, `gameConfig.js`
+
+---
+
 ## 🔄 Data Flow
 
 ```
 User Input → input.js → state.js
                             ↓
 main.js (Game Loop) ← game.js ← snake.js → food.js
-        ↓                         ↓   ↓        ↓
-    render.js → canvas.js        particles.js
-        ↓         ↓ ↓ ↓               ↓
-    ui.js ← flowUI.js         death.js
-    debugHUD.js ↑                ↓
-         ↑       |        skinPalette.js
-    transition.js|
-               difficulty.js ← flow.js
+        ↓                         ↓   ↓   ↓   ↓
+    render.js          particles.js  boosters.js
+        ↓ ↓                ↓              ↓
+ hazardRender.js     death.js     boosterRender.js
+ boosterRender.js        ↓
+        ↓         skinPalette.js
+    ui.js ← flowUI.js ← debugHUD.js
+      ↓  ↑                    ↑
+coinAnimation.js              |
+      ↑                       |
+ transition.js              flow.js
+                              ↑
+                        difficulty.js
+                              ↑
+                           hazards.js
+                           (auto-spawn)
 ```
 
 **Module Dependencies & Integration:**
 
 **Progression Systems:**
-- **difficulty.js** - Calculates tier based on food eaten; drives speed scaling
+- **difficulty.js** - Calculates tier based on food eaten (0-10 tiers); drives speed scaling and hazard progression
 - **flow.js** - Manages chain-eating state; triggered by snake.js food collision
-- Combined they provide dynamic difficulty scaling with skill-based rewards
+- **hazards.js** - Auto-spawns/removes hazards based on difficulty tier (via TIER_SCRIPT config)
+- Combined they provide dynamic difficulty scaling with skill-based rewards and progressive hazard introduction
+
+**Survival Mode Systems:**
+- **boosters.js** - Manages booster pickups (Coin Shower, Shrink Ray), activated on snake collision
+- **hazards.js** - Manages hazard spawning (Static, Patrol Orbs), collision detection with snake
+- **boosterRender.js** - Renders booster visuals (basket, potion, coins, effects)
+- **hazardRender.js** - Renders hazard visuals (telegraph animations, evil gradients, blinking eyes)
+- All auto-spawn based on tier progression with safe positioning and lifecycle management
 
 **Visualization:**
 - **flowUI.js** - Renders horizontal progress bar showing flow status
-- **debugHUD.js** - Shows detailed metrics (tier, speed, flow, multiplier)
-- Both read from difficulty.js and flow.js for real-time data
+- **debugHUD.js** - Shows detailed metrics (tier, speed, flow, hazard counts, multiplier)
+- **hazardRender.js** / **boosterRender.js** - Render survival mode visuals
+- All read from difficulty.js, flow.js, and hazards.js for real-time data
+
+**UI Animations:**
+- **coinAnimation.js** - Creates flying coin particles from game over screen to HUD
+- **transition.js** - Handles play button snake crawl transition animation
+- Both provide visual polish and feedback for player actions
 
 **Gameplay Integration:**
+- **snake.js** calls booster/hazard activation and collision checks during movement
 - **snake.js** calls `onFoodEaten()` (flow.js) and `updateDifficultySnapshot()` (difficulty.js) on food collision
-- **main.js** calls `updateFlowTimer()` (flow.js) each frame to count down timer
-- **game.js** calls `resetDifficulty()` and `resetFlow()` on game start/end
+- **main.js** calls `updateFlowTimer()` (flow.js), `updateBoosters()`, `updateHazards()`, and `updateShrinkRay()` each frame
+- **difficulty.js** auto-manages hazard spawning via TIER_SCRIPT on tier progression changes
+- **game.js** calls `resetDifficulty()`, `resetFlow()`, `resetBoosters()`, and `resetHazards()` on game start/end
 
 **Shared Utilities:**
-- **particles.js** is used by snake.js, food.js, and death.js for all particle effects
+- **particles.js** is used by snake.js, food.js, death.js, boosters.js, and hazards.js for all particle effects
 - **skinPalette.js** provides color palettes to particles.js for skin-aware particle colors
 - **config.js** and **utils.js** are shared utility modules used across the codebase
-- **gameConfig.js** centralizes all designer-tunable parameters (DIFFICULTY, FLOW, FLOW_UI, etc.)
+- **gameConfig.js** centralizes all designer-tunable parameters (DIFFICULTY, FLOW, BOOSTERS, HAZARDS, TIER_SCRIPT, etc.)
 
 ---
 
@@ -585,6 +859,23 @@ main.js (Game Loop) ← game.js ← snake.js → food.js
 - **Spline Smoothing**: Catmull-Rom curves for organic snake movement
 - **Composite Blending**: Uses 'lighter' blend mode for neon glow effects
 - **Multi-pass Rendering**: Glow → Base → Highlight for depth
+
+### **UI/UX Enhancements**
+- **Coin Flying Animation**: Dynamic particle system showing coins flying from game over stat card to HUD
+  - 5-8 coins spawn with staggered timing (80ms delay)
+  - Curved trajectories using CSS custom properties
+  - Rotation animation (720°) with scale effects
+  - Triggers HUD update with pop animation on arrival
+- **High Score Badge**: Hexagon-shaped badge on lobby screen showing personal best
+  - Positioned at right-center for visual balance
+  - Custom clip-path polygon for distinctive shape
+  - Glass morphism styling with gradient and glow effects
+- **Context-Aware HUD**: Different HUD visibility based on game state
+  - Lobby: Shows coins + high score badge only
+  - Gameplay: Shows coins (left) + score + food (right, separate containers)
+  - Each HUD element in separate glass container for clean visual hierarchy
+- **Settings Modal**: Accessible only in lobby (gear icon top-right)
+  - Removed from gameplay HUD to reduce clutter during play
 
 ### **State Management**
 - Centralized state object shared across all modules
@@ -673,6 +964,7 @@ snake-game-demo/
     ├── input.js        # Input handling
     ├── ui.js           # UI management
     ├── transition.js   # UI transition effects
+    ├── coinAnimation.js # Coin flying animation
     ├── canvas.js       # Canvas setup
     ├── utils.js        # Utilities
     ├── difficulty.js   # Difficulty & progression system

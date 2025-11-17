@@ -3,15 +3,12 @@ export const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1
 export const hypot = (x, y) => Math.sqrt(x * x + y * y);
 
 /**
- * Format large numbers with K suffix (e.g., 1200 -> 1.2K)
+ * Format large numbers as integers (e.g., 1200 -> 1200)
  * @param {number} num
  * @returns {string}
  */
 export function formatNumber(num) {
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-  }
-  return String(num);
+  return String(Math.floor(num));
 }
 
 export function applyAlphaToColor(color, alpha) {

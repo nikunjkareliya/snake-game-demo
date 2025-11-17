@@ -1922,6 +1922,68 @@ input[type=range]:focus::-moz-range-thumb {
     }
 }
 
+/* ============================================================================
+   NOTIFICATION SYSTEM
+   ============================================================================ */
+
+.notification-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120px);
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 2px;
+  z-index: 9999;
+  pointer-events: none;
+
+  /* Neon glow effect */
+  text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.notification-banner.warning {
+  background: linear-gradient(135deg, rgba(255, 0, 51, 0.15), rgba(255, 102, 102, 0.1));
+  border: 2px solid rgba(255, 0, 51, 0.5);
+  border-radius: 8px;
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 0 30px rgba(255, 0, 51, 0.3), inset 0 0 20px rgba(255, 0, 51, 0.05);
+}
+
+.notification-banner.info {
+  background: linear-gradient(135deg, rgba(0, 234, 255, 0.15), rgba(0, 170, 255, 0.1));
+  border: 2px solid rgba(0, 234, 255, 0.5);
+  border-radius: 8px;
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 0 30px rgba(0, 234, 255, 0.3), inset 0 0 20px rgba(0, 234, 255, 0.05);
+}
+
+.notification-banner.show {
+  animation: notificationSlideInOut 3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes notificationSlideInOut {
+  0% {
+    transform: translateX(-50%) translateY(-120px);
+    opacity: 0;
+  }
+  15% {
+    transform: translateX(-50%) translateY(50vh);
+    opacity: 1;
+  }
+  85% {
+    transform: translateX(-50%) translateY(50vh);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-120px);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Disable all animations */
   * {

@@ -5,8 +5,10 @@
  * All progression is driven by food collected, not time.
  */
 
-import { DIFFICULTY, FLOW } from './gameConfig.js';
+import { DIFFICULTY, FLOW, TIER_SCRIPT } from './gameConfig.js';
 import { state } from './state.js';
+import { spawnStaticHazard, spawnPatrolOrb, removeHazard, getHazardCounts } from './hazards.js';
+import { showNotification } from './notifications.js';
 
 /**
  * Calculate difficulty tier based on total food collected
@@ -104,6 +106,94 @@ export function updateDifficultySnapshot() {
     // Log tier changes
     if (tier !== prevTier) {
         console.log(`[Difficulty] Tier increased: ${prevTier} → ${tier} (Speed: ${speedMs}ms, Next tier at: ${nextTierAt} food)`);
+
+        // Handle tier-based hazard spawning
+        handleTierChangeHazards(prevTier, tier);
+    }
+}
+
+/**
+ * Handle hazard spawning/despawning on tier change
+ * @param {number} prevTier - Previous tier (-1 for initialization)
+ * @param {number} newTier - New tier
+ */
+export function handleTierChangeHazards(prevTier, newTier) {
+    if (!TIER_SCRIPT.enableAutoSpawn) return;
+
+    // Get static and dynamic targets
+    const prevStaticTarget = TIER_SCRIPT.staticHazardsByTier[prevTier] ?? 0;
+    const newStaticTarget = TIER_SCRIPT.staticHazardsByTier[newTier] ?? 0;
+    const prevDynamicTarget = TIER_SCRIPT.dynamicHazardsByTier[prevTier] ?? 0;
+    const newDynamicTarget = TIER_SCRIPT.dynamicHazardsByTier[newTier] ?? 0;
+
+    // Count current hazards by type
+    const staticCount = state.hazards.filter(h => h.type === 'static').length;
+    const dynamicCount = state.hazards.filter(h => h.type === 'patrol_orb').length;
+    const totalCount = getHazardCounts().total;
+
+    if (TIER_SCRIPT.logTierChanges) {
+        console.log(`[Tier Script] Tier ${prevTier}→${newTier}:`);
+        console.log(`  Static: ${prevStaticTarget}→${newStaticTarget} (current: ${staticCount})`);
+        console.log(`  Dynamic: ${prevDynamicTarget}→${newDynamicTarget} (current: ${dynamicCount})`);
+        console.log(`  Total: ${totalCount}`);
+    }
+
+    // ===== STATIC HAZARDS =====
+    // Show hazard unlock notification on first introduction
+    if (prevStaticTarget === 0 && newStaticTarget > 0) {
+        showNotification('HAZARDS UNLOCKED!', {
+            style: 'warning',
+            duration: 3000
+        });
+        console.log('[Notifications] Static hazards first unlocked at tier ' + newTier);
+    }
+
+    // Spawn or remove static hazards to match target
+    if (newStaticTarget > staticCount) {
+        const toSpawn = newStaticTarget - staticCount;
+        for (let i = 0; i < toSpawn; i++) {
+            spawnStaticHazard();
+        }
+    } else if (newStaticTarget < staticCount) {
+        const toRemove = staticCount - newStaticTarget;
+        removeHazardsByType('static', toRemove);
+    }
+
+    // ===== DYNAMIC HAZARDS (PATROL ORBS) =====
+    // Show notification on first dynamic hazard unlock
+    if (prevDynamicTarget === 0 && newDynamicTarget > 0) {
+        showNotification('MOVING HAZARDS!', {
+            style: 'warning',
+            duration: 3000
+        });
+        console.log('[Notifications] Dynamic hazards first unlocked at tier ' + newTier);
+    }
+
+    // Spawn or remove dynamic hazards to match target
+    if (newDynamicTarget > dynamicCount) {
+        const toSpawn = newDynamicTarget - dynamicCount;
+        for (let i = 0; i < toSpawn; i++) {
+            spawnPatrolOrb();
+        }
+    } else if (newDynamicTarget < dynamicCount) {
+        const toRemove = dynamicCount - newDynamicTarget;
+        removeHazardsByType('patrol_orb', toRemove);
+    }
+}
+
+/**
+ * Remove the oldest hazards of a specific type
+ * @param {string} type - Hazard type ('static' or 'patrol_orb')
+ * @param {number} count - Number of hazards to remove
+ */
+function removeHazardsByType(type, count) {
+    // Filter hazards by type and sort by age (oldest first)
+    const sorted = state.hazards
+        .filter(h => h.type === type)
+        .sort((a, b) => b.age - a.age);
+
+    for (let i = 0; i < count && i < sorted.length; i++) {
+        removeHazard(sorted[i].id);
     }
 }
 
@@ -122,4 +212,7 @@ export function resetDifficulty() {
         nextTierAt: DIFFICULTY.foodPerTier[0] || 10,
     };
     console.log('[Difficulty] Reset to Tier 0');
+
+    // Apply initial tier 0 hazards (e.g., patrol orbs for testing)
+    handleTierChangeHazards(-1, 0);
 }

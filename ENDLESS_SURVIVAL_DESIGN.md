@@ -1,5 +1,44 @@
 # Endless Survival Design Plan — Snake Frenzy
 
+---
+
+## ⚠️ IMPLEMENTATION STATUS
+
+**Current Progress: ~45-50% Complete** ⬆️ (Updated with recent implementations)
+
+This document represents the full design roadmap for the Endless Survival mode. Many features described here are **planned but not yet implemented**.
+
+### ✅ Currently Implemented Features
+- **Flow System**: Chain-eating multiplier with 5 tiers (1.0x → 3.0x)
+- **Difficulty Progression**: Food-based tier system (0-10 tiers) with speed scaling
+- **Coin Economy**: Earn coins during gameplay (+1/food) and on death (score × 0.1)
+- **Skin System**: Multiple purchasable skins with unique visual effects
+- **Core Gameplay**: Snake movement, food spawning, collision detection, death handling
+- **Visual Effects**: Particle system, smooth spline rendering, glow effects
+- **UI/UX Enhancements**: Flow progress bar, HUD system, coin flying animation, high score badge
+- **Tier Script System**: Orchestrated auto-spawning progression (0-10 tiers with hazard scaling) ✨ NEW
+- **Telegraph System**: 1.5-second visual warnings before hazards become lethal ✨ NEW
+- **Boosters** (2/8 types implemented):
+  - ✅ **Coin Shower**: Basket explosion spawning 12 collectible coins (physics-based settlement)
+  - ✅ **Shrink Ray**: Removes 50% of snake's tail segments with magenta particle burst
+- **Hazards** (2/11 types implemented):
+  - ✅ **Static Hazards**: Telegraph warning + grid-based lethal cells with glow aura
+  - ✅ **Patrol Orbs**: Moving hazards (2-4 cells/sec) with evil animated gradient and blinking eyes (48px diameter)
+
+### ❌ Not Yet Implemented
+- **Boosters** (6/8 remaining): Flow Extender, Overdrive Surge, Shield Barrier, Score Magnet, Stasis Burst, Hazard Vortex, and 2 more juicy variants
+- **Hazards** (9/11 remaining): Hazard clusters, crumble cells, spiral drones, laser sweeps, portals, shifter zones, ghost snake, and 2 more variants
+- **Phase Rotation**: Cyclical difficulty phases (Surge/Bloom/Compression)
+- **Adaptive Assist**: Death protection and frustration valves
+- **Time Multiplier**: Score scaling based on survival duration
+- **Advanced Scoring**: Route combos, hazard survival bonuses, booster bonuses
+- **Booster Pity System**: Guaranteed spawn mechanics after 45s without pickup
+- **Weighted Rarity**: Common/Uncommon/Rare/Epic booster distribution
+
+This design document serves as the **north star** for future development. Refer to [README.md](README.md) for accurate documentation of currently implemented features.
+
+---
+
 ## Core Premise
 Make `difficultyTier` the authoritative pacing dial. Every tier (≈ 60s or milestone-based) adds either:
 1. A quantitative ramp (speed, spawn delay, hazard count)
@@ -86,68 +125,326 @@ Exact values tune later; focus on sequencing clarity.
 
 ---
 
-## 5. Booster Suite (Revamped)
+## 5. Booster Suite - Enhanced for Player Engagement ⭐
 
-**Principles:** Each booster maps to one cognitive axis: Tempo, Scoring, Safety, Routing, Flow Sustain. Avoid overlap; make effects transparent in HUD with concise icons.
+**Core Design Philosophy:** Every booster creates a memorable "WOW moment" that players want to experience again and share. Focus on active power moments, visual spectacle, skill expression, and meaningful choice.
 
-### Booster Types
+**Principles:** Avoid passive stat boosts. Make every pickup feel powerful. Enable combo gameplay. Provide satisfying feedback.
 
-#### Time Crystal (Tier 4+)
-- **Effect:** +X seconds to Flow window (capped)
-- **Tier Scaling:** Later tiers add diminishing returns (anti-runaway)
-- **Visual:** Transparent cyan prism with rotation
-- **Icon:** Clock crystal
+---
 
-#### Score Node (Tier 7+)
-- **Effect:** Burst score (Base × 5 + length bonus × tier factor)
-- **Tier Scaling:** Later tiers also grant small coin bonus to reinforce economy loop
-- **Visual:** Pulsating hex, magenta → cyan alternating border
-- **Icon:** Star burst
+### TIER 1: Early Game Power Boosters (Tiers 4-6)
 
-#### Trail Stabilizer (Tier 11+)
-- **Effect:** Efficiency penalty immunity for next N moves
-- **Visual:** Tinted trail as feedback, floating ring locks onto head
-- **Icon:** Shield with path
+#### 🔮 Flow Extender (Tier 4 Unlock) ⭐ CORE
+- **Effect:** +3 seconds to flow window (stacks up to 2 times for +6s max)
+- **Duration:** Permanent until flow breaks
+- **Visual:** Window bar glows cyan with crystalline shimmer; "+3s" floats upward
+- **Audio:** Crystalline "ting" on pickup
+- **Strategic Depth:** Do you chase a second one? Save for higher flow tiers when window tighter?
+- **Engagement Hook:** Direct value players instantly understand. Synergizes perfectly with flow system.
 
-#### Phase Prism (Tier 8+)
-- **Effect:** Freezes hazard movement for 3s (static hazards glow pale)
-- **Visual:** Prismatic cube with energy field
-- **Icon:** Frozen hourglass
+#### ⚡ Overdrive Surge (Tier 5 Unlock) 🎮 POWER FANTASY
+- **Effect:** For 8 seconds: Move 30% faster + 2.0x score multiplier
+- **Skill Ceiling:** Higher for skilled players; risky for beginners
+- **Visual:** Orange/yellow lightning trails, snake glows bright, screen edges pulse with energy
+- **Audio:** Electric charge-up sound; continuous humming during; discharge fizzle on end
+- **Risk/Reward:** Speed makes control harder but massive score potential
+- **Strategic Depth:** Time it when food clusters spawn. Combine with high flow tier (6x total multiplier!)
+- **Engagement Hook:** POWER FANTASY - feel unstoppable. Creates memorable high-score moments.
 
-#### Phase Distorter (Tier 10+)
-- **Effect:** Temporarily slows snake base speed ramp tick accumulation by 50% for 6s
-- **Purpose:** Reduces cognitive overload in spike phases
-- **Visual:** Purple distortion field around snake
-- **Icon:** Spiral slow-mo
+#### 🛡️ Shield Barrier (Tier 6 Unlock) 💪 SAFETY NET
+- **Effect:** 1-hit invincibility shield (blocks hazard OR self-collision)
+- **Duration:** Lasts until consumed or 15 seconds expire
+- **Visual:** Rotating hexagonal barrier orbits snake head; when hit: shatters with glass particles
+- **Audio:** Shield activate hum; glass shatter on impact
+- **Save Mechanic:** Players hold it for "oh shit" moments = encourages risk-taking
+- **Strategic Depth:** Use immediately vs. save for dangerous moments?
+- **Engagement Hook:** Insurance policy. Lets players push boundaries. Feel-good safety net for new players.
 
-#### Portal Catalyst (Tier 9+, synergy)
-- **Effect:** Converts active portal pair into score tunnels (passing through gives +combo; limited uses)
-- **Purpose:** Strategic optional detours
-- **Visual:** Portal edges glow gold when active
-- **Icon:** Portal with star
+---
 
-#### Flow Anchor (Tier 12+)
-- **Effect:** Prevents flow tier from dropping below 1 for 10s
-- **Purpose:** Helps salvage near-miss runs, encourages pushing deeper
-- **Visual:** Anchor icon floats near head with timer
-- **Icon:** Anchor with flow bars
+### TIER 2: Mid Game Interaction Boosters (Tiers 7-9)
 
-#### Hazard Neutralizer (Tier 9+, Rare)
-- **Effect:** Removes one active static hazard (except protected newly spawned)
-- **Spawn Odds:** Extremely low; anti-frustration valve
-- **Visual:** Red X with dissolve animation on hazard
-- **Icon:** Eraser/X mark
+#### 💎 Score Magnet (Tier 7 Unlock) 🧲 ACTIVE GAMEPLAY
+- **Effect:** For 6 seconds: Food worth 3x points + auto-attract food from 3 cells away
+- **Change from Old:** Instead of passive burst, now ACTIVE gameplay mechanic
+- **Visual:** Magenta particle streams tractor-beam food toward snake; coin sprites orbit head
+- **Audio:** Whoosh attraction; ascending chime per food eaten; coin jingle
+- **Challenge:** "How much can I eat in 6 seconds?"
+- **Strategic Depth:** Position near food clusters before activating. Combine with high flow (9x total!)
+- **Engagement Hook:** Active not passive. Magnetic effect is visually satisfying. Hunt food during duration.
 
-### Drop Logic
-- **Weighted Distribution:** Array per tier; sum normalized
-- **Anti-Streak Boredom:** If no booster spawned in X seconds while odds >0, guarantee next spawn slot (soft pity timer)
-- **Conflict Avoidance:** Never spawn booster on hazard or within 2 cells of head
-- **Lifetime:** Despawn after ~12s to encourage decisive action
+#### ❄️ Stasis Burst (Tier 8 Unlock) 🥶 POWER FANTASY (Enhanced)
+- **Effect:** All hazards freeze for 6 seconds (doubled from 3s for impact)
+- **Warning:** 1-second thaw warning before hazards reactivate (frozen hazards pulse)
+- **Visual:** Ice particle explosion; frozen hazards encased in ice crystals; blue tint overlays
+- **Audio:** Ice crystallize on pickup; cracking sound on thaw warning
+- **Fairness:** Thaw warning prevents cheap deaths
+- **Strategic Depth:** Save for dense hazard phases. Use to path shortcuts through patrol orbs.
+- **Engagement Hook:** Turn danger into safety. Risky pathfinding becomes possible. Power fantasy.
+
+#### 🌪️ Hazard Vortex (Tier 9 Unlock) 💥 SATISFYING DESTRUCTION
+- **Effect:** All hazards within 5-cell radius destroyed in swirling vortex animation
+- **Score Bonus:** +50 score per hazard destroyed
+- **Visual:** Purple swirling vortex; hazards pulled toward center; each explodes in particle burst
+- **Audio:** Vortex whoosh on pickup; cascade of explosions; "+50" popups per hazard
+- **Screen Shake:** Intensity increases per destruction
+- **Strategic Depth:** Path to dense hazard clusters for max value. "Hazard farming" incentive.
+- **Engagement Hook:** Big satisfying power moment. Visible destruction with score feedback. Area clearing feels amazing.
+
+---
+
+### TIER 3: Late Game Mastery Boosters (Tiers 10-12)
+
+#### 🔗 Flow Anchor (Tier 10 Unlock) ⚓ INSURANCE
+- **Effect:** Flow tier cannot drop below current level for 12 seconds
+- **Allows:** Missing multiple food without penalty
+- **Visual:** Golden anchor icon chains flow bar; ethereal chain particles drift around snake
+- **Audio:** Heavy chain drop on pickup; chain break on expiry
+- **Strategic Depth:** Use during hazard-dense phases to maintain flow. Enables risky shortcuts.
+- **Engagement Hook:** Lets players PUSH LIMITS. Safety net for risky maneuvers. Late-game recovery tool.
+
+#### 👻 Phase Dash (Tier 11 Unlock) 🌀 SKILL EXPRESSION
+- **Effect:** Next 5 direction changes: Phase through hazards AND your own tail
+- **Mechanic:** Each phase-through creates ghost afterimage
+- **Visual:** Snake semi-transparent with cyan glow; ghost afterimages at each phase position; shimmer ripple
+- **Audio:** Dimensional shift on pickup; whoosh + sparkle per phase-through
+- **Skill Test:** Must count your moves carefully
+- **Strategic Depth:** Thread through your own tail for tight spots. Combine with Overdrive for maximum chaos.
+- **Engagement Hook:** Active skill. High skill ceiling. Enables insane pathing. Creates "that was awesome!" moments.
+
+#### 💫 Combo Crown (Tier 11 Unlock) 👑 ESCALATING REWARD
+- **Effect:** For 10 seconds: Each consecutive food eaten increases multiplier (1.5x → 2.0x → 2.5x → 3.0x+)
+- **Reset:** If you miss food or timer expires, resets to 1.5x
+- **Stacking:** Multiplicative with flow multiplier (3.0x crown × 3.0x flow = 9.0x total!)
+- **Visual:** Crown grows larger with each food; multiplier number in crown shows bonus
+- **Audio:** Royal fanfare on pickup; ascending chime pitch per food; building tension music
+- **Challenge:** "Can I keep the chain going?"
+- **Strategic Depth:** Maintain aggressive eating pace. Risk pushing hard vs. play safe.
+- **Engagement Hook:** Escalating reward creates tension. Skill expression (good routing = huge payoff). Becomes the score meta.
+
+#### ⚙️ Chrono Dial (Tier 12 Unlock) 🎛️ PLAYER AGENCY
+- **Effect:** CHOOSE between two modes at pickup:
+  - **FAST** (⚡): 30% speed boost for 10s (high skill, high score)
+  - **SLOW** (🐢): 30% slower, easier control for 10s (safety, learning)
+- **Choice:** Cannot change once selected
+- **Visual:** Two glowing options appear; selected mode triggers particle effect (orange/blue)
+- **Audio:** Clock tick on appearance; gear click + theme music on choice
+- **Situational:** Adapts to game state (open area = speed, hazard maze = slow)
+- **Strategic Depth:** Read the board state before choosing. Decision-making test.
+- **Engagement Hook:** Player agency. Meaningful choice. Different playstyles rewarded. Situation awareness test.
+
+---
+
+### ADDITIONAL JUICY BOOSTERS (High Engagement Variants)
+
+**Implementation Order:** One booster at a time, testing with keyboard shortcuts (Keys 1-6)
+
+#### 🌈 Neon Afterimage (Tier 3 Unlock) 🎨 SELF-EXPRESSION [PRIORITY 1]
+- **Spawn:** 4% chance per tier 3+
+- **Keyboard Shortcut:** Press **Key 2** during gameplay to spawn
+- **Effect:** Leave glowing light-paint trail for 12 seconds - create beautiful neon art
+- **Visual:** Customizable color trail that fades slowly; neon glow effect; screenshot-worthy moments
+- **Audio:** Ethereal shimmer sound as trail paints
+- **Strategic Depth:** Creates memorable visual moments; encourages sharing
+- **Engagement Hook:** "Paint your masterpiece!" Self-expression through movement.
+- **Implementation Complexity:** ⭐ Low (reuses existing particle system)
+
+#### 💰 Coin Shower (Tier 2 Unlock) 💥 VISUAL SPECTACLE [PRIORITY 2]
+- **Spawn:** 4% chance per tier 2+
+- **Keyboard Shortcut:** Press **Key 1** during gameplay to spawn
+- **Effect:** Next 3 food explode into 5-10 bonus coins that scatter (must be collected within 4s)
+- **Visual:** Gold coin sprites rain down with physics; sparkle particles; cascading collection
+- **Audio:** Satisfying "ching" sounds; coin cascade jingles
+- **Strategic Depth:** Position near clusters; plan collection routes
+- **Engagement Hook:** "It's literally raining coins!" Physical satisfaction of collection minigame.
+- **Implementation Complexity:** ⭐⭐ Medium-Low (physics + collection)
+
+#### 🪶 Shrink Ray (Tier 4 Unlock) 🔬 SPATIAL MASTERY [PRIORITY 3]
+- **Spawn:** 5% chance per tier 4+
+- **Keyboard Shortcut:** Press **Key 3** during gameplay to spawn
+- **Effect:** Snake shrinks to 50% size for 8 seconds - fit through 1-cell gaps, ninja mode activated
+- **Visual:** Shrink animation with "woosh"; tiny snake with proportional food; proportional hitboxes
+- **Audio:** Cute squeaky shrink sound; stealthy whisk when navigating tight spaces
+- **Strategic Depth:** Use for routing through dense hazard clusters safely
+- **Engagement Hook:** "Become the stealth snake!" Novel spatial gameplay change.
+- **Implementation Complexity:** ⭐⭐⭐ Medium (hitbox manipulation)
+
+#### 🌀 Gravity Well (Tier 6 Unlock) 🌀 CONTROL EVERYTHING [PRIORITY 4]
+- **Spawn:** 6% chance per tier 6+
+- **Keyboard Shortcut:** Press **Key 4** during gameplay to spawn
+- **Effect:** Snake becomes a black hole - food/coins pulled toward you from 4 cells away, hazards pushed away 2 cells
+- **Visual:** Distortion ripple around snake; particle trails curve inward; hazards visibly repelled
+- **Audio:** Low frequency whoosh; gravitational effect sound
+- **Strategic Depth:** Use to clear dense food clusters safely away from hazards
+- **Engagement Hook:** "Bend the game world to your will!" God-mode feeling.
+- **Implementation Complexity:** ⭐⭐⭐⭐ Medium-High (physics simulation)
+
+#### 🎰 Mystery Box (Tier 8 Unlock) 🎰 GAMBLING THRILL [PRIORITY 5]
+- **Spawn:** 7% chance per tier 8+
+- **Keyboard Shortcut:** Press **Key 5** during gameplay to spawn
+- **Effect:** Eating triggers slot machine - randomly grants one of 5 bonus effects (chosen from available boosters)
+- **Visual:** Spinning slot machine UI; suspenseful ticking; celebratory reveal animation
+- **Audio:** Slot machine ticking; satisfying reveal chime
+- **Strategic Depth:** Pure luck factor; creates excitement from uncertainty
+- **Engagement Hook:** "Spin the wheel!" Gambling excitement drives engagement.
+- **Implementation Complexity:** ⭐⭐⭐⭐ High (UI + random effects)
+- **Note:** Only selects from unlocked boosters based on current tier
+
+#### 🪞 Mirror Dimension (Tier 10 Unlock) 🪞 RISK/REWARD CHAOS [PRIORITY 6]
+- **Spawn:** 8% chance per tier 10+
+- **Keyboard Shortcut:** Press **Key 6** during gameplay to spawn
+- **Effect:** Controls REVERSED for 8 seconds, BUT hazards become +20 coins each!
+- **Visual:** Screen inverts colors; hazards turn gold; disorienting but rewarding effect
+- **Audio:** Unsettling dimension shift; reversed sound effects; coin chime when hazard-coins collected
+- **Strategic Depth:** Risk confusion for massive coin payoff
+- **Engagement Hook:** "Embrace the delicious chaos!" Unique risk/reward mind-bender.
+- **Implementation Complexity:** ⭐⭐⭐⭐⭐ Very High (control inversion + hazard transformation)
+- **Warning:** Test extensively for fairness - high frustration risk if duration too long
+
+---
+
+### REMOVED BOOSTERS (And Why)
+
+❌ **Tail Whip** - REMOVED
+*Reason:* Requires active input mechanics (opposite direction swing) - too complex for core implementation phase. Can revisit as Post-MVP feature.
+
+---
+
+### Removed Boosters (And Why)
+
+❌ **Trail Stabilizer** - REMOVED
+*Reason:* "Efficiency penalty" doesn't exist in current game. Concept is unclear to players.
+
+❌ **Portal Catalyst** - REMOVED
+*Reason:* Too situational (requires portals to exist). Dead pickup if no portals = frustration.
+
+❌ **Phase Distorter** - REPLACED with Phase Dash
+*Reason:* Passive/defensive ("slow speed ramp accumulation"). Phase Dash is active and empowering.
+
+❌ **Hazard Neutralizer** - MERGED into Hazard Vortex
+*Reason:* Removing ONE hazard felt weak. Clearing an AREA feels powerful.
+
+---
+
+### Booster Spawn System & Progression
+
+#### Spawn Rates by Tier
+| Tier | Boosters Available | Spawn Chance | Avg. Delay |
+|------|-------------------|--------------|-----------|
+| 0-3  | None | 0% | N/A |
+| 4 | Flow Extender | 3% | ~33 food |
+| 5 | + Overdrive | 4% | ~25 food |
+| 6 | + Shield | 5% | ~20 food |
+| 7 | + Magnet | 6% | ~16 food |
+| 8 | + Stasis | 7% | ~14 food |
+| 9 | + Vortex | 8% | ~12 food |
+| 10 | + Flow Anchor | 9% | ~11 food |
+| 11 | + Phase Dash, Crown | 10% | ~10 food |
+| 12+ | + Chrono | 12% | ~8 food |
+
+#### Weighted Rarity Distribution (Tier 11+)
+- **Common (40%):** Flow Extender, Shield Barrier
+- **Uncommon (35%):** Overdrive, Score Magnet, Stasis
+- **Rare (20%):** Hazard Vortex, Flow Anchor, Phase Dash
+- **Epic (5%):** Combo Crown, Chrono Dial
+
+#### Anti-Frustration Systems
+- **Pity Timer:** If no booster spawned in 45s → Force spawn Common-tier booster
+- **Smart Spawning:** Never within 3 cells of hazards; never within 2 cells of head
+- **Extended Lifetime:** Boosters last 18s (up from 12s) - time to plan routes
+- **Visual Warning:** Pulsing urgency at 5s remaining
+- **Combo Prevention:** Active booster prevents SAME TYPE from spawning; different types can overlap
+
+#### HUD Active Booster Display (Top-Right)
+```
+[⚡ Overdrive] 6.2s
+[🛡️ Shield] Ready
+[⚙️ Chrono] 3.1s
+```
+- Icon + name + circular timer decay
+- Stacks vertically (max 3 visible)
+
+---
+
+### Synergy Matrix - Powerful Combos 🔥
+
+**"Speed Demon":** Overdrive + Shield
+→ Safe high-speed scoring through danger zones
+
+**"Vacuum Cleaner":** Score Magnet + High Flow Tier
+→ 9x multiplier food collection (3x magnet × 3x flow)
+
+**"Untouchable":** Phase Dash + Stasis Burst
+→ Navigate frozen hazards with ghost mode for shortcuts
+
+**"Score Explosion":** Combo Crown + Overdrive + Score Magnet
+→ Up to 27x multiplier potential (3.0x × 3.0x × 3.0x!) - THE META COMBO
+
+**"Immortal Run":** Flow Anchor + Shield + Flow Extender
+→ Maintain high flow with layered safety nets
+
+**"Clearance Sale":** Hazard Vortex + Overdrive
+→ Quickly clear zones and speed through for massive score
+
+**"Master Pilot":** Phase Dash + Overdrive
+→ Insane control at high speed - ultra-skilled play
+
+---
+
+### Player Engagement Hooks
+
+#### "First Time" Moments (New Player Retention)
+- **First Shield Save:** "Wow, that saved me!" (emotional relief)
+- **First Overdrive:** "This is INSANE!" (power fantasy)
+- **First Vortex:** "That was SO satisfying!" (destruction fantasy)
+- **First 9x Multiplier:** "LOOK AT MY SCORE!" (achievement moment)
+
+#### Progression Anticipation (Long-term Retention)
+- **Tier 4:** "Ooh, boosters are here!" (new system unlocked)
+- **Tier 7:** "I can get EVEN MORE score?" (economy expansion)
+- **Tier 11:** "This combo system is broken!" (mastery discovery)
+- **Tier 12:** "I can CHOOSE my power?!" (agency moment)
+
+#### Mastery Curves (Skill Expression)
+- Learning optimal Overdrive timing
+- Counting Phase Dash moves perfectly
+- Building massive Combo Crown chains
+- Choosing correct Chrono Dial mode for situation
+
+#### Social Sharing Hooks ("Did you see..." moments)
+- "I got a 9x multiplier combo!"
+- "My Overdrive run scored 2000 points!"
+- "I phase-dashed through my ENTIRE tail!"
+- "Watch this Vortex clear 8 hazards at once!"
+
+---
+
+### Audio Design by Booster
+
+**Pickup Sounds** (unique feedback):
+- Flow Extender: Crystal chime (harmonic)
+- Overdrive: Electric charge build-up (rising pitch)
+- Shield: Shield activate hum (protective)
+- Magnet: Whoosh + coin jingle (satisfying)
+- Stasis: Ice freeze crackle (cold)
+- Vortex: Whirlpool suction (intense)
+- Flow Anchor: Heavy chain drop (weighty)
+- Phase Dash: Dimensional warp (sci-fi)
+- Combo Crown: Royal fanfare (majestic)
+- Chrono Dial: Clock tick (mechanical)
+
+**Active Sounds** (looping during effect):
+- Overdrive: Humming engine (sustained energy)
+- Magnet: Whooshing attraction (active pulling)
+- Combo Crown: Tension buildup music (escalating stakes)
 
 ### HUD Feedback
 - Booster effect badges with timers (icon + circular decay)
-- Active booster glow on snake or HUD corner
-- Audio stinger on pickup
+- Active booster glow on snake when multiple active
+- Screen-edge color tinting per booster type
+- Audio stinger on pickup (unique per booster)
+- Score popup adjustments (+X% larger with multipliers)
 
 ---
 
@@ -504,7 +801,17 @@ SPEED_RELIEF: {
 
 ## 15. Next Immediate Deliverables
 
-### Priority Order
+### Current Implementation Progress
+
+#### ✅ Completed Foundation Systems
+- [x] **Difficulty Progression System**: Food-based tier system (0-10 tiers)
+- [x] **Flow System**: Chain-eating multiplier with timer management
+- [x] **Coin Economy**: Currency earning and persistence
+- [x] **HUD System**: Context-aware display with score/food/coins tracking
+- [x] **Visual Feedback**: Flow progress bar, particle effects, coin flying animation
+- [x] **Skin System**: Multiple purchasable skins with visual variety
+
+#### 🚧 Next Priority Items (Not Yet Started)
 1. **Tier Script Data Structure:** JSON-like object mapping tiers to unlock/change events
 2. **Hazard Manager Module:** Core spawn/despawn/collision system
 3. **Booster Manager Module:** Weighted spawn + effect resolution
@@ -514,12 +821,12 @@ SPEED_RELIEF: {
    - Time Crystal Booster (Tier 4)
    - Patrol Orb (Tier 6)
 
-### Validation Criteria
-- Tier transitions logged and visible in HUD
-- Hazards spawn with proper telegraph
-- Boosters appear at configured odds
-- No unfair death scenarios
-- Performance stays >30 FPS with full hazard load
+### Validation Criteria (For Future Implementations)
+- Tier transitions logged and visible in HUD ✅ (Currently working)
+- Hazards spawn with proper telegraph ❌ (Not implemented)
+- Boosters appear at configured odds ❌ (Not implemented)
+- No unfair death scenarios ✅ (Current collision system prevents this)
+- Performance stays >30 FPS with full hazard load ⏳ (To be tested)
 
 ---
 

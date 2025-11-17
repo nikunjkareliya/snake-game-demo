@@ -668,11 +668,6 @@ function createSettingsModalIfNeeded() {
                         <input id="toggleMusic" type="checkbox" />
                         <span>Music</span>
                     </label>
-                    <div class="row column">
-                        <label for="speedRange">Game Speed</label>
-                        <input id="speedRange" type="range" min="${GAMEPLAY.speedMin}" max="${GAMEPLAY.speedMax}" step="10" />
-                        <div class="hint" id="speedHint"></div>
-                    </div>
                     <div class="danger-zone">
                         <div class="row column">
                             <button id="resetProgressBtn" class="btn btn-danger">
@@ -700,24 +695,15 @@ export function showSettingsModal() {
         // Populate controls
         const soundEl = settingsBackdrop.querySelector('#toggleSound');
         const musicEl = settingsBackdrop.querySelector('#toggleMusic');
-        const speedEl = settingsBackdrop.querySelector('#speedRange');
-        const speedHint = settingsBackdrop.querySelector('#speedHint');
 
         soundEl.checked = !!state.settings?.soundOn;
         musicEl.checked = !!state.settings?.musicOn;
-        speedEl.value = String(state.speedMs);
-        speedHint.textContent = `Tick: ${state.speedMs} ms (lower is faster)`;
 
         // Wire handlers
         const closeBtn = settingsBackdrop.querySelector('#settingsCloseBtn');
         const saveBtn = settingsBackdrop.querySelector('#settingsSaveBtn');
         const cancelBtn = settingsBackdrop.querySelector('#settingsCancelBtn');
         const resetBtn = settingsBackdrop.querySelector('#resetProgressBtn');
-
-        const onInput = () => {
-                speedHint.textContent = `Tick: ${speedEl.value} ms (lower is faster)`;
-        };
-        speedEl.addEventListener('input', onInput);
 
         const onResetProgress = () => {
                 const confirmed = confirm(
@@ -764,11 +750,9 @@ export function showSettingsModal() {
         const onSave = () => {
                 const newSettings = {
                         soundOn: !!soundEl.checked,
-                        musicOn: !!musicEl.checked,
-                        speedMs: Number(speedEl.value)
+                        musicOn: !!musicEl.checked
                 };
                 state.settings = newSettings;
-                state.speedMs = newSettings.speedMs;
                 setStoredJSON('neonSnakeSettings', newSettings);
                 hideSettingsModal();
         };

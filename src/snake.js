@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { Direction, COLUMNS, ROWS, CELL_SIZE, PARTICLE_COUNT_EAT, PARTICLE_SPEED_EAT_MIN, PARTICLE_SPEED_EAT_MAX, MOTION_TRAIL_INTERVAL, MOTION_TRAIL_PARTICLE_LIFE, MOTION_TRAIL_PARTICLE_SIZE, GROW_ANIMATION_DURATION, PARTICLE_COUNT_DEATH, PARTICLE_SPEED_DEATH_MIN, PARTICLE_SPEED_DEATH_MAX } from './config.js';
-import { ECONOMY } from './gameConfig.js';
+import { ECONOMY, HAZARDS } from './gameConfig.js';
 import { startDeathSequence } from './death.js';
 import { spawnFood } from './food.js';
 import { createBurst, addParticle } from './particles.js';
@@ -8,6 +8,8 @@ import { updateStats } from './ui.js';
 import { setStoredValue } from './utils.js';
 import { updateDifficultySnapshot } from './difficulty.js';
 import { onFoodEaten, getCurrentFlowMultiplier } from './flow.js';
+import { checkHazardCollision } from './hazards.js';
+import { explodeBasket, collectShowerCoin, activateShrinkRay } from './boosters.js';
 
 export function stepSnake() {
   // Apply direction change immediately (before position calculation)
@@ -29,6 +31,15 @@ export function stepSnake() {
 
   // Check self collision
   if (state.snake.some(seg => seg.x === next.x && seg.y === next.y)) {
+    startDeathSequence();
+    return;
+  }
+
+  // Check hazard collision
+  if (checkHazardCollision(next)) {
+    console.log('[Snake] Collided with hazard!');
+    // Add screen shake on hazard collision
+    state.hitShakeTimer = HAZARDS.collisionShakeDuration;
     startDeathSequence();
     return;
   }
@@ -65,7 +76,57 @@ export function stepSnake() {
     // Start grow animation
     state.growTimer = GROW_ANIMATION_DURATION;
   } else {
-    state.snake.pop();
+    // Check booster collision (only if not eating food)
+    let boosterCollected = false;
+    for (let i = state.boosters.length - 1; i >= 0; i--) {
+      const booster = state.boosters[i];
+
+      // Check if booster was hit (handles 2x2 boosters like shrinkRay)
+      let boosterHit = false;
+      if (booster.type === 'shrinkRay') {
+        // Shrink ray occupies 2x2 grid cells
+        boosterHit = (
+          (next.x === booster.x || next.x === booster.x + 1) &&
+          (next.y === booster.y || next.y === booster.y + 1)
+        );
+      } else {
+        // Other boosters use single cell
+        boosterHit = (next.x === booster.x && next.y === booster.y);
+      }
+
+      if (boosterHit) {
+        // Activate booster effect based on type
+        if (booster.type === 'coinShower') {
+          explodeBasket(booster.x, booster.y);
+        } else if (booster.type === 'shrinkRay') {
+          activateShrinkRay();
+        }
+        // TODO: Add handlers for other booster types (gravityWell, etc.)
+
+        // Create collection effect
+        createEatEffect(next);
+
+        // Remove pickup from grid
+        state.boosters.splice(i, 1);
+        boosterCollected = true;
+        console.log(`[Snake] Collected booster: ${booster.type}`);
+        break;
+      }
+    }
+
+    // Check shower coin collision (if coin shower is active)
+    if (state.coinShower.active) {
+      const coinCollected = collectShowerCoin(next.x, next.y);
+      if (coinCollected) {
+        // Create particle effect at coin location
+        createBurst(next.x * CELL_SIZE + CELL_SIZE / 2, next.y * CELL_SIZE + CELL_SIZE / 2, 3, '#ffff00');
+      }
+    }
+
+    // Only pop tail if no food or booster was collected
+    if (!boosterCollected) {
+      state.snake.pop();
+    }
   }
 }
 

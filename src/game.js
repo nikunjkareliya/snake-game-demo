@@ -6,6 +6,8 @@ import { canvas } from './canvas.js';
 import { resetDifficulty } from './difficulty.js';
 import { resetFlow } from './flow.js';
 import { updateStats } from './ui.js';
+import { resetHazards } from './hazards.js';
+import { resetBoosters } from './boosters.js';
 
 export function stepIntroAnimation(dt) {
     if (!state.introAnimation) return;
@@ -78,10 +80,11 @@ export function resetGame() {
   state.growTimer = 0;
 
   // Reset progression systems
-  resetDifficulty();
+  resetHazards();        // Clear hazards first
+  resetSnake();          // Initialize snake before spawning hazards
+  resetDifficulty();     // Then spawn tier 0 hazards (e.g., initial patrol orbs)
   resetFlow();
-
-  resetSnake();
+  resetBoosters();       // Clear booster effects
 
   // Initialize previous positions for smooth interpolation
   state.prevSnake = state.snake.map(seg => ({ ...seg }));

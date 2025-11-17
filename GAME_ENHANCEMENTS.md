@@ -86,22 +86,356 @@ HUD: compact 3-icon band: Flow tier indicator (bars), Efficiency spark (lit when
 
 ---
 
-## 3. Boosters (Low-Risk, Clear Telegraphing)
+## 3. Boosters Suite - Juicy, Fun, Player-Hooked Design ⭐
 
-A. Time Crystal (Extends Flow)
-- Spawn: 5% chance instead of food every 20–40s if `flowTier < max`.
-- Effect: Adds +2.5s to `flowTimer` (cannot exceed cap).
-- Visual: Transparent cyan prism with rotation.
+**Design Philosophy:** Every booster creates memorable "wow moments" that make players want to play again. Focus on immediate feedback, power fantasy, visual spectacle, and skill expression.
 
-B. Score Node
-- Spawn: Rare (1 per 60–90s), appears as pulsating hex. Grants `Base × 5 + length bonus` when eaten.
-- Visual: Magenta → cyan alternating border.
+### TIER 1: Early Game Power Boosters (Tiers 2-6)
 
-C. Trail Stabilizer (Temporary efficiency forgiveness)
-- Effect: Next 5 moves ignore efficiency penalty.
-- Visual: Floating ring that locks onto snake head when collected; HUD badge countdown.
+#### A. 🔮 Flow Extender (Tier 4 Unlock) ⭐ CORE
+- **Spawn:** 3% chance per tier 4+
+- **Effect:** +3 seconds to flow window (stacks up to 2x for +6s max)
+- **Duration:** Permanent until flow breaks
+- **Visual:** Window bar glows cyan with crystalline shimmer; "+3s" floats upward
+- **Audio:** Crystalline "ting" on pickup
+- **Strategic:** Do you chase a second one? Save for tighter flow windows?
+- **Hook:** Direct value players understand instantly; synergizes perfectly with flow system.
 
-All boosters despawn after ~12s to encourage decisive action.
+#### B. 🎁 Abundance Blessing (Tier 2 Unlock) 🌟 FIRST BOOSTER
+- **Spawn:** 4% chance per food at Tier 2
+- **Effect:** Food spawn rate +50% for 8 seconds (more opportunities)
+- **Visual:** Food glows brighter; golden aura spreads from pickup; abundance particles
+- **Audio:** Whoosh of plenty; chiming abundance theme
+- **Feel:** Generous, confidence-building early-game booster
+- **Hook:** Players experience booster system as REWARDING not punishing.
+
+#### C. ⏱️ Bullet Time (Tier 5 Unlock) ⏰ CONTROL FANTASY
+- **Spawn:** 4% chance per tier 5+
+- **Effect:** For 8 seconds: All hazards move 30% slower + 1.5x score multiplier
+- **Visual:** Blue slow-motion tint; clock particles orbit snake; hazard trails elongate
+- **Audio:** Time distortion whoosh on pickup; slow-motion sound effects
+- **Strategic:** Time usage for hazard-dense phases. Combine with Shield for ultra-safe runs.
+- **Hook:** Feels like controlling time itself. Safe power fantasy for all skill levels.
+
+#### D. 🛡️ Hazard Shield (Tier 6 Unlock) 🛡️ FOCUSED PROTECTION
+- **Spawn:** 5% chance per tier 6+
+- **Effect:** Blocks 1 hazard collision (any type: static, patrol orb, etc.)
+- **Duration:** Lasts until consumed or 15 seconds expire
+- **Protection Scope:**
+  - ✅ BLOCKS: All hazard types (static cells, patrol orbs, future hazards)
+  - ❌ DOES NOT BLOCK: Wall/edge collisions (player must navigate boundaries)
+  - ❌ DOES NOT BLOCK: Self-collisions (player must avoid tail)
+- **Visual:** Rotating blue hexagonal barrier orbits snake head; shatters with particle burst on hazard impact
+- **Audio:** Continuous shield hum; dramatic glass shatter sound on consumption
+- **Hook:** Insurance policy for external threats. Encourages pushing boundaries near hazards.
+
+---
+
+### TIER 2: Score Explosion Boosters (Tiers 6-9)
+
+#### E. ⚡ Chain Lightning (Tier 8 Unlock) ⚡ CASCADING SATISFACTION
+- **Spawn:** 6% chance per tier 8+
+- **Effect:** Eating food zaps to nearest food, auto-collecting it! Chain up to 5x (100% → 75% → 50% → 25% → 10% score).
+- **Visual:** Electric arcs jump between food items; each zap creates particle explosion; screen flashes white
+- **Audio:** Crackling electricity; satisfying zap sounds per chain
+- **Strategic:** Creates satisfying chain reactions across scattered food
+- **Hook:** "Watch the lightning show!" Cascading particle feedback = dopamine rush.
+
+#### F. 💎 Score Magnet (Tier 7 Unlock) 🧲 ACTIVE GAMEPLAY
+- **Spawn:** 6% chance per tier 7+
+- **Effect:** For 6 seconds: Food worth 3x points + auto-attract food from 3 cells away
+- **Visual:** Magenta particle streams tractor-beam food toward snake; coin sprites orbit head
+- **Audio:** Whoosh attraction; ascending chime per food eaten; coin jingle
+- **Challenge:** "How much can I eat in 6 seconds?"
+- **Hook:** Active gameplay (not passive). Magnetic effect is visually satisfying.
+
+#### G. 💰 Coin Shower (Tier 6 Unlock) 💥 VISUAL SPECTACLE
+- **Spawn:** 5% chance per tier 6+
+- **Effect:** Next 3 food explode into 5-10 bonus coins that scatter (must be collected within 4s)
+- **Visual:** Gold coin sprites rain down with physics; sparkle particles; cascading collection
+- **Audio:** Satisfying "ching" sounds; coin cascade jingles
+- **Strategic:** Position near clusters; plan collection routes
+- **Hook:** "It's literally raining coins!" Physical satisfaction of collection minigame.
+
+#### H. 👻 Score Echo (Tier 9 Unlock) 👻 DELAYED GRATIFICATION
+- **Spawn:** 7% chance per tier 9+
+- **Effect:** Every food eaten counts TWICE - once now, once 3 seconds later (ghostly double-scoring)
+- **Visual:** Ghost numbers float up slowly; echo ripple effect on HUD; ethereal chime
+- **Audio:** Harmonic chime on pickup; reverb sound on delayed score
+- **Strategic:** Creates anticipation and sustained satisfaction
+- **Hook:** "Watch your score climb twice!" Unique dual-reward mechanic.
+
+#### I. 💥 Combo Detonator (Tier 11 Unlock) 💣 BIG PAYOFF MOMENT
+- **Spawn:** 8% chance per tier 11+
+- **Effect:** After eating 5+ food, ALL score accumulated during booster duration MULTIPLIES x2 in explosive burst
+- **Visual:** Countdown builds tension; final explosion with screen shake; fireworks; massive multiplier popup
+- **Audio:** Suspenseful ticking; triumphant explosion fanfare
+- **Strategic:** Build tension vs. use early for guaranteed payoff
+- **Hook:** "Build it, detonate it, celebrate!" Explosive tension release.
+
+---
+
+### TIER 3: Power Fantasy Boosters (Tiers 7-10)
+
+#### J. 🌀 Gravity Well (Tier 8 Unlock) 🌀 CONTROL EVERYTHING
+- **Spawn:** 7% chance per tier 8+
+- **Effect:** Snake becomes a black hole - food/coins pulled toward you from 4 cells away, hazards pushed away 2 cells
+- **Visual:** Distortion ripple around snake; particle trails curve inward; hazards visibly repelled
+- **Audio:** Low frequency whoosh; gravitational effect sound
+- **Strategic:** Use to clear dense food clusters safely away from hazards
+- **Hook:** "Bend the game world to your will!" God-mode feeling.
+
+#### K. 🔥 Berserker Rage (Tier 10 Unlock) 🔥 UNSTOPPABLE FORCE
+- **Spawn:** 8% chance per tier 10+
+- **Effect:** For 6 seconds: Move 40% faster + phase through hazards; eating food extends duration +1s each (max 12s)
+- **Visual:** Red aura; angry eyes on snake; trailing fire particles; intense visual feedback
+- **Audio:** Aggressive metal riff; humming engine sound during effect; final roar on end
+- **Risk/Reward:** Speed makes control harder but massive score potential
+- **Hook:** "Go absolutely wild!" Peak power fantasy with extension mechanic.
+
+#### L. 🪶 Shrink Ray (Tier 7 Unlock) 🔬 SPATIAL MASTERY
+- **Spawn:** 6% chance per tier 7+
+- **Effect:** Snake shrinks to 50% size for 8 seconds - fit through 1-cell gaps, ninja mode activated
+- **Visual:** Shrink animation with "woosh"; tiny snake with proportional food; proportional hitboxes
+- **Audio:** Cute squeaky shrink sound; stealthy whisk when navigating tight spaces
+- **Strategic:** Use for routing through dense hazard clusters safely
+- **Hook:** "Become the stealth snake!" Novel spatial gameplay change.
+
+#### M. 🪃 Tail Whip (Tier 11 Unlock) 🪃 SKILL-BASED DESTRUCTION
+- **Spawn:** 8% chance per tier 11+
+- **Effect:** Press opposite direction to swing tail 180° - destroys hazards touched, grants +100 per hazard destroyed
+- **Visual:** Tail glows orange; swing arc with motion blur; satisfying impact effects per hazard
+- **Audio:** Whoosh swing; crack on impact; destruction sound per hazard
+- **Skill Ceiling:** Must time direction to maximize hit count
+- **Hook:** "Use your tail as a weapon!" Skill expression through active mechanic.
+
+---
+
+### TIER 4: Visuals & Spectacle (Tiers 5-10)
+
+#### N. 🪩 Party Mode (Tier 5 Unlock) 🪩 PURE JOY
+- **Spawn:** 4% chance per tier 5+
+- **Effect:** 10 seconds of pure celebration - rainbow trail, disco ball above snake, confetti, upbeat music, no gameplay effect
+- **Visual:** Disco ball reflects light; rainbow snake; confetti particles; neon glow
+- **Audio:** Upbeat disco music loop; celebration theme
+- **Strategic:** Pure fun break, no competitive advantage
+- **Hook:** "Just for pure FUN!" Emotional reward for joy's sake.
+
+#### O. 🌈 Neon Afterimage (Tier 6 Unlock) 🎨 SELF-EXPRESSION
+- **Spawn:** 5% chance per tier 6+
+- **Effect:** Leave glowing light-paint trail for 12 seconds - create beautiful neon art
+- **Visual:** Customizable color trail that fades slowly; neon glow effect; screenshot-worthy moments
+- **Audio:** Ethereal shimmer sound as trail paints
+- **Strategic:** Creates memorable visual moments; encourages sharing
+- **Hook:** "Paint your masterpiece!" Self-expression through movement.
+
+#### P. 🎇 Firework Feast (Tier 10 Unlock) 🎆 EXPLOSIVE FINALE
+- **Spawn:** 8% chance per tier 10+
+- **Effect:** All food on screen simultaneously explodes (collected automatically) with massive celebration
+- **Visual:** Simultaneous explosion from all food positions; colors; fireworks; screen shake; smoke trails
+- **Audio:** Explosive crescendo; celebratory fanfare; multiple boom sounds
+- **Strategic:** Use on screen with many food spawns for maximum spectacle
+- **Hook:** "Clear the board spectacularly!" Celebration moment for skill payoff.
+
+---
+
+### TIER 5: Clever Mechanics (Tiers 8-12)
+
+#### Q. ⏮️ Second Chance (Tier 11 Unlock) ⏮️ DRAMATIC SAVE
+- **Spawn:** 8% chance per tier 11+
+- **Effect:** If you die while holding this, rewind 3 seconds and get one more try (ghost shows where you died)
+- **Duration:** Lasts until used or 15 seconds expire
+- **Visual:** Time reverses visually; film rewind effect; ghost of dead snake fades in as warning
+- **Audio:** Rewind sound effect; dramatic save music sting
+- **Strategic:** Save for high-stakes moments or learn from mistakes
+- **Hook:** "Rewrite your fate!" Dramatic comeback mechanic.
+
+#### R. 🧬 Food Cloner (Tier 7 Unlock) 🧬 RESOURCE MULTIPLICATION
+- **Spawn:** 6% chance per tier 7+
+- **Effect:** Next 4 food eaten spawn a second identical food in random safe location
+- **Visual:** Food splits with mitosis animation; DNA helix particles; "bloop" cloning sound
+- **Audio:** Satisfying cell division sound; multiplication theme
+- **Strategic:** Creates abundance; more food = more scoring opportunities
+- **Hook:** "Double your harvest!" Resource generation feels clever.
+
+#### S. ✨ Blink Dash (Tier 10 Unlock) ✨ PRECISION TOOL
+- **Spawn:** 8% chance per tier 10+
+- **Effect:** Store one "blink charge" - instantly teleport 5 cells in current direction (one use only)
+- **Visual:** Charge up shimmer; teleport flash with particle burst at both locations; sci-fi sound
+- **Audio:** Charge-up beep; teleport whoosh + sci-fi effect
+- **Strategic:** Save for escape or aggressive food chase
+- **Hook:** "Instant escape button!" Precision tool for clutch plays.
+
+#### T. 👁️ Ghost Food (Tier 8 Unlock) 👁️ STRATEGIC FORESIGHT
+- **Spawn:** 7% chance per tier 8+
+- **Effect:** See preview of next 3 food spawns (translucent) before they appear - plan routes ahead
+- **Visual:** Translucent white food outlines with pulsing glow; countdown timer above each
+- **Audio:** Subtle fortune-teller sound; mystical chime
+- **Strategic:** Enables complex routing; deeper skill expression
+- **Hook:** "See the future!" Strategic depth without complexity.
+
+#### U. 🪞 Mirror Dimension (Tier 12 Unlock) 🪞 RISK/REWARD CHAOS
+- **Spawn:** 9% chance per tier 12+
+- **Effect:** Controls REVERSED for 8 seconds, BUT hazards become +20 coins each!
+- **Visual:** Screen inverts colors; hazards turn gold; disorienting but rewarding effect
+- **Audio:** Unsettling dimension shift; reversed sound effects; coin chime when hazard-coins collected
+- **Strategic:** Risk confusion for massive coin payoff
+- **Hook:** "Embrace the delicious chaos!" Unique risk/reward mind-bender.
+
+---
+
+### TIER 6: Meta & Discovery (Tiers 9-12)
+
+#### V. 🐍🐍 Hydra Head (Tier 12 Unlock) 🐍🐍 DUAL POWER
+- **Spawn:** 9% chance per tier 12+
+- **Effect:** Spawn second ghost head that mirrors your moves - BOTH can eat food (double collection!)
+- **Duration:** Lasts 10 seconds
+- **Visual:** Second translucent head splits off; synchronized eating animations; double particle effects
+- **Audio:** Splitting sound; synchronized eating chimes
+- **Strategic:** Doubles resource collection; synergizes with Food Cloner for 4x+ rates
+- **Hook:** "Two heads ARE better!" Dual power fantasy.
+
+#### W. 🎰 Mystery Box (Tier 9 Unlock) 🎰 GAMBLING THRILL
+- **Spawn:** 7% chance per tier 9+
+- **Effect:** Eating triggers slot machine - randomly grants one of 5 bonus effects (chosen from available boosters)
+- **Visual:** Spinning slot machine UI; suspenseful ticking; celebratory reveal animation
+- **Audio:** Slot machine ticking; satisfying reveal chime
+- **Strategic:** Pure luck factor; creates excitement from uncertainty
+- **Hook:** "Spin the wheel!" Gambling excitement drives engagement.
+
+#### X. 🦋 Metamorphosis (Tier 10 Unlock) 🦋 PLAYER AGENCY
+- **Spawn:** 8% chance per tier 10+
+- **Effect:** CHOOSE one permanent upgrade for this run:
+  - **⚡ Speed:** +10% snake movement speed
+  - **⏱️ Flow:** +1 second to flow window
+  - **💰 Score:** +20% base score value
+- **Visual:** Three glowing option circles; selection triggers transformation burst; permanent visual change (glow color)
+- **Audio:** Meditation chime for selection; transformation fanfare; new playstyle music theme
+- **Strategic:** Meaningful choice affects entire playstyle for remainder of run
+- **Hook:** "Shape your unique destiny!" Player agency + build variety.
+
+---
+
+### Booster Spawn System & Balance
+
+#### Spawn Rates by Tier
+| Tier | Boosters Available | Spawn Chance | Avg. Delay |
+|------|-------------------|--------------|-----------|
+| 0-1  | None | 0% | N/A |
+| 2 | Abundance Blessing | 4% | ~25 food |
+| 3 | (none added) | 4% | ~25 food |
+| 4 | + Flow Extender | 5% | ~20 food |
+| 5 | + Party Mode, Bullet Time | 6% | ~16 food |
+| 6 | + Hazard Shield, Neon, Coin Shower | 7% | ~14 food |
+| 7 | + Magnet, Shrink Ray, Food Cloner | 8% | ~12 food |
+| 8 | + Chain Lightning, Gravity Well, Ghost Food | 9% | ~11 food |
+| 9 | + Score Echo, Mystery Box | 10% | ~10 food |
+| 10 | + Combo Detonator, Berserker, Blink Dash, Firework, Metamorphosis | 11% | ~9 food |
+| 11 | + Second Chance, Tail Whip | 12% | ~8 food |
+| 12+ | + Hydra Head, Mirror Dimension | 13% | ~7 food |
+
+#### Weighted Rarity Distribution (Tier 8+)
+- **Common (40%):** Flow Extender, Abundance Blessing, Hazard Shield
+- **Uncommon (35%):** Bullet Time, Magnet, Stasis, Shrink Ray, Food Cloner, Ghost Food
+- **Rare (20%):** Gravity Well, Berserker, Tail Whip, Blink Dash, Second Chance
+- **Epic (5%):** Chain Lightning, Combo Detonator, Firework Feast, Hydra Head, Mirror Dimension, Metamorphosis
+
+#### Anti-Frustration Systems
+- **Pity Timer:** If no booster spawned in 45s (and odds >0) → Force spawn Common-tier booster
+- **Smart Spawning:** Never within 3 cells of hazards; never within 2 cells of snake head
+- **Extended Lifetime:** Boosters last 18s (player has time to decide)
+- **Visual Warning:** Pulsing urgency at 5s remaining before despawn
+- **Combo Prevention:** Active booster prevents SAME TYPE from spawning; different types can overlap
+
+#### HUD Active Booster Display
+```
+[⚡ Overdrive] 6.2s
+[🛡️ Shield] Ready
+[⚙️ Chrono] 3.1s
+```
+- Icon + name + circular timer decay
+- Stacks vertically (max 3 visible)
+
+---
+
+### Powerful Synergy Combos Players Will Discover 🔥
+
+**"Chain Lightning Reaction":** Chain Lightning + Score Echo + High Flow
+→ Chain zaps auto-collect doubled-scoring food = 9x+ multipliers possible
+
+**"Black Hole Cleaner":** Gravity Well + Firework Feast
+→ Pull everything toward you then detonate = ultimate area clearing
+
+**"Immortal Speed Demon":** Berserker Rage + Second Chance + Hazard Shield
+→ Go insane speeds with triple safety net = highest skill expression
+
+**"The Quadruple Collector":** Hydra Head + Food Cloner + Abundance Blessing
+→ 2 heads × 2 cloned food × 1.5x spawn = 6x+ collection rate
+
+**"Future Master":** Ghost Food + Blink Dash + Metamorphosis (Speed)
+→ See spawns, teleport to them, boosted speed = perfect routing optimization
+
+**"Score Explosion":** Combo Detonator + Score Magnet + Combo Crown (from ENDLESS_SURVIVAL_DESIGN.md)
+→ Up to 27x multiplier potential (if all active!)
+
+---
+
+### Visual/Audio Design Summary
+
+**Pickup Sounds** (unique per booster for instant recognition):
+- Flow Extender: Crystal chime (harmonic)
+- Abundance: Whoosh of plenty
+- Bullet Time: Time distortion
+- Shield: Shield activate hum
+- Chain Lightning: Electric crackle
+- Score Magnet: Whoosh + coin jingle
+- Coin Shower: Raining coin cascade
+- And so on... (see above per booster)
+
+**Screen Effects by Booster:**
+| Booster | Effect |
+|---------|--------|
+| Bullet Time | Blue slow-motion tint |
+| Berserker | Red aura + fire particles |
+| Party Mode | Disco ball + rainbow glow |
+| Gravity Well | Distortion ripples |
+| Mirror Dimension | Inverted colors |
+| Firework | Screen shake + explosions |
+
+---
+
+### Implementation Notes
+
+**State Tracking:** Add to `state.js`:
+```javascript
+state.activeBoosters = [];  // Array of { type, startTime, duration, data }
+state.boosterConfig = { ... }  // Copy of BOOSTERS config
+```
+
+**Booster Manager (`src/boosters.js`):**
+- `spawnBooster(type, position)` - Creates booster object
+- `applyBoosterEffect(type, duration)` - Applies gameplay changes
+- `removeBoosterEffect(type)` - Cleans up on expiry
+- `getActiveBooster(type)` - Queries current state
+
+**Spawn System (`src/food.js`):**
+- Add weighted random selection from available tier boosters
+- Respect spawn safety rules (distance from hazards/head)
+- Handle multiple boosters on field at once
+
+---
+
+### Balance & Tuning Notes
+
+- **No Speed-Only Boosters:** Bullet Time slows hazards (safer) not speeds snake (punishing)
+- **Shield Focused:** Only blocks hazards, not walls/self (maintains skill requirements)
+- **Early Access:** Tier 2 gets Abundance (confidence builder) + Tier 4 Flow (natural progression)
+- **High-Skill Meta:** Late-game combos (27x multipliers) require understanding 3+ booster interactions
+- **Accessibility:** Common boosters (Abundance, Flow, Shield, Magnet) are straightforward
+- **Excitement Curve:** New booster every 1-2 tiers keeps discovery fresh
+- **All Boosters Feel Good:** No "trap" boosters that punish players
+
+All boosters despawn after 18s to encourage decisive action.
 
 ---
 
