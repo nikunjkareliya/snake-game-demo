@@ -1,9 +1,17 @@
-import { DPR } from './config.js';
+import { DPR, CSS_WIDTH, CSS_HEIGHT } from './config.js';
 
 export const canvas = document.getElementById('gameCanvas');
 export const ctx = canvas.getContext('2d');
 
-// Set up high DPI canvas
+// Set actual canvas size (physical pixels)
+canvas.width = CSS_WIDTH * DPR;
+canvas.height = CSS_HEIGHT * DPR;
+
+// Set CSS display size
+canvas.style.width = `${CSS_WIDTH}px`;
+canvas.style.height = `${CSS_HEIGHT}px`;
+
+// Set up high DPI canvas scaling
 ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
 // Ensure canvas can receive focus for keyboard events when overlay is hidden
