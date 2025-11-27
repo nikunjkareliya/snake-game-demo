@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { Direction } from './config.js';
 import { spawnStaticHazard } from './hazards.js';
 import { spawnBoosterPickup } from './boosters.js';
+import { initTouchInput } from './touchInput.js';
 
 const keyMap = new Map([
   ['ArrowUp', Direction.Up],
@@ -92,4 +93,7 @@ export function initInput(onStartGame, onTogglePause) {
     }
     e.preventDefault();
   });
+
+  // Initialize touch controls for mobile devices
+  initTouchInput();
 }

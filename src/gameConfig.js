@@ -92,6 +92,25 @@ export const VISUAL = {
 };
 
 // ============================================================================
+// MOBILE PERFORMANCE SETTINGS
+// ============================================================================
+
+export const MOBILE_PERFORMANCE = {
+    // Reduced particle count for mobile devices
+    maxParticles: 60,           // Reduced from 200 - still looks great on mobile
+    particleCountEat: 8,        // Reduced from 20
+    particleCountDeath: 4,      // Reduced from 6
+
+    // Disable expensive visual features on mobile
+    enableMotionTrail: false,   // Disabled - barely visible on small screens, high frequency (every 50ms)
+    enableFoodSparks: false,    // Disabled - not essential for gameplay
+
+    // Keep essential features for gameplay feel and character
+    enableBlinking: true,       // Keep - important for character personality
+    enableDeathFragments: true, // Keep - essential death feedback
+};
+
+// ============================================================================
 // UI ANIMATION SETTINGS
 // ============================================================================
 

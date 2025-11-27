@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { Direction, COLUMNS, ROWS, CELL_SIZE, PARTICLE_COUNT_EAT, PARTICLE_SPEED_EAT_MIN, PARTICLE_SPEED_EAT_MAX, MOTION_TRAIL_INTERVAL, MOTION_TRAIL_PARTICLE_LIFE, MOTION_TRAIL_PARTICLE_SIZE, GROW_ANIMATION_DURATION, PARTICLE_COUNT_DEATH, PARTICLE_SPEED_DEATH_MIN, PARTICLE_SPEED_DEATH_MAX } from './config.js';
-import { ECONOMY, HAZARDS } from './gameConfig.js';
+import { ECONOMY, HAZARDS, MOBILE_PERFORMANCE, VISUAL } from './gameConfig.js';
 import { startDeathSequence } from './death.js';
 import { spawnFood } from './food.js';
 import { createBurst, addParticle } from './particles.js';
@@ -141,8 +141,14 @@ export function updateParticles(dt) {
     }
   }
   
-  // Spawn motion trail particles when playing
-  if (state.gameState === 'playing' && state.snake.length > 0) {
+  // Spawn motion trail particles when playing (conditional for mobile performance)
+  const shouldSpawnTrail = (() => {
+    const isMobile = window.innerWidth <= 800 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return isMobile ? MOBILE_PERFORMANCE.enableMotionTrail : VISUAL.enableMotionTrail;
+  })();
+
+  if (shouldSpawnTrail && state.gameState === 'playing' && state.snake.length > 0) {
     state.motionTrailTimer += dt;
     if (state.motionTrailTimer >= MOTION_TRAIL_INTERVAL) {
       state.motionTrailTimer = 0;

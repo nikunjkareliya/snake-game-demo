@@ -9,6 +9,7 @@ import { BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX, BLINK_DURATION } from './config
 import { updateFlowTimer } from './flow.js';
 import { updateHazards } from './hazards.js';
 import { updateCoinShower, updateBoosters, updateShrinkRay } from './boosters.js';
+import { initResponsive } from './responsive.js';
 
 /**
  * Game loop
@@ -82,6 +83,9 @@ function tick(now) {
 }
 
 // Initialize
+// Initialize responsive scaling first (before user interaction)
+initResponsive();
+
 initInput(startGame, togglePause);
 showLobby(startGame, hideOverlay);
 

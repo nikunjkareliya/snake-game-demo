@@ -1,13 +1,26 @@
 import { state } from './state.js';
 import { MAX_PARTICLES } from './config.js';
 import { getSkinParticlePalette } from './skinPalette.js';
+import { MOBILE_PERFORMANCE } from './gameConfig.js';
+
+/**
+ * Get max particles based on device type
+ * @returns {number} Maximum particle count for current device
+ */
+function getMaxParticles() {
+  const isMobile = window.innerWidth <= 800 ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  return isMobile ? MOBILE_PERFORMANCE.maxParticles : MAX_PARTICLES;
+}
 
 /**
  * Add a single particle to the shared particle array, enforcing a max cap.
  * @param {object} particle
  */
 export function addParticle(particle) {
-  if (state.particles.length >= MAX_PARTICLES) {
+  const maxParticles = getMaxParticles(); // Dynamic limit based on device
+  if (state.particles.length >= maxParticles) {
     // Remove oldest particle to keep array under cap
     state.particles.shift();
   }
