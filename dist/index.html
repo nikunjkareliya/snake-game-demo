@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Snake Frenzy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="./assets/main-DE_QGDH2.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/main-uPgT-40K.css">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Accessibility: Screen reader announcements -->
+      <div id="ariaLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+      <main id="stage-wrap">
+        <div id="grid-overlay"></div>
+        <canvas id="gameCanvas" width="1024" height="768" tabindex="0"></canvas>
+
+        <div id="stage-hud">          
+          <div class="corner left glass">
+            <div class="hud-item">              
+              <span class="coin-icon"></span>
+              <span id="hudCurrency" class="hud-value">0</span>
+            </div>
+          </div>
+
+          <!-- RIGHT CORNER: Score + Food (separate containers) -->
+          <div class="hud-right-group">
+            <!-- Score HUD (separate container, hidden in lobby) -->
+            <div id="scoreHudContainer" class="corner glass">
+              <div class="hud-item">
+                <span class="hud-label">SCORE:</span>
+                <span id="hudScore" class="hud-value">0</span>
+              </div>
+            </div>
+
+            <!-- Food HUD (separate container, hidden in lobby) -->
+            <div id="foodHudContainer" class="corner glass">
+              <div class="hud-item">
+                <span class="food-sphere-icon"></span>
+                <span id="foodCollected" class="hud-value">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="overlay" class="overlay"></div>
+      </main>
+
+
+    </div>
+
+  </body>
+  </html>
+
+

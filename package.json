@@ -1,0 +1,38 @@
+{
+  "name": "snake-game-demo",
+  "version": "1.0.0",
+  "description": "A neon-styled Snake game for the web. Built with HTML5 Canvas, CSS, and vanilla JavaScript.",
+  "main": "index.js",
+  "dependencies": {
+    "esbuild": "^0.25.12",
+    "fdir": "^6.5.0",
+    "nanoid": "^3.3.11",
+    "picocolors": "^1.1.1",
+    "picomatch": "^4.0.3",
+    "postcss": "^8.5.6",
+    "rollup": "^4.53.3",
+    "source-map-js": "^1.2.1",
+    "tinyglobby": "^0.2.15"
+  },
+  "devDependencies": {
+    "terser": "^5.44.1",
+    "vite": "^7.2.4"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikunjkareliya/snake-game-demo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nikunjkareliya/snake-game-demo/issues"
+  },
+  "homepage": "https://github.com/nikunjkareliya/snake-game-demo#readme"
+}
