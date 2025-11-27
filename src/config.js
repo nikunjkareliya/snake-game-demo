@@ -1,7 +1,7 @@
 import { getSkinPrice } from './gameConfig.js';
 
-export const CSS_WIDTH = 1024;
-export const CSS_HEIGHT = 768;
+export const CSS_WIDTH = 1280;
+export const CSS_HEIGHT = 720;
 export const DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
 
 export const CELL_SIZE = 32;
