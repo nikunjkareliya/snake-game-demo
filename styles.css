@@ -49,15 +49,13 @@ body {
 }
 
 #app {
-  /* Keep the stage horizontally centered but add a top offset
-     so the canvas is visible away from the browser top edge.
-     Using flex with `align-items: flex-start` preserves layout
-     and avoids vertically centering very tall fixed-size stage. */
+  /* Responsive: Center stage both horizontally and vertically */
   display: flex;
-  align-items: flex-start; /* start from top, then offset via padding-top */
+  align-items: center; /* Center vertically for responsive scaling */
   justify-content: center;
   min-height: 100vh;
-  padding: 48px 0 24px; /* padding-top pushes the stage down from the window top */
+  padding: 20px; /* Responsive padding prevents edge touching on small screens */
+  overflow: hidden; /* Prevent scrollbars during scaling */
 }
 
 .glass {
@@ -98,17 +96,19 @@ body {
 
 #stage-wrap {
   position: relative;
-  /* center horizontally and add a reliable top offset so the
-     canvas is not flush against the browser top edge. */
-  margin: 30px auto;
+  /* Responsive: Removed margin to allow centering via #app flexbox */
+  margin: 0;
   border-radius: 16px;
-  overflow: hidden;
+  /* Changed to visible to allow CSS transform scaling beyond container */
+  overflow: visible;
   background: radial-gradient(800px 600px at 60% 60%, rgba(0, 234, 255, 0.06) 0%, rgba(255, 0, 255, 0.06) 40%, transparent 70%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45), 0 10px 40px rgba(0, 0, 0, 0.35);
   width: 1280px;
   height: 720px;
+  /* GPU optimization for smooth transform scaling */
+  will-change: transform;
 }
 
 #grid-overlay {
@@ -626,7 +626,7 @@ body {
 }
 .modal {
   width: 420px;
-  max-width: 92vw;
+  max-width: 90%; /* Changed from 92vw - percentages work with transform scaling */
   background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 14px;
@@ -652,7 +652,7 @@ body {
 .modal .hint { font-size:12px; opacity:0.7; margin-top:4px; }
 
 @media (max-width:600px) {
-  .modal { width: 98vw; padding: 16px 16px 18px; }
+  .modal { width: 95%; padding: 16px 16px 18px; } /* Changed from 98vw to % */
 }
 
 /* --- Settings Modal Refinements --- */
